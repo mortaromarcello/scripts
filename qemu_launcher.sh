@@ -10,7 +10,7 @@ if [ -z $1 ]; then
 xxxx:xxxx: numero identificativo della pendrive (si può leggere tramite il comando 'lsusb')"
 	exit
 fi
-echo -e "Attenzione!!!! Se la pendrive è già montata dovete assolutamente smontarla!!!\n(Premere Invio o Ctrl-c per uscire)"
+echo -e "Attenzione!!!! Se la pendrive è già montata dovete assolutamente smontarla!!!\nUna volta lanciato qemu premere F12 per entrare nel boot menu\n(Premere Invio o Ctrl-c per uscire)"
 read
 
 qemu -machine type=pc,accel=kvm:xen:tcg -m 512 -drive file=${1},if=ide,media=disk -usb -usbdevice host:${2} -boot menu=on
