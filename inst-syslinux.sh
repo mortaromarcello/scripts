@@ -23,7 +23,8 @@ if [ ${sn} = "s" ]; then
 	echo "Sovrascrivo la tabella delle partizioni."
 	parted -s ${1} mktable msdos
 	echo "Creo la partizione primaria fat32 alla massima dimensione."
-	echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
+	echo ",,c,*" | sfdisk -D ${1}
+	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	echo "Formatto la partizione."
 	mkdosfs ${1}1
 fi
