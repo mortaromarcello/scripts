@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 if [ -z ${1} ] & [ -z ${2} ] & [ -z ${3} ]; then
-	echo "Uso:$0 <disco.img> <Mbytes> </percorso/di/montaggio"
-	exit
+  echo "Uso:$0 <disco.img> <Mbytes> </percorso/di/montaggio"
+  exit
 fi
 DIR_MOUNT=${3}
-if [ ${DIR_MOUNT:${#DIR_MOUNT}-1} = "/" ]; then 			# se l'ultimo carattere è /
-	DIR_MOUNT=${DIR_MOUNT:0:${#DIR_MOUNT}-1} 			#allora lo toglie
+if [ ${DIR_MOUNT:${#DIR_MOUNT}-1} = "/" ]; then             # se l'ultimo carattere è /
+    DIR_MOUNT=${DIR_MOUNT:0:${#DIR_MOUNT}-1}                #allora lo toglie
 fi
-LOOP1=$(losetup -f)							#trova il primo loop libero
-dd if=/dev/zero of=${1} bs=1k count=0 seek=$[1024*${2}]			#crea l'immagine
-losetup ${LOOP1} ${1}							#crea il loop dell'immmagine
-parted -s ${LOOP1} mklabel msdos					#crea tabella partizioni
+LOOP1=$(losetup -f)                                         #trova il primo loop libero
+dd if=/dev/zero of=${1} bs=1k count=0 seek=$[1024*${2}]     #crea l'immagine
+losetup ${LOOP1} ${1}                                       #crea il loop dell'immmagine
+parted -s ${LOOP1} mklabel msdos                            #crea tabella partizioni
 #crea partizione primaria fat32 capacità massima con flag boot
 echo ",,c,*" | sfdisk -D ${LOOP1} > /dev/null 2>&1
 #echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${LOOP1}
@@ -19,20 +19,20 @@ echo ",,c,*" | sfdisk -D ${LOOP1} > /dev/null 2>&1
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr.bin of=${LOOP1}
 #start=l'offset della partizione con parted
 start=$(parted ${LOOP1} unit B p|awk 'FNR > 5 && $2 ~ /[0-9]/ {print $2}')
-if [ -n $start ]; then							#se $start non è vuota
-	start=$(echo ${start:0:${#start}-1})				#toglie l'ultima lettera (B)
+if [ -n $start ]; then                                      #se $start non è vuota
+    start=$(echo ${start:0:${#start}-1})                    #toglie l'ultima lettera (B)
 else
-	echo "errore"							#altrimenti esce
-	exit
+    echo "errore"                                           #altrimenti esce
+    exit
 fi
 LOOP2=$(losetup -f)
-losetup -o ${start} ${LOOP2} ${1}					#crea loop per la partizione
-mkdosfs $LOOP2								#formatta partizione
-mount -t vfat ${LOOP2} ${DIR_MOUNT}					#monta partizione
-mkdir -p ${DIR_MOUNT}/boot/syslinux					#crea directory
-syslinux -d /boot/syslinux -i ${LOOP2}					#installa syslinux
+losetup -o ${start} ${LOOP2} ${1}                           #crea loop per la partizione
+mkdosfs $LOOP2                                              #formatta partizione
+mount -t vfat ${LOOP2} ${DIR_MOUNT}                         #monta partizione
+mkdir -p ${DIR_MOUNT}/boot/syslinux                         #crea directory
+syslinux -d /boot/syslinux -i ${LOOP2}                      #installa syslinux
 for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 memdisk menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
-	cp -f /usr/lib/syslinux/$i ${DIR_MOUNT}/boot/syslinux/
+    cp -f /usr/lib/syslinux/$i ${DIR_MOUNT}/boot/syslinux/
 done
 mkdir -p ${DIR_MOUNT}/menus/syslinux
 cat >${DIR_MOUNT}/boot/syslinux/syslinux.cfg <<EOF
