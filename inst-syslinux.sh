@@ -22,11 +22,15 @@ read sn
 if [ ${sn} = "s" ]; then
 	echo "Sovrascrivo la tabella delle partizioni."
 	parted -s ${1} mktable msdos
-	echo "Creo la partizione primaria fat32 alla massima dimensione."
-	echo ",,c,*" | sfdisk -D ${1}
+	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4" 
+	echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
+	read -p "Formatto la prima partizione."
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	echo "Formatto la partizione."
 	mkdosfs ${1}1
+	read -p "Formatto la seconda partizione."
+	mkfs -t ext4 ${1}2
+	e2label {1}2 persistence
+	tune2fs -i 0 ${1}2
 fi
 #-----------------------------------------------------------------------
 
@@ -43,7 +47,7 @@ if [ -e /usr/bin/syslinux ]; then
 	fi
 	echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
 	read
-	cat /usr/lib/syslinux/mbr.bin > $1
+	cat /usr/lib/syslinux/mbr.bin > ${1}
 	echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
 	read
 	syslinux --directory /boot/syslinux/ --install ${1}1

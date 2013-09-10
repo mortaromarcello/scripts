@@ -27,8 +27,8 @@ if [ ${sn} = "s" ]; then
 	mke2fs -t ext2 ${1}1
 	mke2fs -t ext4 ${1}2
 	e2label {1}2 persistence
-	tune2fs -i ${1}1
-	tune2fs -i ${1}2
+	tune2fs -i 0 ${1}1
+	tune2fs -i 0 ${1}2
 fi
 #-----------------------------------------------------------------------
 [[ ! -d /tmp/syslinux ]] && mkdir -p /tmp/syslinux; cd /tmp/syslinux
