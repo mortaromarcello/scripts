@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z $1 ]; then
-  echo "$0 <nomefile.deb>"
+  echo "$0 <namefile.deb>"
   exit
 fi
 
