@@ -8,10 +8,15 @@ if [ $UID != 0 ]; then
 fi
 
 if [ -z $1 ] & [ -z $2 ]; then
-	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/\n\n \
+	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/\n\n [size primary part]\
 /dev/sd(x): disco dove installare extlinux;\n \
-/path/to/mount/: directory dove verrà montata la prima partizione ext2;\n"
+/path/to/mount/: directory dove verrà montata la prima partizione ext2;\n \
+[size primary part]: opzionale grandezza della partizione primaria in MegaByte (default 4096M)"
 	exit
+fi
+SIZE_PRIMARY_PART=4096
+if [ ! -z $3 ]; then
+	SIZE_PRIMARY_PART=${3}
 fi
 
 #-----------------------------------------------------------------------
@@ -19,27 +24,40 @@ echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s
 read sn
 if [ ${sn} = "s" ]; then
 	echo "Sovrascrivo la tabella delle partizioni."
+	read
 	parted -s ${1} mktable msdos
-	echo "Creo la partizione primaria fat32 alla massima dimensione."
-	echo -e ",4096,83,*\n,,83" | sfdisk -u M ${1}
+	echo "Creo la partizione primaria ext2."
+	read
+	echo -e ",${SIZE_PRIMARY_PART},83,*\n,,83" | sfdisk -u M ${1}
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	echo "Formatto la partizione."
+	echo "Formatto le partizioni."
+	read
 	mke2fs -t ext2 ${1}1
 	mke2fs -t ext4 ${1}2
-	e2label {1}2 persistence
+	e2label ${1}2 persistence
 	tune2fs -i 0 ${1}1
 	tune2fs -i 0 ${1}2
 fi
 #-----------------------------------------------------------------------
-[[ ! -d /tmp/syslinux ]] && mkdir -p /tmp/syslinux; cd /tmp/syslinux
-wget https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-5.10.tar.bz2
-tar xfv syslinux-5.10.tar.bz2
-cd syslinux-5.10
-make
-if [ -z ${?} ]; then
-	echo "Errore compilando syslinux"
-	rm -R -f -v /tmp/syslinux
-	exit
+EXTLINUX=/usr/bin/extlinux
+if [ ! -e /usr/bin/extlinux ]; then
+	[[ ! -d /tmp/syslinux ]] && mkdir -p /tmp/syslinux; cd /tmp/syslinux
+	wget https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-5.10.tar.bz2
+	tar xfv syslinux-5.10.tar.bz2
+	cd syslinux-5.10
+	make
+	if [ -z ${?} ]; then
+		echo "Errore compilando syslinux"
+		rm -R -f -v /tmp/syslinux
+		exit
+	fi 
+	if [ -e /tmp/syslinux/syslinux-5.10/extlinux/extlinux ];then
+		EXTLINUX=/tmp/syslinux/syslinux-5.10/extlinux/extlinux
+	else
+		echo "Errore compilando syslinux"
+		rm -R -f -v /tmp/syslinux
+		exit
+	fi
 fi
 mount ${1}1 ${2} < /dev/null 2>&1
 if [ -z ${?} ]; then
@@ -54,19 +72,28 @@ if [ ! -d ${2}/boot/extlinux ]; then
 fi
 echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
 read
-cat mbr/mbr.bin > ${1}
+
 echo "Installo extlinux in ${1}1 (premere Invio o Crtl-c per uscire)"
 read
-extlinux/extlinux --install ${2}/boot/extlinux
-cp com32/chain/chain.c32 ${2}/boot/extlinux
-cp com32/modules/config.c32 ${2}/boot/extlinux
-cp com32/modules/reboot.c32 ${2}/boot/extlinux
-cp com32/hdt/hdt.c32 ${2}/boot/extlinux
-cp com32/lib/libcom32.c32 ${2}/boot/extlinux
-cp com32/libutil/libutil.c32 ${2}/boot/extlinux
-cp com32/menu/menu.c32 ${2}/boot/extlinux
-cp com32/menu/vesamenu.c32 ${2}/boot/extlinux
-cp memdisk/memdisk ${2}/boot/extlinux
+if [ -e /usr/bin/extlinux ]; then
+	cat /usr/lib/syslinux/mbr.bin > ${1}
+	/usr/bin/extlinux --install ${2}/boot/extlinux
+	for i in chain.c32 config.c32 reboot.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 vesamenu.c32 memdisk; do
+		cp -v /usr/lib/syslinux/$i ${2}/boot/extlinux
+	done
+else
+	cat mbr/mbr.bin > ${1}
+	extlinux/extlinux --install ${2}/boot/extlinux
+	cp -v com32/chain/chain.c32 ${2}/boot/extlinux
+	cp -v com32/modules/config.c32 ${2}/boot/extlinux
+	cp -v com32/modules/reboot.c32 ${2}/boot/extlinux
+	cp -v com32/hdt/hdt.c32 ${2}/boot/extlinux
+	cp -v com32/lib/libcom32.c32 ${2}/boot/extlinux
+	cp -v com32/libutil/libutil.c32 ${2}/boot/extlinux
+	cp -v com32/menu/menu.c32 ${2}/boot/extlinux
+	cp -v com32/menu/vesamenu.c32 ${2}/boot/extlinux
+	cp -v memdisk/memdisk ${2}/boot/extlinux
+fi
 if [ ! -d ${2}/menus/extlinux ]; then
 	echo "Creo la directory ${2}/menus/extlinux (premere Invio o Crtl-c per uscire)"
 	read
@@ -123,4 +150,3 @@ EOF
 umount $2
 rm -R -f -v /tmp/syslinux
 echo "Fatto!"
-
