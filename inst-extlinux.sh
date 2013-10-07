@@ -11,7 +11,7 @@ if [ -z $1 ] & [ -z $2 ]; then
 	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/\n\n [size primary part]\
 /dev/sd(x): disco dove installare extlinux;\n \
 /path/to/mount/: directory dove verrà montata la prima partizione ext2;\n \
-[size primary part]: opzionale grandezza della partizione primaria in MegaByte (default 4096M)"
+[size primary part]: opzionale grandezza della partizione primaria in MByte (default 4096M)"
 	exit
 fi
 SIZE_PRIMARY_PART=4096
@@ -26,10 +26,9 @@ if [ ${sn} = "s" ]; then
 	echo "Sovrascrivo la tabella delle partizioni."
 	read
 	parted -s ${1} mktable msdos
-	echo "Creo la partizione primaria ext2."
+	echo "Creo la partizione primaria ext2 di ${3}Mbytes."
 	read
 	echo -e ",${SIZE_PRIMARY_PART},83,*\n,,83" | sfdisk -u M ${1}
-	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	echo "Formatto le partizioni."
 	read
 	mke2fs -t ext2 ${1}1
@@ -38,8 +37,9 @@ if [ ${sn} = "s" ]; then
 	tune2fs -i 0 ${1}1
 	tune2fs -i 0 ${1}2
 fi
+
 #-----------------------------------------------------------------------
-EXTLINUX=/usr/bin/extlinux
+
 if [ ! -e /usr/bin/extlinux ]; then
 	[[ ! -d /tmp/syslinux ]] && mkdir -p /tmp/syslinux; cd /tmp/syslinux
 	wget https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-5.10.tar.bz2
