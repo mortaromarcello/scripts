@@ -3,18 +3,19 @@
 # bash script per eseguire comandi ad un determinato orario attraverso
 # il comando at. Lo script creerà un file provvisorio "at-commands" in
 # cui verranno memorizzati i comandi passati come parametri allo script.
-# il primo parametro deve essere l'orario nel format at HH:MMam/pm, per
-# passare i comandi con i parametri precedere ogni comando da un numero 
-# sequenzale partendo da 1 nella forma:
+# il primo parametro deve essere l'orario nel format at HH:MMam/pm, poi
+# passare i comandi con i parametri (opzionali) facendo precedere ogni 
+# comando da un numero sequenzale partendo da 1 nella forma:
 # '1 comando param-1 param-2 param-n 2 comando param-1...'
 # numeri arbitrari provocheranno una esecuzione imprevedibile.
 # L'output dei comandi verrà memorizzato nel file di log log.txt
+# Per aggiungere il carattere '"' ai parametri del comando usare '\"'
+# Per aggiungere il carattere '\' usare '\\'
 #-----------------------------------------------------------------------
 if [ "$#" -lt 2 ]; then
   echo -e "Usage: $0 [hh:mm]am/pm <\"1 command-1 (optional parameters)\" \"2 command-2(optional parameters)\" \"n command-n (optional parameters)\">"
   exit
 fi
-# Per aggiungere il carattere " ai parametri del comando usare \" per aggiungere il carattere \ usare \\
 
 declare -i count1
 declare -i count2
