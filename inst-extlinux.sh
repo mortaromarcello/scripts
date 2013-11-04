@@ -8,7 +8,7 @@ if [ $UID != 0 ]; then
 fi
 
 if [ -z $1 ] & [ -z $2 ]; then
-	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/\n\n [size primary part]\
+	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/ [size primary part]\n\n\
 /dev/sd(x): disco dove installare extlinux;\n \
 /path/to/mount/: directory dove verrà montata la prima partizione ext2;\n \
 [size primary part]: opzionale grandezza della partizione primaria in MByte (default 4096M)"
