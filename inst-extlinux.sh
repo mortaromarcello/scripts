@@ -41,6 +41,14 @@ fi
 #-----------------------------------------------------------------------
 
 if [ ! -e /usr/bin/extlinux ]; then
+	if [ ! -e /usr/include/uuid/uuid.h ]; then
+		echo -e "Manca l'header uuid.h. Esco"
+		exit
+	fi
+	if [ ! -e /usr/bin/upx ]; then
+		echo -e "Manca il programma upx.Esco"
+		exit
+	fi
 	[[ ! -d /tmp/syslinux ]] && mkdir -p /tmp/syslinux; cd /tmp/syslinux
 	wget https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-5.10.tar.bz2
 	tar xfv syslinux-5.10.tar.bz2
