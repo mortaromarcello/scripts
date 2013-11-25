@@ -26,7 +26,7 @@ function check_hd() {
 	echo "work"
 }
 
-get_info() {
+put_info() {
   echo "Partizione di installazione (root):" $INST_PARTITION
   if [ ! -z $HOME_PARTITION ]; then
     echo "Partizione di home                :" $HOME_PARTITION
@@ -98,4 +98,4 @@ do
 done
 
 check_root
-get_info
+put_info
