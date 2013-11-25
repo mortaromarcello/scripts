@@ -6,6 +6,7 @@
 #  inserire qui le label
 
 DISTRO="distro"
+INST_DRIVE="/dev/sda"
 INST_PARTITION="/dev/sda1"
 HOME_PARTITION=
 INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
@@ -60,8 +61,9 @@ function run_inst {
       read -s -p "Digita la password: " USER_PASSWORD
       CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' $USER_PASSWORD)
     fi
-    #chroot $INST_ROOT_DIRECTORY useradd -m -p $CRYPT_PASSWORD $USER
-    #[ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!";exit
+    chroot $INST_ROOT_DIRECTORY useradd -m -p $CRYPT_PASSWORD $USER
+    [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!";exit
+    grub-install --boot-directory=$INST_ROOT_DIRECTORY/boot/grub --no-floppy $INST_DRIVE
 }
 
 #------------------------------------------------------------------------
@@ -90,6 +92,10 @@ do
     -c | --crypt-password)
       shift
       CRYPT_PASSWORD=$1
+      ;;
+    -d | --inst-drive)
+      shift
+      INST_DRIVE=$1
       ;;
     *)
       shift
