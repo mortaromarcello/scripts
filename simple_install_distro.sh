@@ -3,8 +3,15 @@
 # semplice script di installazione
 #
 #-----------------------------------------------------------------------
-
+#
 #-----------------------------------------------------------------------
+
+function help() {
+  echo -e "
+${0} <opzioni>
+Installa una live su un disco.
+"
+}
 
 function check_root() {
   if [ ${UID} != 0 ]; then
@@ -13,7 +20,6 @@ function check_root() {
   fi
 }
 
-check_root
 #  inserire qui le label
 
 DISTRO="distro"
@@ -45,14 +51,16 @@ put_info() {
   echo "Tipo di file system               :" ${TYPE_FS}
   if [ ! -z ${SWAP_PARTITION} ]; then
     echo "Partizione di swap               :" ${SWAP_PARTITION}
+    echo "UUID                             :" ${UUID_SWAP_PARTITION}
   fi
+  echo "Directory di installazione        :" ${INST_ROOT_DIRECTORY}
   if [ ! -z ${USER} ]; then
     echo "Username                          :" ${USER}
   fi
   if [ ! -z ${CRYPT_PASSWORD} ]; then
     echo "Password criptata                 :" ${CRYPT_PASSWORD}
   fi
-  echo "Drive di installazione di grub      :" ${INST_DRIVE}
+  echo "Drive di installazione di grub    :" ${INST_DRIVE}
 }
 
 create_fstab() {
@@ -66,11 +74,15 @@ create_fstab() {
 # <file system> <mount point> <type> <options> <dump> <pass>
 proc /proc proc defaults 0 0
 UUID=${UUID_ROOT_PARTITION} / ${TYPE_FS} errors=remount-ro 0 1
-UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
-  if [ ! -z $HOME_PARTITION ]; then
+  if [ ! -z ${HOME_PARTITION} ]; then
     cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 UUID=${UUID_HOME_PARTITION} /home ${TYPE_FS} defaults 0 2
+EOF
+  fi
+  if [ ! -z ${SWAP_PARTITION} ]; then
+  cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
+UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
   fi
 }
@@ -111,7 +123,7 @@ function run_inst {
 until [ -z "${1}" ]
 do
   case ${1} in
-    -i | --inst-partition)
+    -r | --root-partition)
       shift
       ROOT_PARTITION=${1}
       ;;
@@ -119,7 +131,7 @@ do
       shift
       TYPE_FS=${1}
       ;;
-    -h | --home-partition)
+    -H | --home-partition)
       shift
       HOME_PARTITION=${1}
       UUID_HOME_PARTITION="$(blkid -o value -s UUID ${HOME_PARTITION})"
@@ -143,10 +155,21 @@ do
     -s | --swap-partition)
       shift
       SWAP_PARTITION=${1}
+      UUID_SWAP_PARTITION="$(blkid -o value -s UUID ${SWAP_PARTITION})"
+      ;;
+    -i | --inst-root-directory)
+      shift
+      INST_ROOT_DIRECTORY=${1}
+      ;;
+    -h | --help)
+      shift
+      help
+      exit
       ;;
     *)
       shift
       ;;
   esac
 done
+check_root
 put_info
