@@ -56,7 +56,7 @@ put_info() {
 }
 
 create_fstab() {
-  cat >${INST_ROOT_DIRECTORY}/etc/fstab <EOF
+  cat > ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 # /etc/fstab: static file system information.
 #
 # Use 'blkid' to print the universally unique identifier for a
@@ -69,20 +69,21 @@ UUID=${UUID_ROOT_PARTITION} / ${TYPE_FS} errors=remount-ro 0 1
 UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
   if [ ! -z $HOME_PARTITION ]; then
-    cat ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
+    cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 UUID=${UUID_HOME_PARTITION} /home ${TYPE_FS} defaults 0 2
 EOF
   fi
 }
 
 function run_inst {
-    read -p "Attenzione! la partizione sarà formattata! (Ctrl-c per abortire)"
+    read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! (Ctrl-c per abortire)"
     mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
     UUID_ROOT_PARTITION="$(blkid -o value -s UUID ${ROOT_PARTITION})"
     mkdir -p ${INST_ROOT_DIRECTORY}
     mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
     if [ ! -z ${HOME_PARTITION} ]; then
       if [ ${FORMAT_HOME} = "si" ]; then
+      read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! (Ctrl-c per abortire)"
         mkfs -t ${TYPE_FS} ${HOME_PARTITION}
         UUID_HOME_PARTITION="$(blkid -o value -s UUID ${HOME_PARTITION})"
       fi
