@@ -88,34 +88,35 @@ EOF
 }
 
 function run_inst {
-    read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! (Ctrl-c per abortire)"
-    mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
-    UUID_ROOT_PARTITION="$(blkid -o value -s UUID ${ROOT_PARTITION})"
-    mkdir -p ${INST_ROOT_DIRECTORY}
-    mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
-    if [ ! -z ${HOME_PARTITION} ]; then
-      if [ ${FORMAT_HOME} = "si" ]; then
-      read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! (Ctrl-c per abortire)"
-        mkfs -t ${TYPE_FS} ${HOME_PARTITION}
-        UUID_HOME_PARTITION="$(blkid -o value -s UUID ${HOME_PARTITION})"
-      fi
-      mkdir -p "${INST_ROOT_DIRECTORY}/home"
-      mount ${HOME_PARTITION} "${INST_ROOT_DIRECTORY}/home"
+  put_info
+  read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! (Ctrl-c per abortire)"
+  mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
+  UUID_ROOT_PARTITION="$(blkid -o value -s UUID ${ROOT_PARTITION})"
+  mkdir -p ${INST_ROOT_DIRECTORY}
+  mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
+  if [ ! -z ${HOME_PARTITION} ]; then
+    if [ ${FORMAT_HOME} = "si" ]; then
+    read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! (Ctrl-c per abortire)"
+      mkfs -t ${TYPE_FS} ${HOME_PARTITION}
+      UUID_HOME_PARTITION="$(blkid -o value -s UUID ${HOME_PARTITION})"
     fi
-    for dir in bin boot etc lib opt sbin srv usr var; do
-      cp -av "/${dir}" "${INST_ROOT_DIRECTORY}"
-    done
-    if [ -z ${USER} ]; then
-      read -p "Digita la username: " USER
-    fi
-    if [ -z ${CRYPT_PASSWORD} ]; then
-      read -s -p "Digita la password: " USER_PASSWORD
-      CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
-    fi
-    chroot ${INST_ROOT_DIRECTORY} useradd -m -p ${CRYPT_PASSWORD $USER}
-    [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!";exit
-    create_fstab
-    grub-install --boot-directory=${INST_ROOT_DIRECTORY}/boot/grub --no-floppy ${INST_DRIVE}
+    mkdir -p "${INST_ROOT_DIRECTORY}/home"
+    mount ${HOME_PARTITION} "${INST_ROOT_DIRECTORY}/home"
+  fi
+  for dir in bin boot etc lib opt sbin srv usr var; do
+    cp -av "/${dir}" "${INST_ROOT_DIRECTORY}"
+  done
+  if [ -z ${USER} ]; then
+    read -p "Digita la username: " USER
+  fi
+  if [ -z ${CRYPT_PASSWORD} ]; then
+    read -s -p "Digita la password: " USER_PASSWORD
+    CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
+  fi
+  chroot ${INST_ROOT_DIRECTORY} useradd -m -p ${CRYPT_PASSWORD $USER}
+  [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!";exit
+  create_fstab
+  grub-install --boot-directory=${INST_ROOT_DIRECTORY}/boot/grub --no-floppy ${INST_DRIVE}
 }
 
 #------------------------------------------------------------------------
@@ -172,4 +173,4 @@ do
   esac
 done
 check_root
-put_info
+run_inst
