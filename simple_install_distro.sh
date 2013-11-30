@@ -49,6 +49,7 @@ USER=
 CRYPT_PASSWORD=
 CRYPT_ROOT_PASSWORD=
 LIVE_USER="live-user"
+YES_NO="no"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -78,8 +79,15 @@ put_info() {
 }
 
 function create_root_and_mount_partition() {
-  read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! Continuo?(si/no): " YES_NO
-  if [ ${YES_NO} != "si" ]; then
+  IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
+  if [ ! -z $IS_MOUNTED ]; then
+    echo "La partizione è montata. Esco."
+    exit
+  fi
+  if [ ${YES_NO} = "no" ]; then
+    read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! Continuo?(si/no): " YES_NO
+  fi
+  if [ ${YES_NO} = "no" ] || [ -z ${YES_NO} ]; then
     exit
   fi
   mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
@@ -89,10 +97,17 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
+  IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
+  if [ ! -z $IS_MOUNTED ]; then
+    echo "La partizione è montata. Esco."
+    exit
+  fi
   if [ ! -z ${HOME_PARTITION} ]; then
     if [ ${FORMAT_HOME} = "si" ]; then
-      read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
-      if [ ${YES_NO} != "si" ]; then
+      if [ ${YES_NO} = "no" ]; then
+        read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
+      fi
+      if [ ${YES_NO} = "no" ] || [ -z ${YES_NO} ]; then
         exit
       fi
       mkfs -t ${TYPE_FS} ${HOME_PARTITION}
@@ -181,7 +196,7 @@ function run_inst {
   change_root_password
   remove_user_live
   create_fstab
-  install_grub
+  #install_grub
 }
 
 #------------------------------------------------------------------------
@@ -212,7 +227,7 @@ do
     -H | --home-partition)
       shift
       HOME_PARTITION=${1}
-      UUID_HOME_PARTITION="$(blkid -o value -s UUID ${HOME_PARTITION})"
+      UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
       ;;
     -i | --inst-root-directory)
       shift
@@ -229,7 +244,7 @@ do
     -s | --swap-partition)
       shift
       SWAP_PARTITION=${1}
-      UUID_SWAP_PARTITION="$(blkid -o value -s UUID ${SWAP_PARTITION})"
+      UUID_SWAP_PARTITION=$(blkid -o value -s UUID ${SWAP_PARTITION})
       ;;
     -t | --type-fs)
       shift
@@ -238,6 +253,10 @@ do
     -u | --user)
       shift
       USER=${1}
+      ;;
+    -y | --yes)
+      shift
+      YES_NO="si"
       ;;
     *)
       shift
