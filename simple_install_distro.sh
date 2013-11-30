@@ -140,12 +140,16 @@ function add_user() {
   fi
 }
 
+function add_sudo_user() {
+  chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
+}
+
 function change_root_password() {
   if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
     read -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
     CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${ROOT_PASSWORD})
   fi
-  chroot ${INST_ROOT_DIRECTORY} echo "root:${CRYPT_ROOT_PASSWORD}" | chpasswd -e
+  chroot ${INST_ROOT_DIRECTORY} bash -c "echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e"
 }
 
 create_fstab() {
