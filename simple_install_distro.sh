@@ -17,7 +17,6 @@ Installa una live su un disco.
   -h | --help                            :Stampa questa messaggio.
   -H | --home-partition <partition>      :Partizione di home.
   -i | --inst-root-directory <directory> :Directory di installazione (default '/mnt/distro').
-  -l | --live-user <user>                :User live (default 'live-user).
   -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
   -t | --type-fs <type fs>               :Tipo di file system (default 'ext4').
@@ -51,6 +50,7 @@ CRYPT_PASSWORD=
 CRYPT_ROOT_PASSWORD=
 LIVE_USER="live-user"
 YES_NO="no"
+LOCALE="it_IT.UTF-8 UTF-8"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -76,7 +76,7 @@ put_info() {
   if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
     echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
   fi
-  echo "Live user                         :" ${LIVE_USER}
+  echo "Locale                            :" ${LOCALE}
 }
 
 function create_root_and_mount_partition() {
@@ -121,9 +121,6 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
   SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-  #for dir in bin boot etc lib opt sbin srv usr var; do
-      #cp -av /${SQUASH_FS}/${dir} ${INST_ROOT_DIRECTORY}
-  #done
   cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
 }
 
@@ -175,6 +172,12 @@ EOF
   fi
 }
 
+function set_locale() {
+  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
+  sed "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
+  chroot ${INST_ROOT_DIRECTORY} locale-gen
+}
+
 function install_grub() {
   for dir in dev proc sys; do
     mount -B /${dir} ${INST_ROOT_DIRECTORY}
@@ -199,6 +202,7 @@ function run_inst {
   add_user
   change_root_password
   create_fstab
+  set_locale
   #install_grub
   end
 }
@@ -236,6 +240,10 @@ do
     -i | --inst-root-directory)
       shift
       INST_ROOT_DIRECTORY=${1}
+      ;;
+    -l | --locale)
+      shift
+      LOCALE=${1}
       ;;
     -r | --root-partition)
       shift
