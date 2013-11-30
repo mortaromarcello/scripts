@@ -17,11 +17,12 @@ Installa una live su un disco.
   -h | --help                            :Stampa questa messaggio.
   -H | --home-partition <partition>      :Partizione di home.
   -i | --inst-root-directory <directory> :Directory di installazione (default '/mnt/distro').
-  -l | --live-user <user>                :User live (default 'live-user)
-  -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1')
+  -l | --live-user <user>                :User live (default 'live-user).
+  -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
-  -t | --type-fs <type fs>               :Tipo di file system (default 'ext4')
+  -t | --type-fs <type fs>               :Tipo di file system (default 'ext4').
   -u | --user                            :Nome utente.
+  -y | --yes                             :Non interattivo.
 "
 }
 
@@ -85,7 +86,7 @@ function create_root_and_mount_partition() {
     exit
   fi
   if [ ${YES_NO} = "no" ]; then
-    read -p "Attenzione! la partizione sarà ${ROOT_PARTITION} formattata! Continuo?(si/no): " YES_NO
+    read -p "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
   fi
   if [ ${YES_NO} = "no" ] || [ -z ${YES_NO} ]; then
     exit
@@ -119,9 +120,11 @@ function create_home_and_mount_partition() {
 }
 
 function copy_root() {
-  for dir in bin boot etc lib opt sbin srv usr var; do
-    cp -av /${dir} ${INST_ROOT_DIRECTORY}
-  done
+  SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
+  #for dir in bin boot etc lib opt sbin srv usr var; do
+      #cp -av /${SQUASH_FS}/${dir} ${INST_ROOT_DIRECTORY}
+  #done
+  cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
 }
 
 function add_user() {
@@ -144,13 +147,8 @@ function change_root_password() {
   if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
     read -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
     CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${ROOT_PASSWORD})
-    
   fi
-  echo "root:${CRYPT_ROOT_PASSWORD}" | chpasswd -e
-}
-
-function remove_user_live() {
-  deluser --remove-all-files ${LIVE_USER}
+  chroot ${INST_ROOT_DIRECTORY} echo "root:${CRYPT_ROOT_PASSWORD}" | chpasswd -e
 }
 
 create_fstab() {
@@ -187,6 +185,12 @@ function install_grub() {
   done
 }
 
+function end() {
+  sync;sync
+  umount ${HOME_PARTITION}
+  umount ${ROOT_PARTITION}
+}
+
 function run_inst {
   put_info
   create_root_and_mount_partition
@@ -194,9 +198,9 @@ function run_inst {
   copy_root
   add_user
   change_root_password
-  remove_user_live
   create_fstab
   #install_grub
+  end
 }
 
 #------------------------------------------------------------------------
@@ -233,10 +237,6 @@ do
       shift
       INST_ROOT_DIRECTORY=${1}
       ;;
-    -l | --live-user)
-      shift
-      LIVE_USER=${1}
-      ;;
     -r | --root-partition)
       shift
       ROOT_PARTITION=${1}
@@ -263,7 +263,5 @@ do
       ;;
   esac
 done
-
 check_root
 run_inst
-
