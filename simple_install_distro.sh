@@ -230,6 +230,7 @@ function run_inst {
   copy_root
   add_user
   change_root_password
+  add_sudo_user
   create_fstab
   set_locale
   set_hostname
