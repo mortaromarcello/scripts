@@ -82,6 +82,8 @@ put_info() {
     echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
   fi
   echo "Locale                            :" ${LOCALE}
+  echo "Tastiera                          :" ${KEYBOARD}
+  echo "Lingua                            :" ${LANG}
 }
 
 function create_root_and_mount_partition() {
