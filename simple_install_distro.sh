@@ -86,7 +86,7 @@ put_info() {
 
 function create_root_and_mount_partition() {
   IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
-  if [ ! -z $IS_MOUNTED ]; then
+  if [ ! -z "$IS_MOUNTED" ]; then
     echo "La partizione è montata. Esco."
     exit
   fi
@@ -104,7 +104,7 @@ function create_root_and_mount_partition() {
 
 function create_home_and_mount_partition() {
   IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
-  if [ ! -z $IS_MOUNTED ]; then
+  if [ ! -z "$IS_MOUNTED" ]; then
     echo "La partizione è montata. Esco."
     exit
   fi
