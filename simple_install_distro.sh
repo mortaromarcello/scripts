@@ -183,12 +183,11 @@ EOF
 
 function set_locale() {
   LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
-  sed "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
+  sed -i "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
   chroot ${INST_ROOT_DIRECTORY} locale-gen
   chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}
-  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/keyboard|grep "XKBLAYOUT")
-  sed "s/${LINE}/XKBLAYOUT=${KEYBOARD}/" ${INST_ROOT_DIRECTORY}/etc/keyboard
-  
+  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep "XKBLAYOUT")
+  sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
 }
 
 function install_grub() {
@@ -252,11 +251,11 @@ do
       ;;
     -i | --inst-root-directory)
       shift
+      INST_ROOT_DIRECTORY=${1}
+      ;;
     -k | --keyboard)
       shift
       KEYBOARD=${1}
-      ;;
-      INST_ROOT_DIRECTORY=${1}
       ;;
     -l | --locale)
       shift
