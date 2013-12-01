@@ -9,7 +9,7 @@
 function help() {
   echo -e "
 ${0} <opzioni>
-Installa una live su un disco.
+Installa la Live su un disco.
   -c | --crypt-password <password>       :Password cifrata utente.
   -C | --crypt-root-password <password>  :Password cifrata root.
   -d | --inst-drive <drive>              :Drive di installazione per grub.
@@ -17,6 +17,9 @@ Installa una live su un disco.
   -h | --help                            :Stampa questa messaggio.
   -H | --home-partition <partition>      :Partizione di home.
   -i | --inst-root-directory <directory> :Directory di installazione (default '/mnt/distro').
+  -k | --keyboard                        :Tipo di tastiera (default 'it').
+  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
+  -L | --language                        :Lingua (default 'it_IT.UTF-8').
   -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
   -t | --type-fs <type fs>               :Tipo di file system (default 'ext4').
@@ -51,6 +54,8 @@ CRYPT_ROOT_PASSWORD=
 LIVE_USER="live-user"
 YES_NO="no"
 LOCALE="it_IT.UTF-8 UTF-8"
+LANG="it_IT.UTF-8"
+KEYBOARD="it"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -180,6 +185,10 @@ function set_locale() {
   LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
   sed "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
   chroot ${INST_ROOT_DIRECTORY} locale-gen
+  chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}
+  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/keyboard|grep "XKBLAYOUT")
+  sed "s/${LINE}/XKBLAYOUT=${KEYBOARD}/" ${INST_ROOT_DIRECTORY}/etc/keyboard
+  
 }
 
 function install_grub() {
@@ -243,11 +252,19 @@ do
       ;;
     -i | --inst-root-directory)
       shift
+    -k | --keyboard)
+      shift
+      KEYBOARD=${1}
+      ;;
       INST_ROOT_DIRECTORY=${1}
       ;;
     -l | --locale)
       shift
       LOCALE=${1}
+      ;;
+    -L | --language)
+      shift
+      LANG=${1}
       ;;
     -r | --root-partition)
       shift
