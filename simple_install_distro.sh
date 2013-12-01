@@ -20,6 +20,7 @@ Installa la Live su un disco.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --language                        :Lingua (default 'it_IT.UTF-8').
+  -n | --hostname                        :Nome hostname (default 'debian').
   -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
   -t | --type-fs <type fs>               :Tipo di file system (default 'ext4').
@@ -56,6 +57,7 @@ YES_NO="no"
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
+HOSTNAME="debian"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -192,6 +194,19 @@ function set_locale() {
   sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
 }
 
+function set_hostname() {
+  cat > ${INST_ROOT_DIRECTORY}/etc/hostname <<EOF
+${HOSTNAME}
+EOF
+  cat > ${INST_ROOT_DIRECTORY}/etc/hosts <<EOF
+127.0.0.1       localhost ${HOSTNAME}
+::1             localhost ip6-localhost ip6-loopback
+fe00::0         ip6-localnet
+ff00::0         ip6-mcastprefix
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+EOF
+}
 function install_grub() {
   for dir in dev proc sys; do
     mount -B /${dir} ${INST_ROOT_DIRECTORY}
@@ -217,6 +232,7 @@ function run_inst {
   change_root_password
   create_fstab
   set_locale
+  set_hostname
   #install_grub
   end
 }
@@ -266,6 +282,10 @@ do
     -L | --language)
       shift
       LANG=${1}
+      ;;
+    -n | --hostname)
+      shift
+      HOSTNAME=${1}
       ;;
     -r | --root-partition)
       shift
