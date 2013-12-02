@@ -14,6 +14,7 @@ Installa la Live su un disco.
   -C | --crypt-root-password <password>  :Password cifrata root.
   -d | --inst-drive <drive>              :Drive di installazione per grub.
   -f | --format-home <si/no>             :Se 'si', formatta la partizione home.
+  -g | --groups <group1,...,groupn>      :Gruppi addizionali a cui l'utente appartiene.
   -h | --help                            :Stampa questa messaggio.
   -H | --home-partition <partition>      :Partizione di home.
   -i | --inst-root-directory <directory> :Directory di installazione (default '/mnt/distro').
@@ -58,6 +59,7 @@ LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
+GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -141,7 +143,7 @@ function add_user() {
     read -s -p "Digita la password: " USER_PASSWORD
     CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
   fi
-  chroot ${INST_ROOT_DIRECTORY} useradd -m -p $CRYPT_PASSWORD $USER
+  chroot ${INST_ROOT_DIRECTORY} useradd -G ${GROUPS} -m -p $CRYPT_PASSWORD $USER
   if [ $? -eq 0 ]; then echo "User has been added to system!" 
   else
     echo "Failed to add a user!";
@@ -257,6 +259,10 @@ do
     -f | --format-home)
       shift
       FORMAT_HOME="si"
+      ;;
+    -g | --groups)
+      shift
+      GROUPS=$1
       ;;
     -h | --help)
       shift
