@@ -143,7 +143,7 @@ function add_user() {
     read -s -p "Digita la password: " USER_PASSWORD
     CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
   fi
-  chroot ${INST_ROOT_DIRECTORY} useradd -G ${GROUPS} -m -p $CRYPT_PASSWORD $USER
+  chroot ${INST_ROOT_DIRECTORY} useradd -G ${GROUPS} -s /bin/bash -m -p $CRYPT_PASSWORD $USER
   if [ $? -eq 0 ]; then echo "User has been added to system!" 
   else
     echo "Failed to add a user!";
