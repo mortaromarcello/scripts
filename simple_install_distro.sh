@@ -25,6 +25,7 @@ Installa la Live su un disco.
   -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
   -t | --type-fs <type fs>               :Tipo di file system (default 'ext4').
+  -T | --timezone <timezone>             :Timezone (default 'Europe/Rome'.
   -u | --user                            :Nome utente.
   -y | --yes                             :Non interattivo.
 "
@@ -60,6 +61,7 @@ LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
 GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
+TIMEZONE="Europe/Rome"
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
@@ -196,6 +198,12 @@ function set_locale() {
   sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
 }
 
+function set_timezone() {
+  cat > ${INST_ROOT_DIRECTORY}/etc/timezone <<EOF
+${TIMEZONE}
+EOF
+}
+
 function set_hostname() {
   cat > ${INST_ROOT_DIRECTORY}/etc/hostname <<EOF
 ${HOSTNAME}
@@ -235,6 +243,7 @@ function run_inst {
   add_sudo_user
   create_fstab
   set_locale
+  set_timezone
   set_hostname
   #install_grub
   end
@@ -306,6 +315,10 @@ do
     -t | --type-fs)
       shift
       TYPE_FS=${1}
+      ;;
+    -T | --timezone)
+      shift
+      TIMEZONE=${1}
       ;;
     -u | --user)
       shift
