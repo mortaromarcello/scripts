@@ -11,6 +11,7 @@ for dir in dev proc sys; do
   mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 done
 chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+chroot ${INST_ROOT_DIRECTORY} update-grub
 for dir in dev proc sys; do
   umount ${INST_ROOT_DIRECTORY}/$dir
 done

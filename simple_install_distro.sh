@@ -311,6 +311,7 @@ function install_grub() {
   done
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+  chroot ${INST_ROOT_DIRECTORY} update-grub
   for dir in dev proc sys; do
     [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     umount ${INST_ROOT_DIRECTORY}/${dir}
