@@ -340,7 +340,7 @@ function run_inst {
   set_locale
   set_timezone
   set_hostname
-  #install_grub
+  install_grub
   end
 }
 
