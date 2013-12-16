@@ -304,6 +304,12 @@ ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 EOF
 }
+
+function update_minidlna() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
+  sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
+}
+
 function install_grub() {
   for dir in dev proc sys; do
     [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
@@ -341,6 +347,7 @@ function run_inst {
   set_locale
   set_timezone
   set_hostname
+  update_minidlna
   install_grub
   end
 }
