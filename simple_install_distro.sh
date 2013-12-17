@@ -175,7 +175,7 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> \
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
   IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
   if [ ! -z "$IS_MOUNTED" ]; then
     echo "La partizione è montata. Esco."
