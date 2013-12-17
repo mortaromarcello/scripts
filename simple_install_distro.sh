@@ -122,7 +122,7 @@ function check_script() {
 
 put_info() {
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
-  echo "UUID                              :" ${UUID_ROOT_PARTITION}
+  #echo "UUID                              :" ${UUID_ROOT_PARTITION}
   if [ ! -z ${HOME_PARTITION} ]; then
     echo "Partizione di home                :" ${HOME_PARTITION}
     echo "UUID                              :" ${UUID_HOME_PARTITION}
@@ -131,7 +131,7 @@ put_info() {
   echo "Tipo di file system               :" ${TYPE_FS}
   if [ ! -z ${SWAP_PARTITION} ]; then
     echo "Partizione di swap                :" ${SWAP_PARTITION}
-    echo "UUID                              :" ${UUID_SWAP_PARTITION}
+    #echo "UUID                              :" ${UUID_SWAP_PARTITION}
   fi
   echo "Directory di installazione        :" ${INST_ROOT_DIRECTORY}
   if [ ! -z ${USER} ]; then
@@ -210,6 +210,10 @@ function copy_root() {
 function add_user() {
   if [ -z ${USER} ]; then
     read -p "Digita la username: " USER
+    if [ -z ${USER} ]; then
+      read -p "Bisogna digitare un nome. Prova ancora o digita 'exit': " USER
+      [ ${USER} = "exit" ] && echo "Installazione abortita!" && exit -1
+    fi
   fi
   if [ -z ${CRYPT_PASSWORD} ]; then
     read -s -p "Digita la password: " USER_PASSWORD
@@ -231,7 +235,7 @@ function add_sudo_user() {
 
 function change_root_password() {
   if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
-    read -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
+    read -s -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
     CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${ROOT_PASSWORD})
   fi
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} bash -c \"echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e\"" &>> ${FILE_DEBUG} || \
@@ -325,6 +329,7 @@ function install_grub() {
 }
 
 function end() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sync;sync" &>> ${FILE_DEBUG} || \
   sync;sync
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${HOME_PARTITION}
