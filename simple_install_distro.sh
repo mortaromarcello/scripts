@@ -65,7 +65,7 @@ Installa la Live su un disco.
 
 function check_debug() {
   if [ ${DEBUG} = "true" ]; then
-    echo -e "-----------------------------------------------------------------------\n$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
+    echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug iniziato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
     echo "debug_info ${LINENO}:Debug abilitato." &>> ${FILE_DEBUG}
     echo -e "debug_info Variabili:
       DEBUG=${DEBUG}
@@ -121,6 +121,7 @@ function check_script() {
 }
 
 put_info() {
+  echo "Debug abilitato                   :" ${DEBUG}
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
   #echo "UUID                              :" ${UUID_ROOT_PARTITION}
   if [ ! -z ${HOME_PARTITION} ]; then
@@ -161,7 +162,7 @@ function create_root_and_mount_partition() {
   if [ ${YES_NO} = "no" ]; then
     read -p "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
   fi
-  if [ ${YES_NO} = "no" ] || [ -z ${YES_NO} ]; then
+  if [ -z ${YES_NO} ] || [ ! ${YES_NO} = "si" ]; then
     exit
   fi
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
@@ -211,12 +212,18 @@ function add_user() {
   if [ -z ${USER} ]; then
     read -p "Digita la username: " USER
     if [ -z ${USER} ]; then
-      read -p "Bisogna digitare un nome. Prova ancora o digita 'exit': " USER
-      [ ${USER} = "exit" ] && echo "Installazione abortita!" && exit -1
+      read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USER
+      [ -z ${USER} ] && echo "Installazione abortita!" && exit -1
     fi
   fi
   if [ -z ${CRYPT_PASSWORD} ]; then
     read -s -p "Digita la password: " USER_PASSWORD
+    echo
+    if [ -z ${USER_PASSWORD} ]; then
+      read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " USER_PASSWORD
+      echo
+      [ -z ${USER_PASSWORD} ] && echo "Installazione abortita!" && exit -1
+    fi
     CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
   fi
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
@@ -236,6 +243,12 @@ function add_sudo_user() {
 function change_root_password() {
   if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
     read -s -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
+    echo
+    if [ -z ${ROOT_PASSWORD} ]; then
+      read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " ROOT_PASSWORD
+      echo
+      [ -z ${ROOT_PASSWORD} ] && echo "Installazione abortita!" && exit -1
+    fi
     CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${ROOT_PASSWORD})
   fi
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} bash -c \"echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e\"" &>> ${FILE_DEBUG} || \
@@ -321,6 +334,7 @@ function install_grub() {
   done
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} update-grub
   for dir in dev proc sys; do
     [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
@@ -329,12 +343,14 @@ function install_grub() {
 }
 
 function end() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sync;sync" &>> ${FILE_DEBUG} || \
-  sync;sync
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sync" &>> ${FILE_DEBUG} || \
+  sync
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${HOME_PARTITION}
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${ROOT_PARTITION}
+  [ ${DEBUG} = "true" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
+  echo "Installazione terminata."
 }
 
 function run_inst {
