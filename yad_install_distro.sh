@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+#---------------------------VARS----------------------------------------
 ROOT_PARTITION="sda1"
 USE_HOME="FALSE"
 HOME_PARTITION=
@@ -39,7 +41,7 @@ for (( i=0; i <= length; i++ )); do
 done
 #------------------------------functions--------------------------------
 function error_exit() {
-  echo "C'è stato un problema..."
+  yad --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="C'è stato un problema... Esco. "
   exit
 }
 
