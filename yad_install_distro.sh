@@ -24,6 +24,8 @@ USER=
 USER_PASSWORD=
 CRYPT_PASSWORD=
 CRYPT_ROOT_PASSWORD=
+MESSAGE="C'è stato un problema... Esco. "
+
 #-----------------------------------------------------------------------
 PARTITIONS="$(awk '{if ($4 ~ /[hs]d[a-z][1-9]/) print $4}' /proc/partitions)"
 PART_ARRAY=($PARTITIONS)
@@ -41,7 +43,7 @@ for (( i=0; i <= length; i++ )); do
 done
 #------------------------------functions--------------------------------
 function error_exit() {
-  yad --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="C'è stato un problema... Esco. "
+  yad --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
   exit
 }
 
@@ -78,7 +80,7 @@ done
 }
 
 function set_options() {
-  result=$(yad --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text="Opzioni modificabili. Il nome  utente e la password sono obbligatori" \
+  result=$(yad --center --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text="Opzioni modificabili. Il nome  utente e la password sono obbligatori" \
   --field="Nome distro:" "$DISTRO" \
   --field="Partizione di root:cb" "$partitionslist" \
   --field="Drive di installazione::cb" "$diskslist" \
@@ -109,10 +111,27 @@ function set_options() {
   fi
 }
 
+function check_options() {
+  
+  if [ ${YES_NO} = "si" ] && [ -z ${USER} ]; then
+    MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
+    error_exit
+  fi
+  if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_PASSWORD} ]; then
+    MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
+    error_exit
+  fi
+  if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_ROOT_PASSWORD} ]; then
+    MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
+    error_exit
+  fi
+  [ $YES_NO = "FALSE" ] && yad --center --button=gtk-close --image=gtk-dialog-info --text="Script verificato. OK."
+}
+
 function set_home_partition() {
   if [ $USE_HOME="TRUE" ]; then
     list=$(echo ${partitionslist//$ROOT_PARTITION!/})
-    res=$(yad --form --image "dialog-question" --separator='\n' \
+    res=$(yad --center --form --image "dialog-question" --separator='\n' \
       --field="Partizione home:cb" "$list" \
       --field="Formattare lapartizione:chk" $FORMAT_HOME
     )
@@ -123,7 +142,7 @@ function set_home_partition() {
 }
 
 function set_user() {
-  res=$(yad --form --image="dialog-question" --separator='\n' \
+  res=$(yad --center --form --image="dialog-question" --separator='\n' \
     --field="Nome utente:" $USER \
     --field="Password:h"
   )
@@ -134,14 +153,15 @@ function set_user() {
 }
 
 function set_root_password() {
-  res=$(yad --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
+  res=$(yad --center --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
   [ $res ] && CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${res}) || error_exit
 }
 
 function run_inst(){
   parse_opts
-  set_options
-  [ $USE_HOME = "TRUE" ] && set_home_partition
+  [ $YES_NO = "FALSE" ] && set_options
+  check_options
+  [ $USE_HOME = "TRUE" ] && [ -z $HOME_PARTITION ] && set_home_partition
   [ -z $USER ] && set_user
   [ -z $CRYPT_PASSWORD ] && set_user
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
@@ -153,3 +173,5 @@ run_inst
 echo $USER
 echo $CRYPT_PASSWORD
 echo $CRYPT_ROOT_PASSWORD
+echo $HOME_PARTITION
+echo $USE_HOME
