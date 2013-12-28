@@ -41,10 +41,55 @@ length=$((${#DISKS_ARRAY[@]} - 1))
 for (( i=0; i <= length; i++ )); do
   [[ $i -lt $length ]] && diskslist+="${DISKS_ARRAY[$i]}"! || diskslist+="${DISKS_ARRAY[$i]}"
 done
+
+#
 #------------------------------functions--------------------------------
+#
+
 function error_exit() {
   yad --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
   exit
+}
+
+function check_debug() {
+  if [ ${DEBUG} = "TRUE" ]; then
+    echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug iniziato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
+    echo "debug_info ${LINENO}:Debug abilitato." &>> ${FILE_DEBUG}
+    echo -e "debug_info Variabili:
+      DEBUG=${DEBUG}
+      FILE_DEBUG=${FILE_DEBUG}
+      DISTRO=${DISTRO}
+      INST_DRIVE=${INST_DRIVE}
+      ROOT_PARTITION=${ROOT_PARTITION}
+      UUID_ROOT_PARTITION=${UUID_ROOT_PARTITION}
+      HOME_PARTITION=${HOME_PARTITION}
+      UUID_HOME_PARTITION=${UUID_HOME_PARTITION}
+      FORMAT_HOME=${FORMAT_HOME}
+      SWAP_PARTITION=${SWAP_PARTITION}
+      UUID_SWAP_PARTITION=${UUID_SWAP_PARTITION}
+      INST_ROOT_DIRECTORY=${INST_ROOT_DIRECTORY}
+      TYPE_FS=${TYPE_FS}
+      USER=${USER}
+      CRYPT_PASSWORD=${CRYPT_PASSWORD}
+      CRYPT_ROOT_PASSWORD=${CRYPT_ROOT_PASSWORD}
+      YES_NO=${YES_NO}
+      LOCALE=${LOCALE}
+      LANG=${LANG}
+      KEYBOARD=${KEYBOARD}
+      HOSTNAME=${HOSTNAME}
+      ADD_GROUPS=${ADD_GROUPS}
+      TIMEZONE=${TIMEZONE}
+      SHELL_USER=${SHELL_USER}
+    " &>> ${FILE_DEBUG}
+  fi
+}
+
+function check_root() {
+  if [ ${UID} != 0 ]; then
+    MESSAGE="Devi essere root per eseguire questo script."
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:exit" &>> ${FILE_DEBUG} || \
+    error_exit
+  fi
 }
 
 function parse_opts() {
@@ -159,6 +204,8 @@ function set_root_password() {
 
 function run_inst(){
   parse_opts
+  check_debug
+  check_root
   [ $YES_NO = "FALSE" ] && set_options
   check_options
   [ $USE_HOME = "TRUE" ] && [ -z $HOME_PARTITION ] && set_home_partition
