@@ -51,39 +51,6 @@ function error_exit() {
   exit
 }
 
-function check_debug() {
-  if [ ${DEBUG} = "TRUE" ]; then
-    echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug iniziato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
-    echo "debug_info ${LINENO}:Debug abilitato." &>> ${FILE_DEBUG}
-    echo -e "debug_info Variabili:
-      DEBUG=${DEBUG}
-      FILE_DEBUG=${FILE_DEBUG}
-      DISTRO=${DISTRO}
-      INST_DRIVE=${INST_DRIVE}
-      ROOT_PARTITION=${ROOT_PARTITION}
-      UUID_ROOT_PARTITION=${UUID_ROOT_PARTITION}
-      HOME_PARTITION=${HOME_PARTITION}
-      UUID_HOME_PARTITION=${UUID_HOME_PARTITION}
-      FORMAT_HOME=${FORMAT_HOME}
-      SWAP_PARTITION=${SWAP_PARTITION}
-      UUID_SWAP_PARTITION=${UUID_SWAP_PARTITION}
-      INST_ROOT_DIRECTORY=${INST_ROOT_DIRECTORY}
-      TYPE_FS=${TYPE_FS}
-      USER=${USER}
-      CRYPT_PASSWORD=${CRYPT_PASSWORD}
-      CRYPT_ROOT_PASSWORD=${CRYPT_ROOT_PASSWORD}
-      YES_NO=${YES_NO}
-      LOCALE=${LOCALE}
-      LANG=${LANG}
-      KEYBOARD=${KEYBOARD}
-      HOSTNAME=${HOSTNAME}
-      ADD_GROUPS=${ADD_GROUPS}
-      TIMEZONE=${TIMEZONE}
-      SHELL_USER=${SHELL_USER}
-    " &>> ${FILE_DEBUG}
-  fi
-}
-
 function check_root() {
   if [ ${UID} != 0 ]; then
     MESSAGE="Devi essere root per eseguire questo script."
@@ -156,17 +123,50 @@ function set_options() {
   fi
 }
 
+function check_debug() {
+  if [ ${DEBUG} = "TRUE" ]; then
+    echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug iniziato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
+    echo "debug_info ${LINENO}:Debug abilitato." &>> ${FILE_DEBUG}
+    echo -e "debug_info Variabili:
+      DEBUG=${DEBUG}
+      FILE_DEBUG=${FILE_DEBUG}
+      DISTRO=${DISTRO}
+      INST_DRIVE=${INST_DRIVE}
+      ROOT_PARTITION=${ROOT_PARTITION}
+      UUID_ROOT_PARTITION=${UUID_ROOT_PARTITION}
+      HOME_PARTITION=${HOME_PARTITION}
+      UUID_HOME_PARTITION=${UUID_HOME_PARTITION}
+      FORMAT_HOME=${FORMAT_HOME}
+      SWAP_PARTITION=${SWAP_PARTITION}
+      UUID_SWAP_PARTITION=${UUID_SWAP_PARTITION}
+      INST_ROOT_DIRECTORY=${INST_ROOT_DIRECTORY}
+      TYPE_FS=${TYPE_FS}
+      USER=${USER}
+      CRYPT_PASSWORD=${CRYPT_PASSWORD}
+      CRYPT_ROOT_PASSWORD=${CRYPT_ROOT_PASSWORD}
+      YES_NO=${YES_NO}
+      LOCALE=${LOCALE}
+      LANG=${LANG}
+      KEYBOARD=${KEYBOARD}
+      HOSTNAME=${HOSTNAME}
+      ADD_GROUPS=${ADD_GROUPS}
+      TIMEZONE=${TIMEZONE}
+      SHELL_USER=${SHELL_USER}
+    " &>> ${FILE_DEBUG}
+  fi
+}
+
 function check_options() {
   
-  if [ ${YES_NO} = "si" ] && [ -z ${USER} ]; then
+  if [ ${YES_NO} = "TRUE" ] && [ -z ${USER} ]; then
     MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
     error_exit
   fi
-  if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_PASSWORD} ]; then
+  if [ ${YES_NO} = "TRUE" ] && [ -z ${CRYPT_PASSWORD} ]; then
     MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
     error_exit
   fi
-  if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_ROOT_PASSWORD} ]; then
+  if [ ${YES_NO} = "TRUE" ] && [ -z ${CRYPT_ROOT_PASSWORD} ]; then
     MESSAGE="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
     error_exit
   fi
@@ -192,33 +192,130 @@ function set_user() {
     --field="Password:h"
   )
   array=($res)
-  [ ${array[0]} ] && USER=${array[0]} || error_exit
-  [ ${array[1]} ] && USER_PASSWORD=${array[1]} || error_exit
+  if [ ${array[0]} ]; then 
+    USER=${array[0]}
+  else
+    MESSAGE=" Bisogna inserire un nome utente. Esco. "
+    error_exit
+  fi
+  if [ ${array[1]} ]; then
+    USER_PASSWORD=${array[1]}
+  else
+    MESSAGE=" Bisogna inserire la password. Esco. "
+    error_exit
+  fi
   CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
 }
 
 function set_root_password() {
   res=$(yad --center --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
-  [ $res ] && CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${res}) || error_exit
+  if [ $res ]; then
+    CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${res})
+  else
+    MESSAGE=" Bisogna inserire una password! Esco. "
+    error_exit
+  fi
+}
+
+function create_root_and_mount_partition() {
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
+  IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
+  if [ ! -z "$IS_MOUNTED" ]; then
+    MESSAGE="La partizione è montata. Esco."
+    error_exit
+  fi
+  if [ ${YES_NO} = "FALSE" ]; then
+    yad --title="Attenzione!!!" \
+      --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
+      --button="gtk-ok=0" --button="gtk-close:1"
+    ret=$?
+    [[ $ret -eq 1 ]] && MESSAGE="Installazione interrotta" && error_exit
+  fi
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
+  UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  mkdir -p ${INST_ROOT_DIRECTORY}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
+}
+
+function create_home_and_mount_partition() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+  IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
+  if [ ! -z "$IS_MOUNTED" ]; then
+    MESSAGE="La partizione è montata. Esco."
+    error_exit
+  fi
+  if [ ! -z ${HOME_PARTITION} ]; then
+    if [ ${FORMAT_HOME} = "TRUE" ]; then
+      if [ ${YES_NO} = "FALSE" ]; then
+        yad --title="Attenzione!!!" \
+          --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
+          --button="gtk-ok=0" --button="gtk-close:1"
+        ret=$?
+        [[ $ret -eq 1 ]] && MESSAGE="Installazione interrotta" && error_exit
+      fi
+      [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+      mkfs -t ${TYPE_FS} ${HOME_PARTITION}
+    fi
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+    UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
+    mkdir -p ${INST_ROOT_DIRECTORY}/home
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
+    mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
+  fi
+}
+
+function copy_root() {
+  SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
+}
+
+function add_user() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
+  if [ $? -eq 0 ]; then echo "User has been added to system!" 
+  else
+    echo "Failed to add a user!";
+    exit
+  fi
 }
 
 function run_inst(){
   parse_opts
-  check_debug
   check_root
   [ $YES_NO = "FALSE" ] && set_options
+  check_debug
   check_options
   [ $USE_HOME = "TRUE" ] && [ -z $HOME_PARTITION ] && set_home_partition
   [ -z $USER ] && set_user
   [ -z $CRYPT_PASSWORD ] && set_user
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
+  #create_root_and_mount_partition
+  #create_home_and_mount_partition
+  #copy_root
+  #add_user
+  #add_sudo_user
+  #create_fstab
+  #set_locale
+  #set_timezone
+  #set_hostname
+  #update_minidlna
+  #install_grub
+  #end
 }
+
 #---------------------------MAIN----------------------------------------
+
 TEMP=$(getopt -o c:C:d:DfF:g:hH:i:k:l:L:n:r:s:S:t:T:u:y --long crypt-password:,crypt-root-password:,inst-drive:,debug,format-home,file-debug:,groups:,help,home-partition:,inst-root-directory:,keyboard:,locale:,language:,hostname:,root-partition:,swap-partition:,shell-user:,type-fs:,timezone:,user:,yes -n 'yad_install_distro.sh' -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 run_inst
-echo $USER
-echo $CRYPT_PASSWORD
-echo $CRYPT_ROOT_PASSWORD
-echo $HOME_PARTITION
-echo $USE_HOME
+#echo $USER
+#echo $CRYPT_PASSWORD
+#echo $CRYPT_ROOT_PASSWORD
+#echo $HOME_PARTITION
+#echo $USE_HOME
