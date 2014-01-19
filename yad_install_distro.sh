@@ -6,9 +6,10 @@ USE_HOME="FALSE"
 HOME_PARTITION=
 SWAP_PARTITION=
 FORMAT_HOME="FALSE"
-DEBUG="FALSE"
+DEBUG="TRUE"
 YES_NO="FALSE"
 FILE_DEBUG="./debug.txt"
+FILE_LOG="./log.txt"
 DISTRO="distro"
 INST_DRIVE="sda"
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -239,6 +240,7 @@ function create_root_and_mount_partition() {
   mkdir -p ${INST_ROOT_DIRECTORY}
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
   mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
+  echo -e "Montaggio di ${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}\n" >> ${FILE_LOG}
 }
 
 function create_home_and_mount_partition() {
@@ -271,18 +273,121 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
   SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
-  cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
 }
 
 function add_user() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
-  if [ $? -eq 0 ]; then echo "User has been added to system!" 
+  if [ $? -eq 0 ]; then echo "User has been added to system!"
   else
-    echo "Failed to add a user!";
-    exit
+    MESSAGE="Failed to add a user!"
+    error_exit
   fi
+}
+
+function add_sudo_user() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
+}
+
+function create_fstab() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+  cat > ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point> <type> <options> <dump> <pass>
+proc /proc proc defaults 0 0
+UUID=${UUID_ROOT_PARTITION} / ${TYPE_FS} errors=remount-ro 0 1
+EOF
+  if [ ! -z ${HOME_PARTITION} ]; then
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+    cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
+UUID=${UUID_HOME_PARTITION} /home ${TYPE_FS} defaults 0 2
+EOF
+  fi
+  if [ ! -z ${SWAP_PARTITION} ]; then
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_SWAP_PARTITION=\$(blkid -o value -s UUID ${SWAP_PARTITION})" &>> ${FILE_DEBUG} || \
+    UUID_SWAP_PARTITION=$(blkid -o value -s UUID ${SWAP_PARTITION})
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+    cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
+UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
+EOF
+  fi
+}
+
+function set_locale() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep \"${LOCALE}\")" &>> ${FILE_DEBUG} || \
+  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/${LOCALE}/\" ${INST_ROOT_DIRECTORY}/etc/locale.gen" &>> ${FILE_DEBUG} || \
+  sed -i "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} locale-gen" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} locale-gen
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep \"XKBLAYOUT\")" &>> ${FILE_DEBUG} || \
+  LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep "XKBLAYOUT")
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\\\"/\" ${INST_ROOT_DIRECTORY}/etc/default/keyboard" &>> ${FILE_DEBUG} || \
+  sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
+}
+
+function set_timezone() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/timezone" &>> ${FILE_DEBUG} || \
+  cat > ${INST_ROOT_DIRECTORY}/etc/timezone <<EOF
+${TIMEZONE}
+EOF
+}
+
+function set_hostname() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hostname" &>> ${FILE_DEBUG} || \
+  cat > ${INST_ROOT_DIRECTORY}/etc/hostname <<EOF
+${HOSTNAME}
+EOF
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hosts" &>> ${FILE_DEBUG} || \
+  cat > ${INST_ROOT_DIRECTORY}/etc/hosts <<EOF
+127.0.0.1       localhost ${HOSTNAME}
+::1             localhost ip6-localhost ip6-loopback
+fe00::0         ip6-localnet
+ff00::0         ip6-mcastprefix
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+EOF
+}
+
+function update_minidlna() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
+  sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
+}
+
+function install_grub() {
+  for dir in dev proc sys; do
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
+    mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}
+  done
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} update-grub
+  for dir in dev proc sys; do
+    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
+    umount ${INST_ROOT_DIRECTORY}/${dir}
+  done
+}
+
+function end() {
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sync" &>> ${FILE_DEBUG} || \
+  sync
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+  umount ${HOME_PARTITION}
+  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  umount ${ROOT_PARTITION}
+  [ ${DEBUG} = "true" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
+  echo "Installazione terminata."
 }
 
 function run_inst(){
@@ -295,6 +400,8 @@ function run_inst(){
   [ -z $USER ] && set_user
   [ -z $CRYPT_PASSWORD ] && set_user
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
+  tail ${FILE_LOG}|yad --text-info --on-top --width=200 --height=200 --timeout=10 --no-buttons --center --no-markup --tail &
+  PROC_ID=$!
   #create_root_and_mount_partition
   #create_home_and_mount_partition
   #copy_root
@@ -313,6 +420,7 @@ function run_inst(){
 
 TEMP=$(getopt -o c:C:d:DfF:g:hH:i:k:l:L:n:r:s:S:t:T:u:y --long crypt-password:,crypt-root-password:,inst-drive:,debug,format-home,file-debug:,groups:,help,home-partition:,inst-root-directory:,keyboard:,locale:,language:,hostname:,root-partition:,swap-partition:,shell-user:,type-fs:,timezone:,user:,yes -n 'yad_install_distro.sh' -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+echo -e "#------Inizio installazione: $(date)---------#\n"> ${FILE_LOG}
 run_inst
 #echo $USER
 #echo $CRYPT_PASSWORD

@@ -255,7 +255,7 @@ function change_root_password() {
   chroot ${INST_ROOT_DIRECTORY} bash -c "echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e"
 }
 
-create_fstab() {
+function create_fstab() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 # /etc/fstab: static file system information.
