@@ -48,14 +48,15 @@ done
 #
 
 function error_exit() {
-  yad --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
+  yad --center --top --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
+  echo ${MESSAGE}>>${FILE_LOG}
   exit
 }
 
 function check_root() {
   if [ ${UID} != 0 ]; then
     MESSAGE="Devi essere root per eseguire questo script."
-    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:exit" &>> ${FILE_DEBUG} || \
+    #[ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:exit" &>> ${FILE_DEBUG} || \
     error_exit
   fi
 }
@@ -268,6 +269,7 @@ function create_home_and_mount_partition() {
     mkdir -p ${INST_ROOT_DIRECTORY}/home
     [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
     mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
+    echo -e "Montaggio di ${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home\n" >> ${FILE_LOG}
   fi
 }
 
@@ -280,7 +282,7 @@ function copy_root() {
 function add_user() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
-  if [ $? -eq 0 ]; then echo "User has been added to system!"
+  if [ $? -eq 0 ]; then echo "User ${USER} has been added to system!">>${FILE_LOG}
   else
     MESSAGE="Failed to add a user!"
     error_exit
@@ -290,6 +292,7 @@ function add_user() {
 function add_sudo_user() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
+  echo -e "Aggiunto user ${USER} al gruppo 'sudo'.">>${FILE_LOG}
 }
 
 function create_fstab() {
@@ -319,6 +322,7 @@ EOF
 UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
   fi
+  echo -e "Aggiornato /etc/fstab.">>${FILE_LOG}
 }
 
 function set_locale() {
@@ -334,6 +338,7 @@ function set_locale() {
   LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep "XKBLAYOUT")
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\\\"/\" ${INST_ROOT_DIRECTORY}/etc/default/keyboard" &>> ${FILE_DEBUG} || \
   sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
+  echo -e "Settato locale a ${LOCALE}, la lingua a ${LANG} e la tastiera a ${KEYBOARD}">>${FILE_LOG}
 }
 
 function set_timezone() {
@@ -341,6 +346,7 @@ function set_timezone() {
   cat > ${INST_ROOT_DIRECTORY}/etc/timezone <<EOF
 ${TIMEZONE}
 EOF
+  echo -e "Settato timezona a ${TIMEZONE}">>${FILE_LOG}
 }
 
 function set_hostname() {
@@ -357,11 +363,13 @@ ff00::0         ip6-mcastprefix
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 EOF
+  echo -e "Settato hostname a ${HOSTNAME}.">>${FILE_LOG}
 }
 
 function update_minidlna() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
   sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
+  echo -e "Aggiornato 'minidlan.conf'.">>${FILE_LOG}
 }
 
 function install_grub() {
@@ -377,6 +385,7 @@ function install_grub() {
     [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     umount ${INST_ROOT_DIRECTORY}/${dir}
   done
+  echo -e "Installato grub su ${INST_DRIVE}.">>${FILE_LOG}
 }
 
 function end() {
@@ -402,18 +411,18 @@ function run_inst(){
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
   tail ${FILE_LOG}|yad --text-info --on-top --width=200 --height=200 --timeout=10 --no-buttons --center --no-markup --tail &
   PROC_ID=$!
-  #create_root_and_mount_partition
-  #create_home_and_mount_partition
-  #copy_root
-  #add_user
-  #add_sudo_user
-  #create_fstab
-  #set_locale
-  #set_timezone
-  #set_hostname
-  #update_minidlna
-  #install_grub
-  #end
+  create_root_and_mount_partition
+  create_home_and_mount_partition
+  copy_root
+  add_user
+  add_sudo_user
+  create_fstab
+  set_locale
+  set_timezone
+  set_hostname
+  update_minidlna
+  install_grub
+  end
 }
 
 #---------------------------MAIN----------------------------------------
@@ -422,8 +431,4 @@ TEMP=$(getopt -o c:C:d:DfF:g:hH:i:k:l:L:n:r:s:S:t:T:u:y --long crypt-password:,c
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 echo -e "#------Inizio installazione: $(date)---------#\n"> ${FILE_LOG}
 run_inst
-#echo $USER
-#echo $CRYPT_PASSWORD
-#echo $CRYPT_ROOT_PASSWORD
-#echo $HOME_PARTITION
-#echo $USE_HOME
+
