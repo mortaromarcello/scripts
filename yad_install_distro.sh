@@ -387,7 +387,7 @@ function end() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${ROOT_PARTITION}
   [ ${DEBUG} = "true" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
-  echo "Installazione terminata."
+  echo "Installazione terminata $(date)." >> ${FILE_LOG}
 }
 
 function run_inst(){
