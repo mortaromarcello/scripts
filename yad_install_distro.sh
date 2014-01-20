@@ -26,6 +26,7 @@ USER_PASSWORD=
 CRYPT_PASSWORD=
 CRYPT_ROOT_PASSWORD=
 MESSAGE="C'è stato un problema... Esco. "
+PROC_ID=
 
 #-----------------------------------------------------------------------
 PARTITIONS="$(awk '{if ($4 ~ /[hs]d[a-z][1-9]/) print $4}' /proc/partitions)"
@@ -48,8 +49,9 @@ done
 #
 
 function error_exit() {
-  yad --center --top --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
   echo ${MESSAGE}>>${FILE_LOG}
+  [[ $PROC_ID ]] && kill -9 ${PROC_ID}
+  yad --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="$MESSAGE"
   exit
 }
 
@@ -127,6 +129,7 @@ function set_options() {
 
 function check_debug() {
   if [ ${DEBUG} = "TRUE" ]; then
+    set -x
     echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug iniziato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG}
     echo "debug_info ${LINENO}:Debug abilitato." &>> ${FILE_DEBUG}
     echo -e "debug_info Variabili:
@@ -176,7 +179,7 @@ function check_options() {
 }
 
 function set_home_partition() {
-  if [ $USE_HOME="TRUE" ]; then
+  if [ $USE_HOME = "TRUE" ]; then
     list=$(echo ${partitionslist//$ROOT_PARTITION!/})
     res=$(yad --center --form --image "dialog-question" --separator='\n' \
       --field="Partizione home:cb" "$list" \
@@ -229,23 +232,23 @@ function create_root_and_mount_partition() {
   if [ ${YES_NO} = "FALSE" ]; then
     yad --title="Attenzione!!!" \
       --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
-      --button="gtk-ok=0" --button="gtk-close:1"
+      --button="gtk-ok:0" --button="gtk-close:1"
     ret=$?
     [[ $ret -eq 1 ]] && MESSAGE="Installazione interrotta" && error_exit
   fi
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
   mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
   UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
   mkdir -p ${INST_ROOT_DIRECTORY}
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
   mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
   echo -e "Montaggio di ${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}\n" >> ${FILE_LOG}
 }
 
 function create_home_and_mount_partition() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
   IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
   if [ ! -z "$IS_MOUNTED" ]; then
     MESSAGE="La partizione è montata. Esco."
@@ -256,18 +259,18 @@ function create_home_and_mount_partition() {
       if [ ${YES_NO} = "FALSE" ]; then
         yad --title="Attenzione!!!" \
           --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
-          --button="gtk-ok=0" --button="gtk-close:1"
+          --button="gtk-ok:0" --button="gtk-close:1"
         ret=$?
         [[ $ret -eq 1 ]] && MESSAGE="Installazione interrotta" && error_exit
       fi
-      [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+      [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
       mkfs -t ${TYPE_FS} ${HOME_PARTITION}
     fi
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
     UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
     mkdir -p ${INST_ROOT_DIRECTORY}/home
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
     mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
     echo -e "Montaggio di ${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home\n" >> ${FILE_LOG}
   fi
@@ -275,12 +278,13 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
   SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
   yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
+  echo -e "Copiato root system." >> ${FILE_LOG}
 }
 
 function add_user() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
   if [ $? -eq 0 ]; then echo "User ${USER} has been added to system!">>${FILE_LOG}
   else
@@ -290,13 +294,13 @@ function add_user() {
 }
 
 function add_sudo_user() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
   echo -e "Aggiunto user ${USER} al gruppo 'sudo'.">>${FILE_LOG}
 }
 
 function create_fstab() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 # /etc/fstab: static file system information.
 #
@@ -309,15 +313,15 @@ proc /proc proc defaults 0 0
 UUID=${UUID_ROOT_PARTITION} / ${TYPE_FS} errors=remount-ro 0 1
 EOF
   if [ ! -z ${HOME_PARTITION} ]; then
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
     cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 UUID=${UUID_HOME_PARTITION} /home ${TYPE_FS} defaults 0 2
 EOF
   fi
   if [ ! -z ${SWAP_PARTITION} ]; then
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:UUID_SWAP_PARTITION=\$(blkid -o value -s UUID ${SWAP_PARTITION})" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_SWAP_PARTITION=\$(blkid -o value -s UUID ${SWAP_PARTITION})" &>> ${FILE_DEBUG} || \
     UUID_SWAP_PARTITION=$(blkid -o value -s UUID ${SWAP_PARTITION})
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat >> ${INST_ROOT_DIRECTORY}/etc/fstab" &>> ${FILE_DEBUG} || \
     cat >> ${INST_ROOT_DIRECTORY}/etc/fstab <<EOF
 UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
@@ -326,23 +330,23 @@ EOF
 }
 
 function set_locale() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep \"${LOCALE}\")" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep \"${LOCALE}\")" &>> ${FILE_DEBUG} || \
   LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/${LOCALE}/\" ${INST_ROOT_DIRECTORY}/etc/locale.gen" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/${LOCALE}/\" ${INST_ROOT_DIRECTORY}/etc/locale.gen" &>> ${FILE_DEBUG} || \
   sed -i "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} locale-gen" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} locale-gen" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} locale-gen
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep \"XKBLAYOUT\")" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:LINE=\$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep \"XKBLAYOUT\")" &>> ${FILE_DEBUG} || \
   LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep "XKBLAYOUT")
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\\\"/\" ${INST_ROOT_DIRECTORY}/etc/default/keyboard" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:sed -i \"s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\\\"/\" ${INST_ROOT_DIRECTORY}/etc/default/keyboard" &>> ${FILE_DEBUG} || \
   sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
   echo -e "Settato locale a ${LOCALE}, la lingua a ${LANG} e la tastiera a ${KEYBOARD}">>${FILE_LOG}
 }
 
 function set_timezone() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/timezone" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/timezone" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/timezone <<EOF
 ${TIMEZONE}
 EOF
@@ -350,11 +354,11 @@ EOF
 }
 
 function set_hostname() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hostname" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hostname" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/hostname <<EOF
 ${HOSTNAME}
 EOF
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hosts" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hosts" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/hosts <<EOF
 127.0.0.1       localhost ${HOSTNAME}
 ::1             localhost ip6-localhost ip6-loopback
@@ -367,36 +371,37 @@ EOF
 }
 
 function update_minidlna() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
   sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
   echo -e "Aggiornato 'minidlan.conf'.">>${FILE_LOG}
 }
 
 function install_grub() {
   for dir in dev proc sys; do
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}
   done
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} update-grub
   for dir in dev proc sys; do
-    [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     umount ${INST_ROOT_DIRECTORY}/${dir}
   done
   echo -e "Installato grub su ${INST_DRIVE}.">>${FILE_LOG}
 }
 
 function end() {
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sync" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:sync" &>> ${FILE_DEBUG} || \
   sync
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${HOME_PARTITION}
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
   umount ${ROOT_PARTITION}
-  [ ${DEBUG} = "true" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
+  [ ${DEBUG} = "TRUE" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
   echo "Installazione terminata $(date)." >> ${FILE_LOG}
+  kill -9 ${PROC_ID}
 }
 
 function run_inst(){
@@ -409,7 +414,7 @@ function run_inst(){
   [ -z $USER ] && set_user
   [ -z $CRYPT_PASSWORD ] && set_user
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
-  tail ${FILE_LOG}|yad --text-info --on-top --width=200 --height=200 --timeout=10 --no-buttons --center --no-markup --tail &
+  tail -f ${FILE_LOG} | yad --text-info --on-top --width=460 --height=200 --no-buttons --center --no-markup --tail &
   PROC_ID=$!
   create_root_and_mount_partition
   create_home_and_mount_partition
