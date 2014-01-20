@@ -25,7 +25,11 @@ USER=
 USER_PASSWORD=
 CRYPT_PASSWORD=
 CRYPT_ROOT_PASSWORD=
+<<<<<<< HEAD
 MESSAGE=" C'è stato un problema... Esco. "
+=======
+MESSAGE="C'è stato un problema... Esco. "
+>>>>>>> 97b0bd61c7304fd608c9402786e242346d3bd75b
 PROC_ID=
 
 #-----------------------------------------------------------------------
@@ -236,7 +240,10 @@ function create_root_and_mount_partition() {
   fi
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
   mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
+<<<<<<< HEAD
   echo -e " Formattata la partizione ${ROOT_PARTITION}. " >> ${FILE_LOG}
+=======
+>>>>>>> 97b0bd61c7304fd608c9402786e242346d3bd75b
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
   UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
