@@ -12,6 +12,7 @@ DEBUG="FALSE"
 YES_NO="FALSE"
 FILE_DEBUG="./debug.txt"
 FILE_LOG="./log.txt"
+FILES_WRITTEN="./files.writes"
 DISTRO="distro"
 INST_DRIVE="sda"
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -188,11 +189,13 @@ function set_home_partition() {
     arr=($res)
     HOME_PARTITION=${arr[0]}
     FORMAT_HOME=${arr[1]}
+    echo -e "Partizione di home /dev/${HOME_PARTITION}" >> ${FILE_LOG}
   fi
 }
 
 function set_swap_partition() {
-  SWAP_PARTITION=$(sudo fdisk -l|awk '{if ($0 ~ /[Ss]wap/) print $1}')
+  SWAP_PARTITION=$(fdisk -l|awk '{if ($0 ~ /[Ss]wap/) print $1}')
+  echo -e "Trovata partizione di swap ${SWAP_PARTITION}." >> ${FILE_LOG}
 }
 
 function set_user() {
@@ -214,6 +217,7 @@ function set_user() {
     error_exit
   fi
   CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
+  echo -e "Utente ${USER}, password criptata ${CRYPT_PASSWORD}" >> ${FILE_LOG}
 }
 
 function set_root_password() {
@@ -224,6 +228,7 @@ function set_root_password() {
     MESSAGE=" Bisogna inserire una password! Esco. "
     error_exit
   fi
+  echo -e "Password criptata di root ${CRYPT_ROOT_PASSWORD}" >> ${FILE_LOG}
 }
 
 function create_root_and_mount_partition() {
@@ -286,7 +291,7 @@ function copy_root() {
   SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
   echo -e "#-Inizio copia del root system-#" >> ${FILE_LOG}
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
-  rsync -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY} >> ${FILE_LOG}
+  rsync -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY} > ${FILES_WRITTEN}
   echo -e "#-Fine copia del root system-#" >> ${FILE_LOG}
 }
 
