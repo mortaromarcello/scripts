@@ -1,6 +1,8 @@
 #!/bin/bash
 # sistemare la partizione di swap
 #---------------------------VARS----------------------------------------
+set -x
+#-----------------------------------------------------------------------
 ROOT_PARTITION="sda1"
 USE_HOME="FALSE"
 HOME_PARTITION=
@@ -95,7 +97,7 @@ done
 }
 
 function set_options() {
-  result=$(yad --center --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text="Opzioni modificabili. Il nome  utente e la password sono obbligatori" \
+  result=$(yad --center --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text=" Opzioni modificabili " \
   --field="Nome distro:" "$DISTRO" \
   --field="Partizione di root:cb" "$partitionslist" \
   --field="Drive di installazione::cb" "$diskslist" \
@@ -181,12 +183,16 @@ function set_home_partition() {
     list=$(echo ${partitionslist//$ROOT_PARTITION!/})
     res=$(yad --center --form --image "dialog-question" --separator='\n' \
       --field="Partizione home:cb" "$list" \
-      --field="Formattare lapartizione:chk" $FORMAT_HOME
+      --field="Formattare la partizione:chk" $FORMAT_HOME
     )
     arr=($res)
-    HOME_PARTITION=${res[0]}
-    FORMAT_HOME=${res[1]}
+    HOME_PARTITION=${arr[0]}
+    FORMAT_HOME=${arr[1]}
   fi
+}
+
+function set_swap_partition() {
+  SWAP_PARTITION=$(sudo fdisk -l|awk '{if ($0 ~ /[Ss]wap/) print $1}')
 }
 
 function set_user() {
@@ -221,34 +227,34 @@ function set_root_password() {
 }
 
 function create_root_and_mount_partition() {
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
-  IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep /dev/${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
+  IS_MOUNTED=$(mount|grep /dev/${ROOT_PARTITION})
   if [ ! -z "$IS_MOUNTED" ]; then
     MESSAGE=" La partizione è montata. Esco. "
     error_exit
   fi
   if [ ${YES_NO} = "FALSE" ]; then
     yad --title="Attenzione!!!" \
-      --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
+      --image=gtk-dialog-warning --text="Attenzione! La partizione /dev/${ROOT_PARTITION} sarà formattata! Continuo?" \
       --button="gtk-ok:0" --button="gtk-close:1"
     ret=$?
     [[ $ret -eq 1 ]] && MESSAGE=" Installazione interrotta " && error_exit
   fi
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
-  mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
-  echo -e " Formattata la partizione ${ROOT_PARTITION}. " >> ${FILE_LOG}
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID ${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
-  UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  mkfs -t ${TYPE_FS} /dev/${ROOT_PARTITION}
+  echo -e " Formattata la partizione /dev/${ROOT_PARTITION}. " >> ${FILE_LOG}
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID /dev/${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
+  UUID_ROOT_PARTITION=$(blkid -o value -s UUID /dev/${ROOT_PARTITION})
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
   mkdir -p ${INST_ROOT_DIRECTORY}
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
-  mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
-  echo -e "Montaggio di ${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}\n" >> ${FILE_LOG}
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount /dev/${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
+  mount /dev/${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
+  echo -e "Montaggio di /dev/${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}\n" >> ${FILE_LOG}
 }
 
 function create_home_and_mount_partition() {
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
-  IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:IS_MOUNTED=\$(mount|grep /dev/${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+  IS_MOUNTED=$(mount|grep /dev/${HOME_PARTITION})
   if [ ! -z "$IS_MOUNTED" ]; then
     MESSAGE=" La partizione è montata. Esco. "
     error_exit
@@ -257,30 +263,31 @@ function create_home_and_mount_partition() {
     if [ ${FORMAT_HOME} = "TRUE" ]; then
       if [ ${YES_NO} = "FALSE" ]; then
         yad --title="Attenzione!!!" \
-          --image=gtk-dialog-warning --text="Attenzione! La partizione ${ROOT_PARTITION} sarà formattata! Continuo?" \
+          --image=gtk-dialog-warning --text="Attenzione! La partizione /dev/${HOME_PARTITION} sarà formattata! Continuo?" \
           --button="gtk-ok:0" --button="gtk-close:1"
         ret=$?
         [[ $ret -eq 1 ]] && MESSAGE=" Installazione interrotta " && error_exit
       fi
-      [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
-      mkfs -t ${TYPE_FS} ${HOME_PARTITION}
-      echo -e " Formattata la partizione ${HOME_PARTITION} " >> ${FILE_LOG}
+      [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+      mkfs -t ${TYPE_FS} /dev/${HOME_PARTITION}
+      echo -e " Formattata la partizione /dev/${HOME_PARTITION} " >> ${FILE_LOG}
     fi
-    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID ${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
-    UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID /dev/${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
+    UUID_HOME_PARTITION=$(blkid -o value -s UUID /dev/${HOME_PARTITION})
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
     mkdir -p ${INST_ROOT_DIRECTORY}/home
-    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
-    mount ${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
-    echo -e "Montaggio di ${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home\n" >> ${FILE_LOG}
+    [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount /dev/${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
+    mount /dev/${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
+    echo -e "Montaggio di /dev/${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home\n" >> ${FILE_LOG}
   fi
 }
 
 function copy_root() {
   SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
+  echo -e "#-Inizio copia del root system-#" >> ${FILE_LOG}
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
-  yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
-  echo -e "Copiato root system." >> ${FILE_LOG}
+  rsync -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY} >> ${FILE_LOG}
+  echo -e "#-Fine copia del root system-#" >> ${FILE_LOG}
 }
 
 function add_user() {
@@ -381,24 +388,24 @@ function install_grub() {
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}
   done
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
-  chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy /dev/${INST_DRIVE}" &>> ${FILE_DEBUG} || \
+  chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy /dev/${INST_DRIVE}
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} update-grub
   for dir in dev proc sys; do
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
     umount ${INST_ROOT_DIRECTORY}/${dir}
   done
-  echo -e "Installato grub su ${INST_DRIVE}.">>${FILE_LOG}
+  echo -e "Installato grub su /dev/${INST_DRIVE}.">>${FILE_LOG}
 }
 
 function end() {
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:sync" &>> ${FILE_DEBUG} || \
   sync
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
-  umount ${HOME_PARTITION}
-  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
-  umount ${ROOT_PARTITION}
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount /dev/${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
+  umount /dev/${HOME_PARTITION}
+  [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount /dev/${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+  umount /dev/${ROOT_PARTITION}
   [ ${DEBUG} = "TRUE" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
   echo "Installazione terminata $(date)." >> ${FILE_LOG}
   kill -9 ${PROC_ID}
@@ -411,6 +418,7 @@ function run_inst(){
   check_debug
   check_options
   [ $USE_HOME = "TRUE" ] && [ -z $HOME_PARTITION ] && set_home_partition
+  [ -z $SWAP_PARTITION ] && set_swap_partition
   [ -z $USER ] && set_user
   [ -z $CRYPT_PASSWORD ] && set_user
   [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
@@ -434,6 +442,6 @@ function run_inst(){
 
 TEMP=$(getopt -o c:C:d:DfF:g:hH:i:k:l:L:n:r:s:S:t:T:u:y --long crypt-password:,crypt-root-password:,inst-drive:,debug,format-home,file-debug:,groups:,help,home-partition:,inst-root-directory:,keyboard:,locale:,language:,hostname:,root-partition:,swap-partition:,shell-user:,type-fs:,timezone:,user:,yes -n 'yad_install_distro.sh' -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
-echo -e "#------Inizio installazione: $(date)---------#\n"> ${FILE_LOG}
+echo -e "#---Inizio installazione: $(date)---#\n"> ${FILE_LOG}
 run_inst
 
