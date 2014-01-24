@@ -359,8 +359,7 @@ function set_locale() {
 
 function set_timezone() {
   [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/timezone" &>> ${FILE_DEBUG} || \
-  cat > ${INST_ROOT_DIRECTORY}/etc/timezone <<EOF
-${TIMEZONE}
+  cp -v ${INST_ROOT_DIRECTORY}/usr/share/zoneinfo/${TIMEZONE} ${INST_ROOT_DIRECTORY}/etc/timezone
 EOF
   echo -e "Settato timezona a ${TIMEZONE}">>${FILE_LOG}
 }
