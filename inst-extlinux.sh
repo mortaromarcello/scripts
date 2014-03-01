@@ -23,10 +23,10 @@ fi
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
-	echo "Sovrascrivo la tabella delle partizioni."
+	echo "Sovrascrivo la tabella delle partizioni. (premi Invio)"
 	read
 	parted -s ${1} mktable msdos
-	echo "Creo la partizione primaria ext2 di ${3}Mbytes."
+	echo "Creo la partizione primaria ext2 di ${SIZE_PRIMARY_PART}Mbytes. (premi Invio)"
 	read
 	echo -e ",${SIZE_PRIMARY_PART},83,*\n,,83" | sfdisk -u M ${1}
 	echo "Formatto le partizioni."
