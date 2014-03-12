@@ -29,10 +29,10 @@ LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
-if [ "$(groups|grep android)" ]; then
+if [ "$(cat /etc/group|grep android)" ]; then
   ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
 else
-  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,"
+  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev"
 fi
 TIMEZONE="Europe/Rome"
 SHELL_USER="/bin/bash"
