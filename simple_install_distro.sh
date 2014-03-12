@@ -29,7 +29,7 @@ LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
-ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
+ADD_GROUPS=$(groups)
 TIMEZONE="Europe/Rome"
 SHELL_USER="/bin/bash"
 
@@ -123,7 +123,6 @@ function check_script() {
 put_info() {
   echo "Debug abilitato                   :" ${DEBUG}
   echo "Partizione di installazione (root):" ${ROOT_PARTITION}
-  #echo "UUID                              :" ${UUID_ROOT_PARTITION}
   if [ ! -z ${HOME_PARTITION} ]; then
     echo "Partizione di home                :" ${HOME_PARTITION}
     echo "UUID                              :" ${UUID_HOME_PARTITION}
@@ -145,6 +144,7 @@ put_info() {
   if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
     echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
   fi
+  echo "Gruppi                            :" ${GROUPS}
   echo "Locale                            :" ${LOCALE}
   echo "Tastiera                          :" ${KEYBOARD}
   echo "Lingua                            :" ${LANG}
