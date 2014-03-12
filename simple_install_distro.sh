@@ -29,7 +29,11 @@ LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
-ADD_GROUPS=$(groups)
+if [ "$(groups|grep android)" ]; then
+  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
+else
+  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,"
+fi
 TIMEZONE="Europe/Rome"
 SHELL_USER="/bin/bash"
 
@@ -144,7 +148,7 @@ put_info() {
   if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
     echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
   fi
-  echo "Gruppi                            :" ${GROUPS}
+  echo "Gruppi                            :" ${ADD_GROUPS}
   echo "Locale                            :" ${LOCALE}
   echo "Tastiera                          :" ${KEYBOARD}
   echo "Lingua                            :" ${LANG}
