@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import sys, re, os, crypt, time, commands, random, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, crypt, time, random, string, subprocess, wx, parted, parted.disk, logging
 from optparse import OptionParser
 
 # variabili globali
@@ -9,7 +9,7 @@ _ = wx.GetTranslation
 padding = 5 # pixels fra gli oggetti delle box
 
 #
-def getsalt(chars = string.letters + string.digits):
+def getsalt(chars=string.letters + string.digits):
   """ generate a random 2-character 'salt' """
 # generate a random 2-character 'salt'
   return random.choice(chars) + random.choice(chars)
@@ -432,16 +432,16 @@ class MyFrame(wx.Frame):
     Glob.PROC_ERROR = proc.returncode
     if not Glob.PROC_ERROR:
       Glob.UUID_ROOT_PARTITION = blkid(Glob.ROOT_PARTITION)
-    else: checkError()
+    else: self.checkError()
     logging.debug("uuid root partition:%s" % Glob.UUID_ROOT_PARTITION)
     if not Glob.PROC_ERROR: 
       proc = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY))
       Glob.PROC_ERROR = proc.returncode
-    else: checkError()
+    else: self.checkError()
     if not Glob.PROC_ERROR: 
       proc = runProcess("mount %s %s" % (Glob.ROOT_PARTITION, Glob.INST_ROOT_DIRECTORY))
       Glob.PROC_ERROR = proc.returncode
-    else: checkError()
+    else: self.checkError()
   
   def createHomeAndMountPartition(self):
     """ """
@@ -452,7 +452,7 @@ class MyFrame(wx.Frame):
     if Glob.FORMAT_HOME:
       proc = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.HOME_PARTITION))
       Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: checkError()
+      if Glob.PROC_ERROR: self.checkError()
     Glob.UUID_HOME_PARTITION = blkid(Glob.HOME_PARTITION)
     print Glob.UUID_HOME_PARTITION
     proc = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY + '/home'))
@@ -460,8 +460,8 @@ class MyFrame(wx.Frame):
     if not Glob.PROC_ERROR: 
       proc = runProcess("mount %s %s" % (Glob.HOME_PARTITION, Glob.INST_ROOT_DIRECTORY + '/home'))
       Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: checkError()
-    else: checkError()
+      if Glob.PROC_ERROR: self.checkError()
+    else: self.checkError()
   
   def copyRoot(self):
     """ """
