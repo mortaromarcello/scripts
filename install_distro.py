@@ -294,7 +294,7 @@ class MyPanel(wx.Panel):
     else: Glob.CRYPT_ROOT_PASSWORD = ''
     Glob.LOCALE = self.locale.GetValue()
     Glob.LANG = self.lang.GetValue()
-    Glob.KEYBOARD = self.lang.GetValue()
+    Glob.KEYBOARD = self.keyboard.GetValue()
     Glob.HOSTNAME = self.hostname.GetValue()
     Glob.GROUPS = self.groups.GetValue()
     Glob.TIMEZONE = self.timezone.GetValue()
