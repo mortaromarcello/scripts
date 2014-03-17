@@ -375,19 +375,11 @@ class MyFrame(wx.Frame):
     else:
       self.endInstall()
       self.Close()
-  
-  #def onClickPartiziona(self, evt):
-  #  """ """
-  #  print 'onClickPartiziona'
-    #proc = runProcess("/usr/sbin/gparted;kill -KILL %s;/usr/bin/python %s" % (Glob.PID, sys.argv[0]))
-    #Glob.PROC_ERROR = proc.returncode
-    #if not Glob.PROC_ERROR:
-    #  self.initDisks()
-    #self.panel.Hide()
-  
+    
   def goInstall(self):
     """ """
     print 'GoInstall'
+    self.SetStatusText('Inizio installazione...')
     if not self.checkRequisites():
       #---- codice controllo
       pass
@@ -418,6 +410,7 @@ class MyFrame(wx.Frame):
   def checkRequisites(self):
     """ controlla che i requisiti siano rispettati """
     print 'checkRequisites'
+    self.SetStatusText('Controllo i prerequisiti')
     if (not Glob.ROOT_PARTITION) or (not Glob.INST_DRIVE) or (not Glob.USER) or (not Glob.CRYPT_USER_PASSWORD) or (not Glob.CRYPT_ROOT_PASSWORD) or (not Glob.HOSTNAME) or (not Glob.GROUPS):
       wx.MessageBox(_("Non tutte le opzioni necessarie sono state assegnate. (Tutte le opzioni contrassegnate da un asterisco sono obbligatorie)"), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
       return False
@@ -434,6 +427,7 @@ class MyFrame(wx.Frame):
   def createRootAndMountPartition(self):
     """ """
     print 'createRootAndMountPartition'
+    self.SetStatusText('Creo il root filesystem e lo monto')
     proc = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.ROOT_PARTITION))
     Glob.PROC_ERROR = proc.returncode
     if not Glob.PROC_ERROR:
@@ -454,6 +448,7 @@ class MyFrame(wx.Frame):
     print 'createHomeAndMountPartition'
     if not Glob.HOME_PARTITION:
       return
+    self.SetStatusText('Creo e monto la HOME directory')
     if Glob.FORMAT_HOME:
       proc = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.HOME_PARTITION))
       Glob.PROC_ERROR = proc.returncode
@@ -471,6 +466,7 @@ class MyFrame(wx.Frame):
   def copyRoot(self):
     """ """
     print 'copyRoot'
+    self.SetStatusText('Copio i files (Ci può volere un pò di tempo)...')
     proc = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
     Glob.PROC_ERROR = proc.returncode
     if Glob.PROC_ERROR: self.checkError()
@@ -478,6 +474,7 @@ class MyFrame(wx.Frame):
   def addUser(self):
     """ """
     print 'addUser'
+    self.SetStatusText('Aggiungo l\'utente')
     proc = runProcess("chroot %s useradd -G %s -s %s -m -p %s %s" % (Glob.INST_ROOT_DIRECTORY, Glob.GROUPS, Glob.SHELL_USER, Glob.CRYPT_USER_PASSWORD, Glob.USER))
     Glob.PROC_ERROR = proc.returncode
     if Glob.PROC_ERROR: self.checkError()
@@ -485,6 +482,7 @@ class MyFrame(wx.Frame):
   def changeRootPassword(self):
     """ """
     print 'changeRootPassword'
+    self.SetStatusText('Cambio la password di root')
     proc = runProcess("chroot %s bash -c \"echo root:%s | chpasswd -e\"" % (Glob.INST_ROOT_DIRECTORY, Glob.CRYPT_ROOT_PASSWORD))
     Glob.PROC_ERROR = proc.returncode
     if Glob.PROC_ERROR: self.checkError()
@@ -492,13 +490,16 @@ class MyFrame(wx.Frame):
   def addSudoUser(self):
     """ """
     print 'addSudoUser'
+    self.SetStatusText('Aggiungo l\'utente al gruppo \'sudo\'')
     proc = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
     Glob.PROC_ERROR = proc.returncode
     if Glob.PROC_ERROR: self.checkError()
   
   def setAutologin(self):
     """ """
+    if not Glob.AUTOLOGIN: return
     print 'setAutologin'
+    self.SetStatusText('Setto l\'autologin')
     if not os.path.isfile('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY): return
     f = open('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, 'r')
     dm = f.readline().split()
@@ -517,6 +518,7 @@ class MyFrame(wx.Frame):
   def createFstab(self):
     """ """
     print 'createFstab'
+    self.SetStatusText('Creo /etc/fstab')
     buff = "# /etc/fstab: static file system information.\n#\n# Use 'blkid' to print the universally unique identifier for a\n# device; this may be used with UUID= as a more robust way to name devices\n# that works even if disks are added and removed. See fstab(5).\n#\n# <file system> <mount point> <type> <options> <dump> <pass>\nproc /proc proc defaults 0 0\nUUID=%s / %s errors=remount-ro 0 1\n" % (Glob.UUID_ROOT_PARTITION, Glob.TYPE_FS)
     if Glob.UUID_HOME_PARTITION:
       buff = buff + "UUID=%s /home %s defaults 0 2\n" % (Glob.UUID_HOME_PARTITION, Glob.TYPE_FS)
@@ -530,6 +532,7 @@ class MyFrame(wx.Frame):
   def setLocale(self):
     """ """
     print 'setLocale'
+    self.SetStatusText('Setto locale')
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
     if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, Glob.LOCALE)
     line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XBLAYOUT')
@@ -545,6 +548,7 @@ class MyFrame(wx.Frame):
   def setTimezone(self):
     """" """
     print 'setTimezone'
+    self.SetStatusText('Setto timezone')
     f = open('%s/etc/timezone' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write('%s\n' % Glob.TIMEZONE)
     f.close()
@@ -552,11 +556,13 @@ class MyFrame(wx.Frame):
   def setHostname(self):
     """" """
     print 'setHostname'
+    self.SetStatusText('Setto hostname')
     f = open('%s/etc/hostname' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write("%s\n" % Glob.HOSTNAME)
     f.close()
   
   def updateMinidlna(self):
+    """ """
     if not os.path.isfile('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY): return
     print 'updateMinidlna'
     edsub('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY, 'live-user', Glob.USER)
@@ -564,6 +570,7 @@ class MyFrame(wx.Frame):
   def installGrub(self):
     """ """
     print 'installGrub'
+    self.SetStatusText('Installo grub')
     for dir in ['dev', 'sys', 'proc']:
       proc = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
       Glob.PROC_ERROR = proc.returncode
