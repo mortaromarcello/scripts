@@ -154,8 +154,8 @@ class MyPanel(wx.Panel):
   
   def initGui(self):
     """ """
-    img = wx.Image("image_h.png", wx.BITMAP_TYPE_ANY)
-    sb = wx.StaticBitmap(self, -1, wx.BitmapFromImage(img))
+    #img = wx.Image("image_h.png", wx.BITMAP_TYPE_ANY)
+    #sb = wx.StaticBitmap(self, -1, wx.BitmapFromImage(img))
     self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Inizializzazione ')), wx.VERTICAL)
     
     grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
@@ -242,7 +242,7 @@ class MyPanel(wx.Panel):
     horizontal_sizer.Add((50, -1))
     horizontal_sizer.Add(grid_sizer2)
     
-    self.sizer.Add(sb, 0, wx.ALIGN_CENTER|wx.ALL, padding)
+    #self.sizer.Add(sb, 0, wx.ALIGN_CENTER|wx.ALL, padding)
     self.sizer.Add(horizontal_sizer, 0, wx.EXPAND|wx.ALL, padding)
     self.sizer.Fit(self)
   
