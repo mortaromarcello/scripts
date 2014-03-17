@@ -522,14 +522,14 @@ class MyFrame(wx.Frame):
     f.close()
     if (dm == '/usr/sbin/gdm3'):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLoginEnable')
-      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLoginEnable = true')
-      line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLogin')
-      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s' % Glob.USER)
+      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLoginEnable = true\n')
+      line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLogin ')
+      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s\n' % Glob.USER)
     elif (dm == '/usr/sbin/lightdm'):
-      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s' % Glob.USER)
+      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user=')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s\n' % Glob.USER)
       line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user-timeout')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0\n')
   
   def createFstab(self):
     """ """
@@ -550,9 +550,9 @@ class MyFrame(wx.Frame):
     print 'setLocale'
     self.SetStatusText('Setto locale')
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
-    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, Glob.LOCALE)
-    line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XBLAYOUT')
-    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XBLAYOUT=\"%s\"' % Glob.KEYBOARD)
+    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s\n' % Glob.LOCALE)
+    line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XKBLAYOUT')
+    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XKBLAYOUT=\"%s\"\n' % Glob.KEYBOARD)
     proc = runProcess("chroot %s locale-gen" % Glob.INST_ROOT_DIRECTORY)
     Glob.PROC_ERROR = proc.returncode
     if not Glob.PROC_ERROR:
