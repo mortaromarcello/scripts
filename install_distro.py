@@ -15,7 +15,7 @@ def getsalt(chars=string.letters + string.digits):
   return random.choice(chars) + random.choice(chars)
 
 def ismount(device):
-  """ controlla se il device √® montato """
+  """ controlla se il device Ë montato """
   for l in file('/proc/mounts'):
     d = l.split()
     if d[0] == device: return d[1]
@@ -390,7 +390,7 @@ class MyFrame(wx.Frame):
     self.sizer.Fit(self)
     info = "\n Nome Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n UUID root partition:\t\t%s\n Home partition:\t\t\t%s\n Format home:\t\t\t%s\n Autologin:\t\t\t\t%s\n UUID home partition:\t\t%s\n Swap partition:\t\t\t%s\n UUID swap partition:\t\t%s\n Drive installation:\t\t\t%s\n Directory root installation:\t%s\n Name User:\t\t\t\t%s\n Crypt user password:\t\t%s\n Crypt root password:\t\t%s\n Locale:\t\t\t\t\t%s\n Lang:\t\t\t\t\t%s\n Keyboard:\t\t\t\t%s\n Hostname:\t\t\t\t%s\n Groups:\t\t\t\t\t%s\n Timezone:\t\t\t\t%s\n Shell user:\t\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION, Glob.UUID_ROOT_PARTITION, Glob.HOME_PARTITION, Glob.FORMAT_HOME, Glob.AUTOLOGIN, Glob.UUID_HOME_PARTITION, Glob.SWAP_PARTITION, Glob.UUID_SWAP_PARTITION, Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER)
     self.panel_info.updateInfo(info)
-    result = wx.MessageDialog(None, _("Attenzione! L'installazione formatter√  la/le partizione/i del/dei disco/i! Sei Sicuro?"), _("Attenzione"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
+    result = wx.MessageDialog(None, _("Attenzione! L'installazione formatta  la/le partizione/i del/dei disco/i! Sei Sicuro?"), _("Attenzione"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
     if result == wx.ID_NO: return
     self.runInst = True
     self.createRootAndMountPartition()
