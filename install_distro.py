@@ -37,7 +37,7 @@ def grep(namefile, string):
     return None
   for line in f:
     if re.search(string, line):
-      return line,
+      return line
 
 def edsub(namefile, string, substring, one=False):
   """ sostituisce tutte le occorrenze di 'string ' con 'substring' e la scrive nel file 'namefile' 
@@ -566,9 +566,9 @@ class MyFrame(wx.Frame):
     print 'setLocale'
     self.SetStatusText('Setto locale')
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
-    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s\n' % Glob.LOCALE)
+    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s' % Glob.LOCALE)
     line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XKBLAYOUT')
-    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XKBLAYOUT=\"%s\"\n' % Glob.KEYBOARD)
+    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XKBLAYOUT=\"%s\"' % Glob.KEYBOARD)
     proc = runProcess("chroot %s locale-gen" % Glob.INST_ROOT_DIRECTORY)
     Glob.PROC_ERROR = proc.returncode
     if not Glob.PROC_ERROR:
