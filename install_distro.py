@@ -522,7 +522,7 @@ class MyFrame(wx.Frame):
     self.SetStatusText('Setto l\'autologin')
     if not os.path.isfile('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY): return
     f = open('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, 'r')
-    dm = f.readline().split()
+    dm = f.readline()
     f.close()
     if (dm == '/usr/sbin/gdm3'):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLoginEnable')
@@ -530,10 +530,10 @@ class MyFrame(wx.Frame):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLogin ')
       if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s\n' % Glob.USER)
     elif (dm == '/usr/sbin/lightdm'):
-      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user =')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user = %s\n' % Glob.USER)
-      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user-timeout')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout = 0\n')
+      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, '#autologin-user=')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s\n' % Glob.USER)
+      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, '#autologin-user-timeout=0')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0\n')
   
   def createFstab(self):
     """ """
