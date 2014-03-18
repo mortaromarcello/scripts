@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import sys, re, os, time, random, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
 from optparse import OptionParser
 
 # variabili globali
@@ -159,8 +159,6 @@ class MyPanel(wx.Panel):
   
   def initGui(self):
     """ """
-    #img = wx.Image("image_h.png", wx.BITMAP_TYPE_ANY)
-    #sb = wx.StaticBitmap(self, -1, wx.BitmapFromImage(img))
     self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Inizializzazione ')), wx.VERTICAL)
     
     grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
