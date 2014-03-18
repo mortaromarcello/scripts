@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import sys, re, os, crypt, time, random, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, time, random, string, subprocess, wx, parted, parted.disk, logging
 from optparse import OptionParser
 
 # variabili globali
@@ -9,11 +9,6 @@ _ = wx.GetTranslation
 padding = 5 # pixels fra gli oggetti delle box
 
 #
-def getsalt(chars=string.letters + string.digits):
-  """ generate a random 2-character 'salt' """
-# generate a random 2-character 'salt'
-  return random.choice(chars) + random.choice(chars)
-
 def ismount(device):
   """ controlla se il device è montato """
   for l in file('/proc/mounts'):
@@ -27,9 +22,12 @@ def blkid(device):
   proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
   return proc.stdout.readline().strip()
 
-def crypt_p(password):
+def crypt_password(password):
   """ ritorna una stringa con la password criptata """
-  return crypt.crypt(password, getsalt())
+  command = "perl -e \'print crypt($ARGV[0], \"password\")\' %s" % password
+  proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+  return proc.stdout.readline().strip()
+  
 
 def grep(namefile, string):
   """ ritorna la prima linea che contiene la stringa 'string' nel file 'namefile' """
@@ -287,14 +285,14 @@ class MyPanel(wx.Panel):
     Glob.USER = self.user.GetValue()
     if self.password_user.GetValue():
       try:
-        Glob.CRYPT_USER_PASSWORD = crypt_p(self.password_user.GetValue())
+        Glob.CRYPT_USER_PASSWORD = crypt_password(self.password_user.GetValue())
       except UnicodeEncodeError:
         wx.MessageBox(_(" Hai inserito un carattere illegale nel campo 'Password utente'. "), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
         return
     else: Glob.CRYPT_USER_PASSWORD = ''
     if self.password_root.GetValue():
       try:
-        Glob.CRYPT_ROOT_PASSWORD = crypt_p(self.password_root.GetValue())
+        Glob.CRYPT_ROOT_PASSWORD = crypt_password(self.password_root.GetValue())
       except UnicodeEncodeError:
         wx.MessageBox(_(" Hai inserito un carattere illegale nel campo 'Password superuser'. "), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
         return
