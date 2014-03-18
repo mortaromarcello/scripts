@@ -106,8 +106,8 @@ class Glob:
   SQUASH_FS             = '/lib/live/mount/rootfs/filesystem.squashfs'
   USE_HOME              = False
   CONSOLE_LOG_LEVEL     = logging.DEBUG
-  PROC_ERROR            = 0
-  PATH_FILE_LOG         = 'install.log'
+  PROC                  = None
+  PATH_FILE_LOG         = '/tmp/install.log'
   FILE_LOG              = None
 
   # user's home dir - works for windows/unix/linux
@@ -425,6 +425,7 @@ class MyFrame(wx.Frame):
     self.updateMinidlna()
     self.installGrub()
     self.runInst = False
+    self.panel_info.clearInfo()
     self.panel_info.updateInfo("\t<--Installazione terminata con successo-->")
   
   def checkRequisites(self):
@@ -448,19 +449,16 @@ class MyFrame(wx.Frame):
     """ """
     print 'createRootAndMountPartition'
     self.SetStatusText('Creo il root filesystem e lo monto')
-    proc = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.ROOT_PARTITION))
-    Glob.PROC_ERROR = proc.returncode
-    if not Glob.PROC_ERROR:
+    Glob.PROC = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.ROOT_PARTITION))
+    if not Glob.PROC.returncode:
       Glob.UUID_ROOT_PARTITION = blkid(Glob.ROOT_PARTITION)
     else: self.checkError()
     logging.debug("uuid root partition:%s" % Glob.UUID_ROOT_PARTITION)
-    if not Glob.PROC_ERROR: 
-      proc = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY))
-      Glob.PROC_ERROR = proc.returncode
+    if not Glob.PROC.returncode: 
+      Glob.PROC = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY))
     else: self.checkError()
-    if not Glob.PROC_ERROR: 
-      proc = runProcess("mount %s %s" % (Glob.ROOT_PARTITION, Glob.INST_ROOT_DIRECTORY))
-      Glob.PROC_ERROR = proc.returncode
+    if not Glob.PROC.returncode: 
+      Glob.PROC = runProcess("mount %s %s" % (Glob.ROOT_PARTITION, Glob.INST_ROOT_DIRECTORY))
     else: self.checkError()
   
   def createHomeAndMountPartition(self):
@@ -470,60 +468,52 @@ class MyFrame(wx.Frame):
       return
     self.SetStatusText('Creo e monto la HOME directory')
     if Glob.FORMAT_HOME:
-      proc = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.HOME_PARTITION))
-      Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: self.checkError()
+      Glob.PROC = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.HOME_PARTITION))
+      if Glob.PROC.returncode: self.checkError()
     Glob.UUID_HOME_PARTITION = blkid(Glob.HOME_PARTITION)
     print Glob.UUID_HOME_PARTITION
-    proc = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY + '/home'))
-    Glob.PROC_ERROR = proc.returncode
-    if not Glob.PROC_ERROR: 
-      proc = runProcess("mount %s %s" % (Glob.HOME_PARTITION, Glob.INST_ROOT_DIRECTORY + '/home'))
-      Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY + '/home'))
+    if not Glob.PROC.returncode: 
+      Glob.PROC = runProcess("mount %s %s" % (Glob.HOME_PARTITION, Glob.INST_ROOT_DIRECTORY + '/home'))
+      if Glob.PROC.returncode: self.checkError()
     else: self.checkError()
   
   def createSwapPartition(self):
     """ """
     if not Glob.SWAP_PARTITION: return
     print 'createSwapPartition'
-    proc = runProcess("mkswap -c %s" % Glob.SWAP_PARTITION)
-    Glob.PROC_ERROR = proc.returncode
-    if not Glob.PROC_ERROR:
+    Glob.PROC = runProcess("mkswap -c %s" % Glob.SWAP_PARTITION)
+    if not Glob.PROC.returncode:
       Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
-    if Glob.PROC_ERROR: self.checkError()
+    if Glob.PROC.returncode: self.checkError()
   
   def copyRoot(self):
     """ """
     print 'copyRoot'
     self.SetStatusText('Copio i files (Ci può volere un pò di tempo)...')
-    proc = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
+    if Glob.PROC.returncode: self.checkError()
   
   def addUser(self):
     """ """
     print 'addUser'
     self.SetStatusText('Aggiungo l\'utente')
-    proc = runProcess("chroot %s useradd -G %s -s %s -m -p %s %s" % (Glob.INST_ROOT_DIRECTORY, Glob.GROUPS, Glob.SHELL_USER, Glob.CRYPT_USER_PASSWORD, Glob.USER))
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("chroot %s useradd -G %s -s %s -m -p %s %s" % (Glob.INST_ROOT_DIRECTORY, Glob.GROUPS, Glob.SHELL_USER, Glob.CRYPT_USER_PASSWORD, Glob.USER))
+    if Glob.PROC.returncode: self.checkError()
   
   def changeRootPassword(self):
     """ """
     print 'changeRootPassword'
     self.SetStatusText('Cambio la password di root')
-    proc = runProcess("chroot %s bash -c \"echo root:%s | chpasswd -e\"" % (Glob.INST_ROOT_DIRECTORY, Glob.CRYPT_ROOT_PASSWORD))
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("chroot %s bash -c \"echo root:%s | chpasswd -e\"" % (Glob.INST_ROOT_DIRECTORY, Glob.CRYPT_ROOT_PASSWORD))
+    if Glob.PROC.returncode: self.checkError()
   
   def addSudoUser(self):
     """ """
     print 'addSudoUser'
     self.SetStatusText('Aggiungo l\'utente al gruppo \'sudo\'')
-    proc = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
+    if Glob.PROC.returncode: self.checkError()
   
   def setAutologin(self):
     """ """
@@ -536,14 +526,14 @@ class MyFrame(wx.Frame):
     f.close()
     if (dm == '/usr/sbin/gdm3'):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLoginEnable')
-      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLoginEnable = true')
+      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLoginEnable = true\n')
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLogin ')
-      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s' % Glob.USER)
+      if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s\n' % Glob.USER)
     elif (dm == '/usr/sbin/lightdm'):
-      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user=')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s' % Glob.USER)
+      line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user =')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user = %s\n' % Glob.USER)
       line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, 'autologin-user-timeout')
-      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0')
+      if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout = 0\n')
   
   def createFstab(self):
     """ """
@@ -564,15 +554,13 @@ class MyFrame(wx.Frame):
     print 'setLocale'
     self.SetStatusText('Setto locale')
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
-    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s' % Glob.LOCALE)
+    if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s\n' % Glob.LOCALE)
     line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XKBLAYOUT')
-    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XKBLAYOUT=\"%s\"' % Glob.KEYBOARD)
-    proc = runProcess("chroot %s locale-gen" % Glob.INST_ROOT_DIRECTORY)
-    Glob.PROC_ERROR = proc.returncode
-    if not Glob.PROC_ERROR:
-      proc = runProcess("chroot %s update-locale LANG=%s" % (Glob.INST_ROOT_DIRECTORY, Glob.LANG))
-      Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: self.checkError()
+    if line: edsub('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, line, 'XKBLAYOUT=\"%s\"\n' % Glob.KEYBOARD)
+    Glob.PROC = runProcess("chroot %s locale-gen" % Glob.INST_ROOT_DIRECTORY)
+    if not Glob.PROC.returncode:
+      Glob.PROC = runProcess("chroot %s update-locale LANG=%s" % (Glob.INST_ROOT_DIRECTORY, Glob.LANG))
+      if Glob.PROC.returncode: self.checkError()
     else: self.checkError()
   
   def setTimezone(self):
@@ -602,38 +590,31 @@ class MyFrame(wx.Frame):
     print 'installGrub'
     self.SetStatusText('Installo grub')
     for dir in ['dev', 'sys', 'proc']:
-      proc = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
-      Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: self.checkError()
-    proc = runProcess("chroot %s grub-install --no-floppy %s" % (Glob.INST_ROOT_DIRECTORY, Glob.INST_DRIVE))
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
-    proc = runProcess("chroot %s update-grub" % Glob.INST_ROOT_DIRECTORY)
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+      Glob.PROC = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
+      if Glob.PROC.returncode: self.checkError()
+    Glob.PROC = runProcess("chroot %s grub-install --no-floppy %s" % (Glob.INST_ROOT_DIRECTORY, Glob.INST_DRIVE))
+    if Glob.PROC.returncode: self.checkError()
+    Glob.PROC = runProcess("chroot %s update-grub" % Glob.INST_ROOT_DIRECTORY)
+    if Glob.PROC.returncode: self.checkError()
     for dir in ['dev','sys', 'proc']:
-      proc = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, dir))
-      Glob.PROC_ERROR = proc.returncode
-      if Glob.PROC_ERROR: self.checkError()
+      Glob.PROC = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, dir))
+      if Glob.PROC.returncode: self.checkError()
   
   def endInstall(self):
     """ """
     print 'endInstall'
-    proc = runProcess("sync")
-    Glob.PROC_ERROR = proc.returncode
-    if Glob.PROC_ERROR: self.checkError()
+    Glob.PROC = runProcess("sync")
+    if Glob.PROC.returncode: self.checkError()
     if ismount(Glob.HOME_PARTITION):
-      proc = runProcess("umount %s" % Glob.HOME_PARTITION)
-      Glob.PROC_ERROR = proc.returncode
+      Glob.PROC = runProcess("umount %s" % Glob.HOME_PARTITION)
     if ismount(Glob.ROOT_PARTITION):
-      proc = runProcess("umount %s" % Glob.ROOT_PARTITION)
-      Glob.PROC_ERROR = proc.returncode
+      Glob.PROC = runProcess("umount %s" % Glob.ROOT_PARTITION)
     Glob.FILE_LOG.close()
   
   def checkError(self):
     """ """
     print 'checkError'
-    logging.debug("Subprocess error:%s" % Glob.PROC_ERROR)
+    logging.debug("Subprocess error:%s" % Glob.PROC.returncode)
     return True
 
 
