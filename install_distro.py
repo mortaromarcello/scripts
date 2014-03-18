@@ -33,7 +33,10 @@ def crypt_p(password):
 
 def grep(namefile, string):
   """ ritorna la prima linea che contiene la stringa 'string' nel file 'namefile' """
-  f = open(namefile, 'r')
+  try:
+    f = open(namefile, 'r')
+  except:
+    return None
   for line in f:
     if re.search(string, line):
       return line,
@@ -41,13 +44,17 @@ def grep(namefile, string):
 def edsub(namefile, string, substring, one=False):
   """ sostituisce tutte le occorrenze di 'string ' con 'substring' e la scrive nel file 'namefile' 
   Se one=True dopo la prima sostituzione esce. """
-  with open(namefile, 'r') as sources:
-    lines = sources.readlines()
-  with open(namefile, 'w') as sources:
-    for line in lines:
-      sources.write(re.sub(string, substring, line))
-      if one: return
-
+  try:
+    with open(namefile, 'r') as sources:
+      lines = sources.readlines()
+    with open(namefile, 'w') as sources:
+      for line in lines:
+        sources.write(re.sub(string, substring, line))
+        if one: return 0
+  except:
+    return -1
+  return 0
+  
 def runProcess(command):
   proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
   while True:
@@ -394,7 +401,7 @@ class MyFrame(wx.Frame):
     if Glob.HOME_PARTITION: self.panel_info.updateInfo(" Home partition:\t\t\t%s\n" % Glob.HOME_PARTITION)
     if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo("UUID home partition:\t\t%s\n" % Glob.UUID_HOME_PARTITION)
     if Glob.SWAP_PARTITION: self.panel_info.updateInfo(" Swap partition:\t\t\t%s\n" % Glob.SWAP_PARTITION)
-    if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo("UUID swap partition:\t\t%s\n" % Glob.UUID_SWAP_PARTITION)
+    if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo(" UUID swap partition:\t\t%s\n" % Glob.UUID_SWAP_PARTITION)
     self.panel_info.updateInfo(" Drive installation:\t\t\t%s\n Directory root installation:\t%s\n Name User:\t\t\t\t%s\n Crypt user password:\t\t%s\n Crypt root password:\t\t%s\n Locale:\t\t\t\t\t%s\n Lang:\t\t\t\t\t%s\n Keyboard:\t\t\t\t%s\n Hostname:\t\t\t\t%s\n Groups:\t\t\t\t\t%s\n Timezone:\t\t\t\t%s\n Shell user:\t\t\t\t%s\n" % (Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER))
     result = wx.MessageDialog(None, _("Attenzione! L'installazione formatta  la/le partizione/i del/dei disco/i! Sei Sicuro?"), _("Attenzione"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
     if result == wx.ID_NO:
@@ -405,11 +412,11 @@ class MyFrame(wx.Frame):
       return
     self.runInst = True
     self.createRootAndMountPartition()
-    if Glob.UUID_ROOT_PARTITION: self.panel_info.updateInfo('UUID root partition:\t\t\t%s\n' % Glob.UUID_ROOT_PARTITION, True)
+    if Glob.UUID_ROOT_PARTITION: self.panel_info.updateInfo(' UUID root partition:\t\t%s\n' % Glob.UUID_ROOT_PARTITION)
     self.createHomeAndMountPartition()
-    if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo('UUID home partition:\t\t\t%s\n' % Glob.UUID_HOME_PARTITION, True)
+    if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo(' UUID home partition:\t\t%s\n' % Glob.UUID_HOME_PARTITION)
     self.createSwapPartition()
-    if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo('UUID swap partition:\t\t\t%s\n' % Glob.UUID_SWAP_PARTITION, True)
+    if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo(' UUID swap partition:\t\t%s\n' % Glob.UUID_SWAP_PARTITION)
     self.copyRoot()
     self.addUser()
     self.changeRootPassword()
@@ -630,6 +637,7 @@ class MyFrame(wx.Frame):
   def checkError(self):
     """ """
     print 'checkError'
+    logging.debug("Subprocess error:%s" % Glob.PROC_ERROR)
     return True
 
 
