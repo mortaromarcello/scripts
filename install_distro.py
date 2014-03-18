@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
 
 import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
 from optparse import OptionParser
@@ -10,7 +9,7 @@ padding = 5 # pixels fra gli oggetti delle box
 
 #
 def ismount(device):
-  """ controlla se il device � montato """
+  """ controlla se il device montato """
   for l in file('/proc/mounts'):
     d = l.split()
     if d[0] == device: return d[1]
@@ -137,7 +136,7 @@ class RedirectText:
       try:
         self.file.write(string)
       except:
-        print 'Problema sul file %s.' % self.file.name
+        print 'Problem on the file %s.' % self.file.name
         pass
 
 
@@ -159,7 +158,7 @@ class MyPanel(wx.Panel):
   
   def initGui(self):
     """ """
-    self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Inizializzazione ')), wx.VERTICAL)
+    self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
     
     grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
     grid_sizer2 = wx.FlexGridSizer(7, 2, padding, padding)
@@ -169,9 +168,9 @@ class MyPanel(wx.Panel):
     self.part_root = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
     self.part_home = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
     self.disk_inst = wx.ComboBox(self, -1, choices=self.disks, style=wx.CB_READONLY)
-    self.check_format_home = wx.CheckBox(self, -1, _("Formattare la partizione di home"))
+    self.check_format_home = wx.CheckBox(self, -1, _("Format the partition  home"))
     self.check_format_home.SetValue(Glob.FORMAT_HOME)
-    self.check_autologin =  wx.CheckBox(self, -1, _("Login automatico"))
+    self.check_autologin =  wx.CheckBox(self, -1, _("Automatic login"))
     self.check_autologin.SetValue(Glob.AUTOLOGIN)
     self.user = wx.TextCtrl(self, -1, 'debian-user')
     self.password_user = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
@@ -197,42 +196,42 @@ class MyPanel(wx.Panel):
     self.timezone.SetStringSelection(self.str_timezones[0])
     self.shell.SetStringSelection(self.str_shells[0])
     #
-    self.sizer.AddWindow(wx.StaticText(self, -1, _('Le opzioni contrassegnate da un asterisco sono necessarie')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    self.sizer.AddWindow(wx.StaticText(self, -1, _('The options marked with an asterisk are required')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     # 1 riga
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Partizione di root (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Root partition (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.part_root, 0, wx.EXPAND|wx.ALL, padding)
     # 2
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Partizione di home')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Home partizione')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.part_home, 0, wx.EXPAND|wx.ALL, padding)
     # 3
     grid_sizer1.Add(self.check_format_home, 0, wx.EXPAND|wx.ALL, padding)
     grid_sizer1.Add(self.check_autologin, 0, wx.EXPAND|wx.ALL, padding)
     # 4
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Drive di installazione (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Installation drive (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.disk_inst, 0, wx.EXPAND|wx.ALL, padding)
     # 5 
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Nome utente (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Username (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.user, 0, wx.EXPAND|wx.ALL, padding)
     # 6
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Password utente (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('User password (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.password_user, 0, wx.EXPAND|wx.ALL, padding)
     # 7
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Password superuser (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Root password (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.password_root, 0, wx.EXPAND|wx.ALL, padding)
     # 1
     grid_sizer2.Add(wx.StaticText(self, -1, _('Locale')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer2.Add(self.locale, 0, wx.EXPAND|wx.ALL, padding)
     # 2
-    grid_sizer2.Add(wx.StaticText(self, -1, _('Lingua')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer2.Add(wx.StaticText(self, -1, _('Language')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer2.Add(self.lang, 0, wx.EXPAND|wx.ALL, padding)
     # 3
-    grid_sizer2.Add(wx.StaticText(self, -1, _('Tastiera')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer2.Add(wx.StaticText(self, -1, _('Keyboard')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer2.Add(self.keyboard, 0, wx.EXPAND|wx.ALL, padding)
     # 4
     grid_sizer2.Add(wx.StaticText(self, -1, _('Hostname (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer2.Add(self.hostname, 0, wx.EXPAND|wx.ALL, padding)
     # 5
-    grid_sizer2.Add(wx.StaticText(self, -1, _('Gruppi (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer2.Add(wx.StaticText(self, -1, _('Groups (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer2.Add(self.groups, 0, wx.EXPAND|wx.ALL, padding)
     # 6
     grid_sizer2.Add(wx.StaticText(self, -1, _('Timezone')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
@@ -244,8 +243,6 @@ class MyPanel(wx.Panel):
     horizontal_sizer.Add(grid_sizer1)
     horizontal_sizer.Add((50, -1))
     horizontal_sizer.Add(grid_sizer2)
-    
-    #self.sizer.Add(sb, 0, wx.ALIGN_CENTER|wx.ALL, padding)
     self.sizer.Add(horizontal_sizer, 0, wx.EXPAND|wx.ALL, padding)
     self.sizer.Fit(self)
   
@@ -285,14 +282,14 @@ class MyPanel(wx.Panel):
       try:
         Glob.CRYPT_USER_PASSWORD = crypt_password(self.password_user.GetValue())
       except UnicodeEncodeError:
-        wx.MessageBox(_(" Hai inserito un carattere illegale nel campo 'Password utente'. "), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox(_(" You entered an illegal character in the 'User password'. "), _("Attention"), wx.OK | wx.ICON_INFORMATION)
         return
     else: Glob.CRYPT_USER_PASSWORD = ''
     if self.password_root.GetValue():
       try:
         Glob.CRYPT_ROOT_PASSWORD = crypt_password(self.password_root.GetValue())
       except UnicodeEncodeError:
-        wx.MessageBox(_(" Hai inserito un carattere illegale nel campo 'Password superuser'. "), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox(_(" You entered an illegal character in the 'Root password' "), _("Attention"), wx.OK | wx.ICON_INFORMATION)
         return
     else: Glob.CRYPT_ROOT_PASSWORD = ''
     Glob.LOCALE = self.locale.GetValue()
@@ -313,7 +310,7 @@ class MyPanelInfo(wx.Panel):
     self.info = wx.TextCtrl(self, size=(800, 500), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
     self.info.SetForegroundColour(wx.BLACK)
     self.info.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_BACKGROUND))
-    sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Informazioni ')), wx.VERTICAL)
+    sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Summary ')), wx.VERTICAL)
     self.SetSizer(sizer)
     sizer.Add(self.info, 0, wx.EXPAND|wx.ALL, padding)
   
@@ -332,7 +329,7 @@ class MyFrame(wx.Frame):
     self.panel_info.Hide()
     self.runInst = False
     self.CreateStatusBar()
-    self.SetStatusText("Benvenuto nel programma di installazione di Livedevelop")
+    self.SetStatusText("Welcome to Setup Livedevelop")
     self.__DoLayout()
   
   def __DoLayout(self):
@@ -349,7 +346,7 @@ class MyFrame(wx.Frame):
     self.sizer_vertical.Add(self.panel_info, 1, wx.EXPAND|wx.ALL, padding)
     self.sizer_vertical.Add(log, 0, wx.EXPAND|wx.ALL, padding)
     
-    self.installa = wx.Button(self, -1, "Installa")
+    self.installa = wx.Button(self, -1, _("Install"))
     self.installa.Bind(wx.EVT_BUTTON, self.onClickInstalla)
     self.esci = wx.Button(self, wx.ID_EXIT)
     self.esci.Bind(wx.EVT_BUTTON, self.onClickEsci)
@@ -371,7 +368,7 @@ class MyFrame(wx.Frame):
   def onClickEsci(self, evt):
     """ """
     if self.runInst:
-      result = wx.MessageDialog(None, _("Attenzione! Installazione in corso! Sei Sicuro?"), _("Attenzione"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
+      result = wx.MessageDialog(None, _("Attention! Installation is in progress! Are you sure?"), _("Attention"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
       if result == wx.ID_YES:
         self.endInstall()
         self.Close()
@@ -383,7 +380,7 @@ class MyFrame(wx.Frame):
   def goInstall(self):
     """ """
     print 'GoInstall'
-    self.SetStatusText('Inizio installazione...')
+    self.SetStatusText(_('Beginning installation...'))
     if not self.checkRequisites():
       #---- codice controllo
       self.installa.Enable()
@@ -393,13 +390,13 @@ class MyFrame(wx.Frame):
     self.panel_info.Show()
     self.sizer.Fit(self)
     
-    self.panel_info.updateInfo("\n Nome Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
+    self.panel_info.updateInfo("\n Name Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
     if Glob.HOME_PARTITION: self.panel_info.updateInfo(" Home partition:\t\t\t%s\n" % Glob.HOME_PARTITION)
     if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo("UUID home partition:\t\t%s\n" % Glob.UUID_HOME_PARTITION)
     if Glob.SWAP_PARTITION: self.panel_info.updateInfo(" Swap partition:\t\t\t%s\n" % Glob.SWAP_PARTITION)
     if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo(" UUID swap partition:\t\t%s\n" % Glob.UUID_SWAP_PARTITION)
     self.panel_info.updateInfo(" Drive installation:\t\t\t%s\n Directory root installation:\t%s\n Name User:\t\t\t\t%s\n Crypt user password:\t\t%s\n Crypt root password:\t\t%s\n Locale:\t\t\t\t\t%s\n Lang:\t\t\t\t\t%s\n Keyboard:\t\t\t\t%s\n Hostname:\t\t\t\t%s\n Groups:\t\t\t\t\t%s\n Timezone:\t\t\t\t%s\n Shell user:\t\t\t\t%s\n" % (Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER))
-    result = wx.MessageDialog(None, _("Attenzione! L'installazione formatta  la/le partizione/i del/dei disco/i! Sei Sicuro?"), _("Attenzione"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
+    result = wx.MessageDialog(None, _("Attention! The installation formats the partitions of the of the disk! Are you sure??"), _("Attention"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
     if result == wx.ID_NO:
       self.panel_info.clearInfo()
       self.panel_info.Hide()
@@ -426,29 +423,29 @@ class MyFrame(wx.Frame):
     self.installGrub()
     self.runInst = False
     self.panel_info.clearInfo()
-    self.panel_info.updateInfo("\t<--Installazione terminata con successo-->")
+    self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
   
   def checkRequisites(self):
     """ controlla che i requisiti siano rispettati """
     print 'checkRequisites'
-    self.SetStatusText('Controllo i prerequisiti')
+    self.SetStatusText(_("Checking the prerequisites"))
     if (not Glob.ROOT_PARTITION) or (not Glob.INST_DRIVE) or (not Glob.USER) or (not Glob.CRYPT_USER_PASSWORD) or (not Glob.CRYPT_ROOT_PASSWORD) or (not Glob.HOSTNAME) or (not Glob.GROUPS):
-      wx.MessageBox(_("Non tutte le opzioni necessarie sono state assegnate. (Tutte le opzioni contrassegnate da un asterisco sono obbligatorie)"), _("Attenzione"), wx.OK | wx.ICON_INFORMATION)
+      wx.MessageBox(_("Not all required options have been assigned. (All options marked with an asterisk are required)"), _("Attention"), wx.OK | wx.ICON_INFORMATION)
       return False
     for part in (Glob.ROOT_PARTITION, Glob.HOME_PARTITION, Glob.SWAP_PARTITION):
       d = ismount(part)
       if d:
-        wx.MessageBox(_("Device %s montato in %s." % (part, d)), _("Errore"), wx.OK|wx.ICON_ERROR)
+        wx.MessageBox(_("Device %s mounted in %s." % (part, d)), _("Error"), wx.OK|wx.ICON_ERROR)
         return False
     if Glob.ROOT_PARTITION == Glob.HOME_PARTITION:
-      wx.MessageBox(_("La partizione di root e la partizione di home coincidono."), _("Errore"), wx.OK|wx.ICON_ERROR)
+      wx.MessageBox(_("The root partition and home partition coincide."), _("Error"), wx.OK|wx.ICON_ERROR)
       return False
     return True
   
   def createRootAndMountPartition(self):
     """ """
     print 'createRootAndMountPartition'
-    self.SetStatusText('Creo il root filesystem e lo monto')
+    self.SetStatusText(_("I create the root filesystem, and I mount it"))
     Glob.PROC = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.ROOT_PARTITION))
     if not Glob.PROC.returncode:
       Glob.UUID_ROOT_PARTITION = blkid(Glob.ROOT_PARTITION)
@@ -466,7 +463,7 @@ class MyFrame(wx.Frame):
     print 'createHomeAndMountPartition'
     if not Glob.HOME_PARTITION:
       return
-    self.SetStatusText('Creo e monto la HOME directory')
+    self.SetStatusText(_("I create and mount the HOME directory"))
     if Glob.FORMAT_HOME:
       Glob.PROC = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.HOME_PARTITION))
       if Glob.PROC.returncode: self.checkError()
@@ -490,28 +487,28 @@ class MyFrame(wx.Frame):
   def copyRoot(self):
     """ """
     print 'copyRoot'
-    self.SetStatusText('Copio i files (Ci può volere un pò di tempo)...')
+    self.SetStatusText(_("I copy the files (It takes time)..."))
     Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
     if Glob.PROC.returncode: self.checkError()
   
   def addUser(self):
     """ """
     print 'addUser'
-    self.SetStatusText('Aggiungo l\'utente')
+    self.SetStatusText(_("Add user"))
     Glob.PROC = runProcess("chroot %s useradd -G %s -s %s -m -p %s %s" % (Glob.INST_ROOT_DIRECTORY, Glob.GROUPS, Glob.SHELL_USER, Glob.CRYPT_USER_PASSWORD, Glob.USER))
     if Glob.PROC.returncode: self.checkError()
   
   def changeRootPassword(self):
     """ """
     print 'changeRootPassword'
-    self.SetStatusText('Cambio la password di root')
+    self.SetStatusText(_("Change the root password"))
     Glob.PROC = runProcess("chroot %s bash -c \"echo root:%s | chpasswd -e\"" % (Glob.INST_ROOT_DIRECTORY, Glob.CRYPT_ROOT_PASSWORD))
     if Glob.PROC.returncode: self.checkError()
   
   def addSudoUser(self):
     """ """
     print 'addSudoUser'
-    self.SetStatusText('Aggiungo l\'utente al gruppo \'sudo\'')
+    self.SetStatusText(_("Add the user to the sudo group"))
     Glob.PROC = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
     if Glob.PROC.returncode: self.checkError()
   
@@ -519,7 +516,7 @@ class MyFrame(wx.Frame):
     """ """
     if not Glob.AUTOLOGIN: return
     print 'setAutologin'
-    self.SetStatusText('Setto l\'autologin')
+    self.SetStatusText(_("Set the autologin"))
     if not os.path.isfile('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY): return
     f = open('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, 'r')
     dm = f.readline()
@@ -552,7 +549,7 @@ class MyFrame(wx.Frame):
   def setLocale(self):
     """ """
     print 'setLocale'
-    self.SetStatusText('Setto locale')
+    self.SetStatusText(_("Set locale"))
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
     if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s\n' % Glob.LOCALE)
     line = grep('%s/etc/default/keyboard' % Glob.INST_ROOT_DIRECTORY, 'XKBLAYOUT')
@@ -566,7 +563,7 @@ class MyFrame(wx.Frame):
   def setTimezone(self):
     """" """
     print 'setTimezone'
-    self.SetStatusText('Setto timezone')
+    self.SetStatusText(_("Set timezone"))
     f = open('%s/etc/timezone' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write('%s\n' % Glob.TIMEZONE)
     f.close()
@@ -574,7 +571,7 @@ class MyFrame(wx.Frame):
   def setHostname(self):
     """" """
     print 'setHostname'
-    self.SetStatusText('Setto hostname')
+    self.SetStatusText(_("Set hostname"))
     f = open('%s/etc/hostname' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write("%s\n" % Glob.HOSTNAME)
     f.close()
@@ -588,7 +585,7 @@ class MyFrame(wx.Frame):
   def installGrub(self):
     """ """
     print 'installGrub'
-    self.SetStatusText('Installo grub')
+    self.SetStatusText(_("Install grub"))
     for dir in ['dev', 'sys', 'proc']:
       Glob.PROC = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
       if Glob.PROC.returncode: self.checkError()
