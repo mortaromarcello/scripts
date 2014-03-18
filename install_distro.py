@@ -201,7 +201,7 @@ class MyPanel(wx.Panel):
     grid_sizer1.Add(wx.StaticText(self, -1, _('Root partition (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.part_root, 0, wx.EXPAND|wx.ALL, padding)
     # 2
-    grid_sizer1.Add(wx.StaticText(self, -1, _('Home partizione')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
+    grid_sizer1.Add(wx.StaticText(self, -1, _('Home partition')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
     grid_sizer1.Add(self.part_home, 0, wx.EXPAND|wx.ALL, padding)
     # 3
     grid_sizer1.Add(self.check_format_home, 0, wx.EXPAND|wx.ALL, padding)
@@ -324,6 +324,10 @@ class MyFrame(wx.Frame):
   """ """
   def __init__(self, parent=None, ID=-1, title=_(_("Install distro"))):
     wx.Frame.__init__(self, parent, ID, title)
+    mylocale = wx.Locale()
+    mylocale.AddCatalogLookupPathPrefix('.')
+    mylocale.AddCatalogLookupPathPrefix('/usr/local/share/install_distro')
+    mylocale.AddCatalog('locale/it/messages')
     self.panel = MyPanel(self)
     self.panel_info = MyPanelInfo(self)
     self.panel_info.Hide()
