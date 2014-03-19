@@ -329,6 +329,8 @@ class MyFrame(wx.Frame):
     mylocale.AddCatalogLookupPathPrefix('./locale')
     mylocale.AddCatalogLookupPathPrefix('/usr/local/share/locale')
     mylocale.AddCatalog('it/LC_MESSAGES/install_distro')
+    self.menubar = self.createMenuBar()
+    self.SetMenuBar(self.menubar)
     self.panel = MyPanel(self)
     self.panel_info = MyPanelInfo(self)
     self.panel_info.Hide()
@@ -336,6 +338,13 @@ class MyFrame(wx.Frame):
     self.CreateStatusBar()
     self.SetStatusText("Welcome to Setup Livedevelop")
     self.__DoLayout()
+  
+  def createMenuBar(self):
+    menubar = wx.MenuBar()
+    help_menu = wx.Menu()
+    help_menu.Append(wx.ID_HELP)
+    menubar.Append(help_menu, _("Help"))
+    return menubar
   
   def __DoLayout(self):
     self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
@@ -522,16 +531,12 @@ class MyFrame(wx.Frame):
     if not Glob.AUTOLOGIN: return
     print 'setAutologin'
     self.SetStatusText(_("Set the autologin"))
-    if not os.path.isfile('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY): return
-    f = open('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, 'r')
-    dm = f.readline()
-    f.close()
-    if (dm == '/usr/sbin/gdm3'):
+    if grep('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, '/usr/sbin/gdm3'):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLoginEnable')
       if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLoginEnable = true\n')
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLogin ')
       if line: edsub('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, line, 'AutomaticLogin = %s\n' % Glob.USER)
-    elif (dm == '/usr/sbin/lightdm'):
+    elif grep('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, '/usr/sbin/lightdm'):
       line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, '#autologin-user=')
       if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s\n' % Glob.USER)
       line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, '#autologin-user-timeout=0')
