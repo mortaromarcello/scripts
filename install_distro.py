@@ -341,10 +341,28 @@ class MyFrame(wx.Frame):
   
   def createMenuBar(self):
     menubar = wx.MenuBar()
-    help_menu = wx.Menu()
-    help_menu.Append(wx.ID_HELP)
-    menubar.Append(help_menu, _("Help"))
+    menuData = (
+      (_("&File"),(wx.ID_EXIT, _("&Quit"), _("Quit"), "", self.onClickExit)),
+      (_("&Help"),(wx.ID_HELP, _("&Help"), _("Help"), "", self.onClickHelp))
+    )
+    for eachMenuData in menuData:
+      menuLabel = eachMenuData[0]
+      menuItems = eachMenuData[1:]
+      menubar.Append(self.createMenu(menuItems), menuLabel)
     return menubar
+  
+  def createMenu(self, menuData):
+    menu = wx.Menu()
+    for eachID, eachLabel, eachStatus, eachIcon, eachHandler in menuData:
+      if not eachLabel:
+        menu.AppendSeparator()
+        continue
+      menuItem = wx.MenuItem(menu, eachID, eachLabel, eachStatus)
+      if eachIcon:
+        menuItem.SetBitmap(wx.Bitmap(eachIcon))
+      menu.AppendItem(menuItem)
+      self.Bind(wx.EVT_MENU, eachHandler, menuItem)
+    return menu
   
   def __DoLayout(self):
     self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
@@ -360,44 +378,44 @@ class MyFrame(wx.Frame):
     self.sizer_vertical.Add(self.panel_info, 1, wx.EXPAND|wx.ALL, padding)
     self.sizer_vertical.Add(log, 0, wx.EXPAND|wx.ALL, padding)
     
-    self.installa = wx.Button(self, -1, _("Install"))
-    self.installa.Bind(wx.EVT_BUTTON, self.onClickInstalla)
-    self.esci = wx.Button(self, wx.ID_EXIT)
-    self.esci.Bind(wx.EVT_BUTTON, self.onClickEsci)
+    self.install = wx.Button(self, -1, _("Install"))
+    self.install.Bind(wx.EVT_BUTTON, self.onClickInstall)
+    self.exit = wx.Button(self, wx.ID_EXIT)
+    self.exit.Bind(wx.EVT_BUTTON, self.onClickExit)
     sizer_buttons = wx.BoxSizer(wx.VERTICAL)
-    sizer_buttons.Add(self.installa, 0, wx.EXPAND|wx.ALL, padding)
-    sizer_buttons.Add(self.esci, 0, wx.EXPAND|wx.ALL, padding)
+    sizer_buttons.Add(self.install, 0, wx.EXPAND|wx.ALL, padding)
+    sizer_buttons.Add(self.exit, 0, wx.EXPAND|wx.ALL, padding)
     self.sizer.Add(self.sizer_vertical, 0, wx.EXPAND|wx.ALL, padding)
     self.sizer.Add(sizer_buttons, 0, wx.EXPAND|wx.ALL, padding)
     self.SetSizer(self.sizer)
     self.sizer.Fit(self)
   
-  def onClickInstalla(self, evt):
-    self.installa.Disable()
+  def onClickHelp(self, event):
+    pass
+  
+  def onClickInstall(self, evt):
+    self.install.Disable()
     if not self.panel.SetGlob():
-      self.installa.Enable()
+      self.install.Enable()
     else:
       self.goInstall()
   
-  def onClickEsci(self, evt):
+  def onClickExit(self, evt):
     """ """
     if self.runInst:
       result = wx.MessageDialog(None, _("Attention! Installation is in progress! Are you sure?"), _("Attention"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
-      if result == wx.ID_YES:
-        self.endInstall()
-        self.Close()
-      else: return
-    else:
-      self.endInstall()
-      self.Close()
-    
+      if result == wx.ID_NO:
+        return
+    self.endInstall()
+    self.Close()
+  
   def goInstall(self):
     """ """
     print 'GoInstall'
     self.SetStatusText(_('Beginning installation...'))
     if not self.checkRequisites():
       #---- codice controllo
-      self.installa.Enable()
+      self.install.Enable()
       return
       #----
     self.panel.Hide()
@@ -584,6 +602,9 @@ class MyFrame(wx.Frame):
     self.SetStatusText(_("Set hostname"))
     f = open('%s/etc/hostname' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write("%s\n" % Glob.HOSTNAME)
+    f.close()
+    f = open('%s/etc/hosts' % Glob.INST_ROOT_DIRECTORY, 'w')
+    f.write("127.0.0.1       localhost %s\n::1             localhost ip6-localhost ip6-loopback\nfe00::0         ip6-localnet\nff00::0         ip6-mcastprefix\nff02::1         ip6-allnodes\nff02::2         ip6-allrouters\n" % Glob.HOSTNAME)
     f.close()
   
   def updateMinidlna(self):
