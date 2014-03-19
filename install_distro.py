@@ -325,9 +325,9 @@ class MyFrame(wx.Frame):
   def __init__(self, parent=None, ID=-1, title=_(_("Install distro"))):
     wx.Frame.__init__(self, parent, ID, title)
     mylocale = wx.Locale()
-    mylocale.AddCatalogLookupPathPrefix('.')
-    mylocale.AddCatalogLookupPathPrefix('/usr/local/share/install_distro')
-    mylocale.AddCatalog('locale/it/messages')
+    mylocale.AddCatalogLookupPathPrefix('./locale')
+    mylocale.AddCatalogLookupPathPrefix('/usr/local/share/locale')
+    mylocale.AddCatalog('it/LC_MESSAGES/install_distro')
     self.panel = MyPanel(self)
     self.panel_info = MyPanelInfo(self)
     self.panel_info.Hide()
