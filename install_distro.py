@@ -115,13 +115,14 @@ class Glob:
   PID = os.getpid()
 
   # will be set by main function
-  PACKAGE_VERSION     = ''
+  PACKAGE_VERSION     = '0.1'
   PACKAGE_BUGREPORT   = ''
   PACKAGE_URL         = ''
-  PACKAGE_TITLE       = ''
+  PACKAGE_TITLE       = 'Install distro'
   PACKAGE_COPYRIGHT   = ''
   DEFAULT_CONFIG_FILE = ''
-  LICENSE             = ""
+  LICENSE             = ''
+  AUTHOR              = 'Mortaro Marcello'
 
  
 class RedirectText:
@@ -322,7 +323,7 @@ class MyPanelInfo(wx.Panel):
 
 class MyFrame(wx.Frame):
   """ """
-  def __init__(self, parent=None, ID=-1, title=_(_("Install distro"))):
+  def __init__(self, parent=None, ID=-1, title=_(_(Glob.PACKAGE_TITLE))):
     wx.Frame.__init__(self, parent, ID, title)
     mylocale = wx.Locale()
     mylocale.AddCatalogLookupPathPrefix('./locale')
