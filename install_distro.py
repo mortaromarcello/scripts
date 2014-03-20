@@ -347,12 +347,13 @@ class MyFrame(wx.Frame):
     self.panel_info.Hide()
     self.runInst = False
     self.statusbar = self.CreateStatusBar()
-    #self.statusbar.SetFieldsCount(3)
-    #self.statusbar.SetStatusWidths([320, -1, -2])
-    #self.progress_bar = wx.Gauge(self.statusbar, -1, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
-    #rect = self.statusbar.GetFieldRect(1)
-    #self.progress_bar.SetPosition((rect.x+2, rect.y+2))
-    #self.progress_bar.SetSize((rect.width-4, rect.height-4))
+    self.statusbar.SetFieldsCount(3)
+    self.statusbar.SetStatusWidths([320, -1, -2])
+    self.progress_bar = wx.Gauge(self.statusbar, -1, range=100, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
+    rect = self.statusbar.GetFieldRect(1)
+    self.progress_bar.SetPosition((rect.x+2, rect.y+2))
+    self.progress_bar.SetSize((rect.width-4, rect.height-4))
+    self.progress_bar.Hide()
     self.SetStatusText("Welcome to Setup Livedevelop")
     self.__DoLayout()
   
@@ -537,6 +538,9 @@ class MyFrame(wx.Frame):
     """ """
     print 'copyRoot'
     self.SetStatusText(_("I copy the files (It takes time)..."))
+    self.progress_bar.Show()
+    self.timer = wx.Timer(self, 1)
+    self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
     cmd = 'rsync -a --stats --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
     proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
     remainder = proc.communicate()[0]
@@ -545,10 +549,21 @@ class MyFrame(wx.Frame):
     #print('Number of files: ' + str(total_files))
     cmd = 'rsync -av  --progress %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
     proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
-    
+    while True:
+      output = proc.stdout.readline()
+      if 'to-check' in output:
+        m = re.findall(r'to-check=(\d+)/(\d+)', output)
+        self.progress = (100 * (int(m[0][1]) - int(m[0][0]))) / total_files
+        if int(m[0][0]) == 0:
+          break
     
     #Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
     #if Glob.PROC.returncode: self.checkError()
+  
+  def OnTimer(self, evt):
+    self.process_bar.SetValue(self.progress)
+    if self.count == TASK_RANGE:
+      self.timer.Stop()
   
   def addUser(self):
     """ """
