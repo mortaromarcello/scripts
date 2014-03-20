@@ -18,7 +18,7 @@ for i in $DEV; do
 	ID[CONT]=$(lsusb -s $i|awk '{print $6}')
 	CONT=$CONT+1
 done
-if [ -z ${ID} ]; then
+if [ -z "${ID}" ]; then
 	echo "non c'è nessuna pendrive. Esco"
 	exit
 fi
