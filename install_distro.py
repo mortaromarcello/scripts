@@ -6,50 +6,7 @@ from optparse import OptionParser
 # variabili globali
 _ = wx.GetTranslation
 padding = 5 # pixels fra gli oggetti delle box
-count_size_files_copied = 0
 # funzioni
-
-def copytree(src, dst, symlinks=True, ignore=None):
-  global count_size_files_copied
-  names = os.listdir(src)
-  if ignore is not None:
-    ignored_names = ignore(src, names)
-  else:
-    ignored_names = set()
-  if not os.path.isdir(dst):
-    os.makedirs(dst)
-  errors = []
-  for name in names:
-    if name in ignored_names:
-      continue
-    srcname = os.path.join(src, name)
-    dstname = os.path.join(dst, name)
-    try:
-      if symlinks and os.path.islink(srcname):
-        linkto = os.readlink(srcname)
-        os.symlink(linkto, dstname)
-      elif os.path.isdir(srcname):
-        copytree(srcname, dstname, symlinks, ignore)
-      else:
-        shutil.copy2(srcname, dstname)
-        count_size_files_copied += os.lstat(srcname).st_size
-        sys.stdout.write("%s -> %s\n" % (srcname, dstname))
-      # XXX What about devices, sockets etc.?
-    except (IOError, os.error) as why:
-      errors.append((srcname, dstname, str(why)))
-    # catch the Error from the recursive copytree so that we can
-    # continue with other files
-    except shutil.Error as err:
-      errors.extend(err.args[0])
-  try:
-    shutil.copystat(src, dst)
-  except shutil.WindowsError:
-    # can't copy file access times on Windows
-    pass
-  except OSError as why:
-    errors.extend((src, dst, str(why)))
-  if errors:
-    raise shutil.Error(errors)
 
 def ismount(device):
   """ controlla se il device montato """
@@ -390,12 +347,12 @@ class MyFrame(wx.Frame):
     self.panel_info.Hide()
     self.runInst = False
     self.statusbar = self.CreateStatusBar()
-    self.statusbar.SetFieldsCount(3)
-    self.statusbar.SetStatusWidths([320, -1, -2])
-    self.progress_bar = wx.Gauge(self.statusbar, -1, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
-    rect = self.statusbar.GetFieldRect(1)
-    self.progress_bar.SetPosition((rect.x+2, rect.y+2))
-    self.progress_bar.SetSize((rect.width-4, rect.height-4))
+    #self.statusbar.SetFieldsCount(3)
+    #self.statusbar.SetStatusWidths([320, -1, -2])
+    #self.progress_bar = wx.Gauge(self.statusbar, -1, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
+    #rect = self.statusbar.GetFieldRect(1)
+    #self.progress_bar.SetPosition((rect.x+2, rect.y+2))
+    #self.progress_bar.SetSize((rect.width-4, rect.height-4))
     self.SetStatusText("Welcome to Setup Livedevelop")
     self.__DoLayout()
   
@@ -580,9 +537,8 @@ class MyFrame(wx.Frame):
     """ """
     print 'copyRoot'
     self.SetStatusText(_("I copy the files (It takes time)..."))
-    #Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
-    #if Glob.PROC.returncode: self.checkError()
-    copytree(Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
+    Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
+    if Glob.PROC.returncode: self.checkError()
   
   def addUser(self):
     """ """
