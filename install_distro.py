@@ -692,9 +692,8 @@ class MyFrame(wx.Frame):
   def endInstall(self):
     """ """
     print 'endInstall'
-    ,#Glob.PROC = runProcess("sync")
-    #if Glob.PROC.returncode: self.checkError()
-    os.sync()
+    Glob.PROC = runProcess("sync")
+    if Glob.PROC.returncode: self.checkError()
     if ismount(Glob.HOME_PARTITION):
       Glob.PROC = runProcess("umount %s" % Glob.HOME_PARTITION)
     if ismount(Glob.ROOT_PARTITION):
