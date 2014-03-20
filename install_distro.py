@@ -537,8 +537,18 @@ class MyFrame(wx.Frame):
     """ """
     print 'copyRoot'
     self.SetStatusText(_("I copy the files (It takes time)..."))
-    Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
-    if Glob.PROC.returncode: self.checkError()
+    cmd = 'rsync -a --stats --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
+    proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
+    remainder = proc.communicate()[0]
+    mn = re.findall(r'Number of files: (\d+)', remainder)
+    total_files = int(mn[0])
+    #print('Number of files: ' + str(total_files))
+    cmd = 'rsync -av  --progress %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
+    proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
+    
+    
+    #Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
+    #if Glob.PROC.returncode: self.checkError()
   
   def addUser(self):
     """ """
