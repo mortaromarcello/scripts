@@ -1,215 +1,212 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Marcello Mortaro <mortaromarcello@gmail.com>, 2014.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-19 11:00+0100\n"
-"PO-Revision-Date: 2014-03-19 11:04+0200\n"
-"Last-Translator: Marcello Mortaro <mortaromarcello@gmail.com>\n"
-"Language-Team: it\n"
-"Language: it\n"
+"POT-Creation-Date: 2014-03-22 11:25+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.7.1\n"
 
-#: install_distro.py:162
+#: install_distro.py:184
 msgid " Initialization "
-msgstr " Inizializzazione "
+msgstr ""
 
-#: install_distro.py:172
+#: install_distro.py:194
 msgid "Format the partition  home"
-msgstr "Formattare la partizione home"
+msgstr ""
 
-#: install_distro.py:174
+#: install_distro.py:196
 msgid "Automatic login"
-msgstr "Accesso automatico"
+msgstr ""
 
-#: install_distro.py:200
+#: install_distro.py:222
 msgid "The options marked with an asterisk are required"
-msgstr "Le opzioni segnate con un asterisco sono necessarie"
+msgstr ""
 
-#: install_distro.py:202
+#: install_distro.py:224
 msgid "Root partition (*)"
-msgstr "Partizione di root (*)"
+msgstr ""
 
-#: install_distro.py:205
+#: install_distro.py:227
 msgid "Home partition"
-msgstr "Partizione di home"
+msgstr ""
 
-#: install_distro.py:211
+#: install_distro.py:233
 msgid "Installation drive (*)"
-msgstr "Dispositivo di installazione (*)"
+msgstr ""
 
-#: install_distro.py:214
+#: install_distro.py:236
 msgid "Username (*)"
-msgstr "Nome utente (*)"
+msgstr ""
 
-#: install_distro.py:217
+#: install_distro.py:239
 msgid "User password (*)"
-msgstr "Password utente (*)"
+msgstr ""
 
-#: install_distro.py:220
+#: install_distro.py:242
 msgid "Root password (*)"
-msgstr "Password di root (*)"
+msgstr ""
 
-#: install_distro.py:223
+#: install_distro.py:245
 msgid "Locale"
-msgstr "Localizzazione"
+msgstr ""
 
-#: install_distro.py:226
+#: install_distro.py:248
 msgid "Language"
-msgstr "Lingua"
+msgstr ""
 
-#: install_distro.py:229
+#: install_distro.py:251
 msgid "Keyboard"
-msgstr "Tastiera"
+msgstr ""
 
-#: install_distro.py:232
+#: install_distro.py:254
 msgid "Hostname (*)"
-msgstr "Nome Host (*)"
+msgstr ""
 
-#: install_distro.py:235
+#: install_distro.py:257
 msgid "Groups (*)"
-msgstr "Gruppi (*)"
+msgstr ""
 
-#: install_distro.py:238
+#: install_distro.py:260
 msgid "Timezone"
-msgstr "Fuso orario"
+msgstr ""
 
-#: install_distro.py:241
+#: install_distro.py:263
 msgid "Shell"
-msgstr "Shell"
+msgstr ""
 
-#: install_distro.py:286
+#: install_distro.py:308
 msgid " You entered an illegal character in the 'User password'. "
-msgstr "Hai inserito un carattere illegale nella 'Password utente'"
+msgstr ""
 
-#: install_distro.py:286 install_distro.py:293 install_distro.py:406
-#: install_distro.py:431 install_distro.py:465
+#: install_distro.py:308 install_distro.py:315 install_distro.py:441
+#: install_distro.py:469 install_distro.py:504
 msgid "Attention"
-msgstr "Attenzione"
+msgstr ""
 
-#: install_distro.py:293
+#: install_distro.py:315
 msgid " You entered an illegal character in the 'Root password' "
-msgstr "Hai inserito un carattere illegale nella 'Password di root'"
+msgstr ""
 
-#: install_distro.py:314
+#: install_distro.py:336
 msgid " Summary "
-msgstr "Riepilogo"
+msgstr ""
 
-#: install_distro.py:345
+#: install_distro.py:380
 msgid "&File"
-msgstr "&File"
+msgstr ""
 
-#: install_distro.py:345
+#: install_distro.py:380
 msgid "&Quit"
-msgstr "&Esci"
+msgstr ""
 
-#: install_distro.py:345
+#: install_distro.py:380
 msgid "Quit"
-msgstr "Esci"
-
-#: install_distro.py:346
-msgid "&Help"
-msgstr "Ai&uto"
-
-#: install_distro.py:346
-msgid "Help"
-msgstr "Aiuto"
+msgstr ""
 
 #: install_distro.py:381
+msgid "&Help"
+msgstr ""
+
+#: install_distro.py:381
+msgid "Help"
+msgstr ""
+
+#: install_distro.py:416
 msgid "Install"
-msgstr "Installazione"
+msgstr ""
 
-#: install_distro.py:406
+#: install_distro.py:441
 msgid "Attention! Installation is in progress! Are you sure?"
-msgstr "Attenzione! L'installazione è in corso! Sei sicuro?"
+msgstr ""
 
-#: install_distro.py:415
+#: install_distro.py:454
 msgid "Beginning installation..."
-msgstr "Preparazione dell'installazione in corso..."
+msgstr ""
 
-#: install_distro.py:431
+#: install_distro.py:469
 msgid ""
 "Attention! The installation formats the partitions of the of the disk! Are "
 "you sure??"
 msgstr ""
-"Attenzione! L'installazione formatterà le partizioni del disco! Sei sicuro??"
 
-#: install_distro.py:458
+#: install_distro.py:497
 msgid "\t<--installation completed successfully-->"
-msgstr "<--installazione terminata con successo-->"
+msgstr ""
 
-#: install_distro.py:463
+#: install_distro.py:502
 msgid "Checking the prerequisites"
-msgstr "Controllo i prerequisiti"
+msgstr ""
 
-#: install_distro.py:465
+#: install_distro.py:504
 msgid ""
 "Not all required options have been assigned. (All options marked with an "
 "asterisk are required)"
 msgstr ""
-"Non tutte le opzioni richieste sono state assegnate. (Tutte le opzioni "
-"segnate con un asterisco sono richieste)"
 
-#: install_distro.py:470
+#: install_distro.py:509
 #, python-format
 msgid "Device %s mounted in %s."
-msgstr "Dispositivo %s montato in %s."
+msgstr ""
 
-#: install_distro.py:470 install_distro.py:473
+#: install_distro.py:509 install_distro.py:512
 msgid "Error"
-msgstr "Errore"
+msgstr ""
 
-#: install_distro.py:473
+#: install_distro.py:512
 msgid "The root partition and home partition coincide."
-msgstr "La partizione di root e la partizione di home coincidono."
+msgstr ""
 
-#: install_distro.py:480
+#: install_distro.py:520
 msgid "I create the root filesystem, and I mount it"
-msgstr "Creo il filesystem principale, e lo monto"
+msgstr ""
 
-#: install_distro.py:498
+#: install_distro.py:539
 msgid "I create and mount the HOME directory"
-msgstr "Creo e monto la HOME directory"
+msgstr ""
 
-#: install_distro.py:522
+#: install_distro.py:564
 msgid "I copy the files (It takes time)..."
-msgstr "Copio i files (Ci può volere un pò di tempo)..."
+msgstr ""
 
-#: install_distro.py:529
+#: install_distro.py:608
 msgid "Add user"
-msgstr "Aggiungo utente"
+msgstr ""
 
-#: install_distro.py:536
+#: install_distro.py:616
 msgid "Change the root password"
-msgstr "Cambio la password di root"
+msgstr ""
 
-#: install_distro.py:543
+#: install_distro.py:624
 msgid "Add the user to the sudo group"
-msgstr "Aggiungo l'utente al gruppo sudo"
+msgstr ""
 
-#: install_distro.py:551
+#: install_distro.py:633
 msgid "Set the autologin"
-msgstr "Imposto l'accesso automatico"
+msgstr ""
 
-#: install_distro.py:580
+#: install_distro.py:664
 msgid "Set locale"
-msgstr "Imposto la localizzazione"
+msgstr ""
 
-#: install_distro.py:594
+#: install_distro.py:679
 msgid "Set timezone"
-msgstr "Imposto il fuso orario"
+msgstr ""
 
-#: install_distro.py:602
+#: install_distro.py:688
 msgid "Set hostname"
-msgstr "Imposto il nome dell'host"
+msgstr ""
 
-#: install_distro.py:619
+#: install_distro.py:707
 msgid "Install grub"
-msgstr "Installo grub"
+msgstr ""
