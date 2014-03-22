@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, re, os, shutil, time, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
 from optparse import OptionParser
 
 # variabili globali
