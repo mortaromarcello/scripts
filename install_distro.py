@@ -6,13 +6,21 @@ from optparse import OptionParser
 # variabili globali
 _ = wx.GetTranslation
 padding = 5 # pixels fra gli oggetti delle box
-# funzioni
 
-def ismount(device):
-  """ controlla se il device montato """
+#--------------Funzioni-----------------
+
+def isdevmount(device):
+  """ controlla se il device montato.Ritorna il path, altrimenti stringa vuota """
   for l in file('/proc/mounts'):
     d = l.split()
     if d[0] == device: return d[1]
+  return ''
+
+def ispathmount(path):
+  """ controlla se il path montato. Ritorna il device, altrimenti stringa vuota """
+  for l in file('/proc/mounts'):
+    d = l.split()
+    if d[1] == path: return d[0]
   return ''
 
 def blkid(device):
@@ -116,8 +124,11 @@ class Glob:
   SQUASH_FS             = '/lib/live/mount/rootfs/filesystem.squashfs'
   USE_HOME              = False
   CONSOLE_LOG_LEVEL     = logging.DEBUG
+  DEBUG                 = False
   PROC                  = None
   PATH_FILE_LOG         = '/tmp/install.log'
+  PATH_PROG             = os.path.realpath(sys.argv[0])
+  PATH_PROG_LANGS       = ('/usr/local/share/locale/it/%s.mo' % sys.argv[0],)
   FILE_LOG              = None
 
   # user's home dir - works for windows/unix/linux
@@ -319,7 +330,7 @@ class MyPanel(wx.Panel):
 class MyPanelInfo(wx.Panel):
   def __init__(self, parent):
     wx.Panel.__init__(self, parent)
-    self.info = wx.TextCtrl(self, size=(800, 500), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
+    self.info = wx.TextCtrl(self, size=(800, 400), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
     self.info.SetForegroundColour(wx.BLACK)
     self.info.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_BACKGROUND))
     sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Summary ')), wx.VERTICAL)
@@ -346,15 +357,21 @@ class MyFrame(wx.Frame):
     self.panel_info = MyPanelInfo(self)
     self.panel_info.Hide()
     self.runInst = False
+    self.distro_install_done = False
+    # statusbar
     self.statusbar = self.CreateStatusBar()
     self.statusbar.SetFieldsCount(3)
-    self.statusbar.SetStatusWidths([320, -1, -2])
-    self.progress_bar = wx.Gauge(self.statusbar, -1, range=100, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
-    rect = self.statusbar.GetFieldRect(1)
-    self.progress_bar.SetPosition((rect.x+2, rect.y+2))
-    self.progress_bar.SetSize((rect.width-4, rect.height-4))
+    #self.statusbar.SetStatusWidths([320, -1, -2])
+    #self.progress_bar
+    self.progress_bar = wx.Gauge(self.statusbar, -1, style=wx.GA_HORIZONTAL|wx.GA_SMOOTH)
     self.progress_bar.Hide()
+    #self.timer
+    self.timer = wx.Timer(self, 1)
+    #self.progress
+    self.progress = 0
+    self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
     self.SetStatusText("Welcome to Setup Livedevelop")
+    #
     self.__DoLayout()
   
   def createMenuBar(self):
@@ -425,6 +442,10 @@ class MyFrame(wx.Frame):
       if result == wx.ID_NO:
         return
     self.endInstall()
+    if self.distro_install_done:
+      os.remove(Glob.PATH_PROG)
+      for flang in Glob.PATH_PROG_LANGS:
+        os.remove(flang)
     self.Close()
   
   def goInstall(self):
@@ -439,7 +460,6 @@ class MyFrame(wx.Frame):
     self.panel.Hide()
     self.panel_info.Show()
     self.sizer.Fit(self)
-    
     self.panel_info.updateInfo("\n Name Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
     if Glob.HOME_PARTITION: self.panel_info.updateInfo(" Home partition:\t\t\t%s\n" % Glob.HOME_PARTITION)
     if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo("UUID home partition:\t\t%s\n" % Glob.UUID_HOME_PARTITION)
@@ -472,6 +492,7 @@ class MyFrame(wx.Frame):
     self.updateMinidlna()
     self.installGrub()
     self.runInst = False
+    self.distro_install_done = True
     self.panel_info.clearInfo()
     self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
   
@@ -483,7 +504,7 @@ class MyFrame(wx.Frame):
       wx.MessageBox(_("Not all required options have been assigned. (All options marked with an asterisk are required)"), _("Attention"), wx.OK | wx.ICON_INFORMATION)
       return False
     for part in (Glob.ROOT_PARTITION, Glob.HOME_PARTITION, Glob.SWAP_PARTITION):
-      d = ismount(part)
+      d = isdevmount(part)
       if d:
         wx.MessageBox(_("Device %s mounted in %s." % (part, d)), _("Error"), wx.OK|wx.ICON_ERROR)
         return False
@@ -495,6 +516,7 @@ class MyFrame(wx.Frame):
   def createRootAndMountPartition(self):
     """ """
     print 'createRootAndMountPartition'
+    if Glob.DEBUG: return
     self.SetStatusText(_("I create the root filesystem, and I mount it"))
     Glob.PROC = runProcess("mkfs -t %s %s" % (Glob.TYPE_FS, Glob.ROOT_PARTITION))
     if not Glob.PROC.returncode:
@@ -511,6 +533,7 @@ class MyFrame(wx.Frame):
   def createHomeAndMountPartition(self):
     """ """
     print 'createHomeAndMountPartition'
+    if Glob.DEBUG: return
     if not Glob.HOME_PARTITION:
       return
     self.SetStatusText(_("I create and mount the HOME directory"))
@@ -529,6 +552,7 @@ class MyFrame(wx.Frame):
     """ """
     if not Glob.SWAP_PARTITION: return
     print 'createSwapPartition'
+    if Glob.DEBUG: return
     Glob.PROC = runProcess("mkswap -c %s" % Glob.SWAP_PARTITION)
     if not Glob.PROC.returncode:
       Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
@@ -538,36 +562,49 @@ class MyFrame(wx.Frame):
     """ """
     print 'copyRoot'
     self.SetStatusText(_("I copy the files (It takes time)..."))
+    #preparo la progress_bar
+    rect = self.statusbar.GetFieldRect(1)
+    self.progress_bar.SetPosition((rect.x+2, rect.y+2))
+    self.progress_bar.SetSize((rect.width-4, rect.height-4))
     self.progress_bar.Show()
-    self.timer = wx.Timer(self, 1)
-    self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
-    cmd = 'rsync -a --stats --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
-    proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
+    self.timer.Start(100)
+    copied_files = 0
+    cmd = 'rsync -a --info=stats2 --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     remainder = proc.communicate()[0]
-    mn = re.findall(r'Number of files: (\d+)', remainder)
-    total_files = int(mn[0])
-    #print('Number of files: ' + str(total_files))
-    cmd = 'rsync -av  --progress %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
-    proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,)
+    mn = re.findall(r'reg: (\d+.*? )', remainder)
+    if mn:
+      total_files = int(mn[0].replace(',', ''))
+      print total_files
+    cmd = 'rsync -av --info=progress2,stats2 %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     while True:
-      output = proc.stdout.readline()
-      if 'to-check' in output:
-        m = re.findall(r'to-check=(\d+)/(\d+)', output)
-        self.progress = (100 * (int(m[0][1]) - int(m[0][0]))) / total_files
-        if int(m[0][0]) == 0:
+      line = proc.stdout.readline()
+      wx.Yield()
+      if line.strip() == "":
+		pass
+      if 'xfr#' in line:
+        m = re.findall(r'xfr#(\d+)', line)
+        if m: copied_files = int(m[0])
+        self.progress = (100 * copied_files) / total_files
+        if copied_files == total_files:
           break
-    
+      else:
+        print line.strip()
+      if not line: break
+    proc.wait()
     #Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
     #if Glob.PROC.returncode: self.checkError()
   
-  def OnTimer(self, evt):
-    self.process_bar.SetValue(self.progress)
-    if self.count == TASK_RANGE:
+  def onTimer(self, evt):
+    self.progress_bar.SetValue(self.progress)
+    if self.progress == 100:
       self.timer.Stop()
   
   def addUser(self):
     """ """
     print 'addUser'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Add user"))
     Glob.PROC = runProcess("chroot %s useradd -G %s -s %s -m -p %s %s" % (Glob.INST_ROOT_DIRECTORY, Glob.GROUPS, Glob.SHELL_USER, Glob.CRYPT_USER_PASSWORD, Glob.USER))
     if Glob.PROC.returncode: self.checkError()
@@ -575,6 +612,7 @@ class MyFrame(wx.Frame):
   def changeRootPassword(self):
     """ """
     print 'changeRootPassword'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Change the root password"))
     Glob.PROC = runProcess("chroot %s bash -c \"echo root:%s | chpasswd -e\"" % (Glob.INST_ROOT_DIRECTORY, Glob.CRYPT_ROOT_PASSWORD))
     if Glob.PROC.returncode: self.checkError()
@@ -582,6 +620,7 @@ class MyFrame(wx.Frame):
   def addSudoUser(self):
     """ """
     print 'addSudoUser'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Add the user to the sudo group"))
     Glob.PROC = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
     if Glob.PROC.returncode: self.checkError()
@@ -590,6 +629,7 @@ class MyFrame(wx.Frame):
     """ """
     if not Glob.AUTOLOGIN: return
     print 'setAutologin'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Set the autologin"))
     if grep('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, '/usr/sbin/gdm3'):
       line = grep('%s/etc/gdm3/daemon.conf' % Glob.INST_ROOT_DIRECTORY, 'AutomaticLoginEnable')
@@ -605,6 +645,7 @@ class MyFrame(wx.Frame):
   def createFstab(self):
     """ """
     print 'createFstab'
+    if Glob.DEBUG: return
     self.SetStatusText('Creo /etc/fstab')
     buff = "# /etc/fstab: static file system information.\n#\n# Use 'blkid' to print the universally unique identifier for a\n# device; this may be used with UUID= as a more robust way to name devices\n# that works even if disks are added and removed. See fstab(5).\n#\n# <file system> <mount point> <type> <options> <dump> <pass>\nproc /proc proc defaults 0 0\nUUID=%s / %s errors=remount-ro 0 1\n" % (Glob.UUID_ROOT_PARTITION, Glob.TYPE_FS)
     if Glob.UUID_HOME_PARTITION:
@@ -619,6 +660,7 @@ class MyFrame(wx.Frame):
   def setLocale(self):
     """ """
     print 'setLocale'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Set locale"))
     line = grep('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, Glob.LOCALE)
     if line: edsub('%s/etc/locale.gen' % Glob.INST_ROOT_DIRECTORY, line, '%s\n' % Glob.LOCALE)
@@ -633,6 +675,7 @@ class MyFrame(wx.Frame):
   def setTimezone(self):
     """" """
     print 'setTimezone'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Set timezone"))
     f = open('%s/etc/timezone' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write('%s\n' % Glob.TIMEZONE)
@@ -641,6 +684,7 @@ class MyFrame(wx.Frame):
   def setHostname(self):
     """" """
     print 'setHostname'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Set hostname"))
     f = open('%s/etc/hostname' % Glob.INST_ROOT_DIRECTORY, 'w')
     f.write("%s\n" % Glob.HOSTNAME)
@@ -653,11 +697,13 @@ class MyFrame(wx.Frame):
     """ """
     if not os.path.isfile('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY): return
     print 'updateMinidlna'
+    if Glob.DEBUG: return
     edsub('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY, 'live-user', Glob.USER)
   
   def installGrub(self):
     """ """
     print 'installGrub'
+    if Glob.DEBUG: return
     self.SetStatusText(_("Install grub"))
     for dir in ['dev', 'sys', 'proc']:
       Glob.PROC = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
@@ -673,11 +719,12 @@ class MyFrame(wx.Frame):
   def endInstall(self):
     """ """
     print 'endInstall'
+    if Glob.DEBUG: return
     Glob.PROC = runProcess("sync")
     if Glob.PROC.returncode: self.checkError()
-    if ismount(Glob.HOME_PARTITION):
+    if isdevmount(Glob.HOME_PARTITION):
       Glob.PROC = runProcess("umount %s" % Glob.HOME_PARTITION)
-    if ismount(Glob.ROOT_PARTITION):
+    if isdevmount(Glob.ROOT_PARTITION):
       Glob.PROC = runProcess("umount %s" % Glob.ROOT_PARTITION)
     Glob.FILE_LOG.close()
   
@@ -700,6 +747,9 @@ class MyApp(wx.App):
     Glob.INST_DRIVE = options.inst_drive
     if options.groups: 
       Glob.GROUPS = options.groups
+    #
+    if ispathmount(Glob.INST_ROOT_DIRECTORY):
+      Glob.PROC = runProcess("umount %s" % Glob.INST_ROOT_DIRECTORY)
     #
     Glob.FILE_LOG = open(Glob.PATH_FILE_LOG, 'w')
     Glob.FILE_LOG.write(time.strftime("%a, %d %b %Y %H:%M:%S +0000\n", time.gmtime()))
