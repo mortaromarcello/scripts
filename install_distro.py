@@ -130,6 +130,7 @@ class Glob:
   PATH_PROG             = os.path.realpath(sys.argv[0])
   PATH_PROG_LANGS       = ('/usr/local/share/locale/it/%s.mo' % sys.argv[0],)
   FILE_LOG              = None
+  INSTALLED_OK          = False
 
   # user's home dir - works for windows/unix/linux
   HOME_DIR = os.getenv('USERPROFILE') or os.getenv('HOME')
@@ -495,6 +496,7 @@ class MyFrame(wx.Frame):
     self.distro_install_done = True
     self.panel_info.clearInfo()
     self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
+    Glob.INSTALLED_OK = True
   
   def checkRequisites(self):
     """ controlla che i requisiti siano rispettati """
@@ -763,6 +765,11 @@ def main():
   """ """
   app = MyApp()
   app.MainLoop()
+  if Glob.INSTALLED_OK:
+    if os.path.exists('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG_LANGS)):
+      os.remove('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG_LANGS))
+    if os.path.exists('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG)):
+      os.remove('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG))
 
 if __name__ == '__main__':
   main()
