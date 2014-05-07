@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, time, string, subprocess, psutil, wx, parted, parted.disk, logging
 from optparse import OptionParser
 
 # variabili globali
@@ -370,7 +370,6 @@ class MyFrame(wx.Frame):
 		self.panel_info = MyPanelInfo(self)
 		self.panel_info.Hide()
 		self.runInst = False
-		self.distro_install_done = False
 		# statusbar
 		self.statusbar = self.CreateStatusBar()
 		self.statusbar.SetFieldsCount(3)
@@ -455,10 +454,6 @@ class MyFrame(wx.Frame):
 			if result == wx.ID_NO:
 				return
 		self.endInstall()
-		if self.distro_install_done:
-			os.remove(Glob.PATH_PROG)
-			for flang in Glob.PATH_PROG_LANGS:
-				os.remove(flang)
 		self.Close()
 	
 	def goInstall(self):
@@ -505,7 +500,6 @@ class MyFrame(wx.Frame):
 		self.updateMinidlna()
 		self.installGrub()
 		self.runInst = False
-		self.distro_install_done = True
 		self.panel_info.clearInfo()
 		self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
 		Glob.INSTALLED_OK = True
@@ -604,7 +598,7 @@ class MyFrame(wx.Frame):
 			cmd = 'rsync -av --info=progress2,stats2 %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
 		else:
 			cmd = 'rsync -av --progress %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
-		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+		Glob.PROC = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 		while True:
 			line = proc.stdout.readline()
 			wx.Yield()
@@ -757,6 +751,11 @@ class MyFrame(wx.Frame):
 		""" """
 		print 'endInstall'
 		if Glob.DEBUG: return
+		for process in psutil.process_iter():
+			if 'rsync' in process.cmdline:
+				print('Process found. Terminating it.')
+				process.terminate()
+		
 		Glob.PROC = runProcess("sync")
 		if Glob.PROC.returncode: self.checkError()
 		if isdevmount(Glob.HOME_PARTITION):
