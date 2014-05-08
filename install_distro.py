@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, re, os, time, string, subprocess, psutil, wx, parted, parted.disk, logging
+import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
+#import psutil
 from optparse import OptionParser
 
 # variabili globali
@@ -757,10 +758,20 @@ class MyFrame(wx.Frame):
 		if Glob.PROC:
 			if Glob.PROC.returncode == None:
 				Glob.PROC.terminate()
-		for process in psutil.process_iter():
-			if 'rsync' in process.cmdline:
-				print('Process found. Terminating it.')
-				process.terminate()
+		proc = subprocess.Popen(["pgrep", "rsync"], stdout=subprocess.PIPE)
+		for pid in proc.stdout:
+			os.kill(int(pid), signal.SIGTERM)
+			try:
+				os.kill(int(pid), 0)
+				raise Exception(""""wasn't able to kill the process 
+									HINT:use signal.SIGKILL or signal.SIGABORT""")
+			except OSError as ex:
+				continue
+
+#		for process in psutil.process_iter():
+#			if 'rsync' in process.cmdline:
+#				print('Process found. Terminating it.')
+#				process.terminate()
 		
 		Glob.PROC = runProcess("sync")
 		if Glob.PROC.returncode: self.checkError()
