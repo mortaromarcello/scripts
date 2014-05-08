@@ -2,6 +2,7 @@
 
 import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
 import signal
+import shutil
 #import psutil
 from optparse import OptionParser
 
@@ -715,6 +716,14 @@ class MyFrame(wx.Frame):
 		f = open('%s/etc/timezone' % Glob.INST_ROOT_DIRECTORY, 'w')
 		f.write('%s\n' % Glob.TIMEZONE)
 		f.close()
+		# set the time
+		try:
+			shutil.copy("/usr/share/zoneinfo/%s" % Glob.TIMEZONE, "/etc/localtime")
+		except shutil.Error as e:
+			print('Error: %s' % e)
+		# eg. source or destination doesn't exist
+		except IOError as e:
+			print('Error: %s' % e.strerror)
 	
 	def setHostname(self):
 		"""" setta hostname """
