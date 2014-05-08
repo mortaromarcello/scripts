@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
+import signal
 #import psutil
 from optparse import OptionParser
 
@@ -87,7 +88,7 @@ def get_size(start_path = '.', symlink=False):
 	return total_size
 
 def is31rsync():
-	""" ritorna True se la versione di rsync è maggiore o uguale di 3.1 """
+	""" ritorna True se la versione di rsync e' maggiore o uguale di 3.1 """
 	proc = subprocess.Popen("rsync --version", shell=True, stdout=subprocess.PIPE)
 	while True:
 		line = proc.stdout.readline()
@@ -492,22 +493,23 @@ class MyFrame(wx.Frame):
 		if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo(' UUID home partition:\t\t%s\n' % Glob.UUID_HOME_PARTITION)
 		self.createSwapPartition()
 		if Glob.UUID_SWAP_PARTITION: self.panel_info.updateInfo(' UUID swap partition:\t\t%s\n' % Glob.UUID_SWAP_PARTITION)
-		self.copyRoot()
-		self.addUser()
-		self.changeRootPassword()
-		self.addSudoUser()
-		self.setAutologin()
-		self.createFstab()
-		self.setLocale()
-		self.setTimezone()
-		self.setHostname()
-		self.updateMinidlna()
-		self.installGrub()
-		self.runInst = False
-		self.panel_info.clearInfo()
-		self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
-		Glob.INSTALLED_OK = True
-	
+		try:
+			self.copyRoot()
+			self.addUser()
+			self.changeRootPassword()
+			self.addSudoUser()
+			self.setAutologin()
+			self.createFstab()
+			self.setLocale()
+			self.setTimezone()
+			self.setHostname()
+			self.updateMinidlna()
+			self.installGrub()
+			self.runInst = False
+			self.panel_info.clearInfo()
+			self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
+			Glob.INSTALLED_OK = True
+		except: pass
 	def checkRequisites(self):
 		""" controlla che i requisiti siano rispettati """
 		print 'checkRequisites'
@@ -604,7 +606,7 @@ class MyFrame(wx.Frame):
 			cmd = 'rsync -av --progress %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
 		Glob.PROC = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 		while True:
-			line = proc.stdout.readline()
+			line = Glob.PROC.stdout.readline()
 			wx.Yield()
 			if line.strip() == "":
 				pass
@@ -627,7 +629,7 @@ class MyFrame(wx.Frame):
 				else:
 					print line.strip()
 			if not line: break
-		proc.wait()
+		Glob.PROC.wait()
 		#Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
 		#if Glob.PROC.returncode: self.checkError()
 	
@@ -763,8 +765,7 @@ class MyFrame(wx.Frame):
 			os.kill(int(pid), signal.SIGTERM)
 			try:
 				os.kill(int(pid), 0)
-				raise Exception(""""wasn't able to kill the process 
-									HINT:use signal.SIGKILL or signal.SIGABORT""")
+#				raise Exception(""""wasn't able to kill the process\nHINT:use signal.SIGKILL or signal.SIGABORT""")
 			except OSError as ex:
 				continue
 
