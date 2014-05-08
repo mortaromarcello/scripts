@@ -60,6 +60,7 @@ def edsub(namefile, string, substring, one=False):
 	return 0
 	
 def runProcess(command):
+	""" esegue il comando 'command' e ritorna il processo """
 	proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 	while True:
 		line = proc.stdout.readline()                        
@@ -73,6 +74,7 @@ def runProcess(command):
 	return proc
 
 def get_size(start_path = '.', symlink=False):
+	""" restituisce il totale della grandezza dei file in una directory """
 	total_size = 0
 	for dirpath, dirnames, filenames in os.walk(start_path):
 		for f in filenames:
@@ -84,6 +86,7 @@ def get_size(start_path = '.', symlink=False):
 	return total_size
 
 def is31rsync():
+	""" ritorna True se la versione di rsync è maggiore o uguale di 3.1 """
 	proc = subprocess.Popen("rsync --version", shell=True, stdout=subprocess.PIPE)
 	while True:
 		line = proc.stdout.readline()
@@ -751,6 +754,9 @@ class MyFrame(wx.Frame):
 		""" """
 		print 'endInstall'
 		if Glob.DEBUG: return
+		if Glob.PROC:
+			if Glob.PROC.returncode == None:
+				Glob.PROC.terminate()
 		for process in psutil.process_iter():
 			if 'rsync' in process.cmdline:
 				print('Process found. Terminating it.')
