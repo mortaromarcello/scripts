@@ -573,7 +573,7 @@ class MyFrame(wx.Frame):
 		if Glob.PROC.returncode: self.checkError()
 	
 	def copyRoot(self):
-		""" """
+		""" copia la root """
 		print 'copyRoot'
 		self.SetStatusText(_("I copy the files (It takes time)..."))
 		#preparo la progress_bar
@@ -630,8 +630,6 @@ class MyFrame(wx.Frame):
 					print line.strip()
 			if not line: break
 		Glob.PROC.wait()
-		#Glob.PROC = runProcess("rsync -av %s/* %s" % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY))
-		#if Glob.PROC.returncode: self.checkError()
 	
 	def onTimer(self, evt):
 		self.progress_bar.SetValue(self.progress)
@@ -639,7 +637,7 @@ class MyFrame(wx.Frame):
 			self.timer.Stop()
 	
 	def addUser(self):
-		""" """
+		""" aggiunge utente """
 		print 'addUser'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Add user"))
@@ -647,7 +645,7 @@ class MyFrame(wx.Frame):
 		if Glob.PROC.returncode: self.checkError()
 	
 	def changeRootPassword(self):
-		""" """
+		""" cambia root password """
 		print 'changeRootPassword'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Change the root password"))
@@ -655,7 +653,7 @@ class MyFrame(wx.Frame):
 		if Glob.PROC.returncode: self.checkError()
 	
 	def addSudoUser(self):
-		""" """
+		""" aggiunge user a l gruppo sudo """
 		print 'addSudoUser'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Add the user to the sudo group"))
@@ -663,7 +661,7 @@ class MyFrame(wx.Frame):
 		if Glob.PROC.returncode: self.checkError()
 	
 	def setAutologin(self):
-		""" """
+		""" setta l'autologin '"""
 		if not Glob.AUTOLOGIN: return
 		print 'setAutologin'
 		if Glob.DEBUG: return
@@ -680,7 +678,7 @@ class MyFrame(wx.Frame):
 			if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0\n')
 	
 	def createFstab(self):
-		""" """
+		""" crea /etc/fstab """
 		print 'createFstab'
 		if Glob.DEBUG: return
 		self.SetStatusText('Creo /etc/fstab')
@@ -695,7 +693,7 @@ class MyFrame(wx.Frame):
 		f.close()
 	
 	def setLocale(self):
-		""" """
+		""" setta il locale """
 		print 'setLocale'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Set locale"))
@@ -710,7 +708,7 @@ class MyFrame(wx.Frame):
 		else: self.checkError()
 	
 	def setTimezone(self):
-		"""" """
+		"""" setta timezone """
 		print 'setTimezone'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Set timezone"))
@@ -719,7 +717,7 @@ class MyFrame(wx.Frame):
 		f.close()
 	
 	def setHostname(self):
-		"""" """
+		"""" setta hostname """
 		print 'setHostname'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Set hostname"))
@@ -731,14 +729,14 @@ class MyFrame(wx.Frame):
 		f.close()
 	
 	def updateMinidlna(self):
-		""" """
+		""" setta minidlna.conf se esiste """
 		if not os.path.isfile('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY): return
 		print 'updateMinidlna'
 		if Glob.DEBUG: return
 		edsub('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY, 'live-user', Glob.USER)
 	
 	def installGrub(self):
-		""" """
+		""" installa grub """
 		print 'installGrub'
 		if Glob.DEBUG: return
 		self.SetStatusText(_("Install grub"))
@@ -754,7 +752,7 @@ class MyFrame(wx.Frame):
 			if Glob.PROC.returncode: self.checkError()
 	
 	def endInstall(self):
-		""" """
+		""" finisce l'installazione """
 		print 'endInstall'
 		if Glob.DEBUG: return
 		if Glob.PROC:
@@ -768,11 +766,6 @@ class MyFrame(wx.Frame):
 #				raise Exception(""""wasn't able to kill the process\nHINT:use signal.SIGKILL or signal.SIGABORT""")
 			except OSError as ex:
 				continue
-
-#		for process in psutil.process_iter():
-#			if 'rsync' in process.cmdline:
-#				print('Process found. Terminating it.')
-#				process.terminate()
 		
 		Glob.PROC = runProcess("sync")
 		if Glob.PROC.returncode: self.checkError()
@@ -785,7 +778,7 @@ class MyFrame(wx.Frame):
 		Glob.FILE_LOG.close()
 	
 	def checkError(self):
-		""" """
+		""" controlla errori """
 		print 'checkError'
 		logging.debug("Subprocess error:%s" % Glob.PROC.returncode)
 		return True
