@@ -13,7 +13,7 @@ padding = 5 # pixels fra gli oggetti delle box
 #--------------Funzioni-----------------
 
 def isdevmount(device):
-	""" controlla se il device montato.Ritorna il path, altrimenti stringa vuota """
+	""" controlla se il device montato. Ritorna il path, altrimenti stringa vuota """
 	for l in file('/proc/mounts'):
 		d = l.split()
 		if d[0] == device: return d[1]
@@ -181,9 +181,8 @@ class RedirectText:
 				print 'Problem on the file %s.' % self.file.name
 				pass
 
-
 class MyPanel(wx.Panel):
-	""" """
+	""" Pannello """
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
@@ -199,7 +198,7 @@ class MyPanel(wx.Panel):
 		self.initGui()
 	
 	def initGui(self):
-		""" """
+		""" inizializza l'interfaccia """
 		self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
 		
 		grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
@@ -289,7 +288,7 @@ class MyPanel(wx.Panel):
 		self.sizer.Fit(self)
 	
 	def initDisks(self):
-		""" """
+		""" inizializza le informazioni sui dischi """
 		print 'initDisks'
 		# Inizializza le informazioni dei dischi
 		devices = parted.getAllDevices()
@@ -308,7 +307,7 @@ class MyPanel(wx.Panel):
 					else: self.parts += [i.path]
 	
 	def SetGlob(self):
-		""" """
+		""" setta le variabili Globali """
 		#--------------------------------------
 		Glob.ROOT_PARTITION = self.part_root.GetValue()
 		Glob.HOME_PARTITION = self.part_home.GetValue()
@@ -347,6 +346,7 @@ class MyPanel(wx.Panel):
 		return True
 
 class MyPanelInfo(wx.Panel):
+	""" Pannello delle informazioni """
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		self.info = wx.TextCtrl(self, size=(800, 400), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
@@ -393,6 +393,7 @@ class MyFrame(wx.Frame):
 		self.__DoLayout()
 	
 	def createMenuBar(self):
+		""" crea la barra dei menu """
 		menubar = wx.MenuBar()
 		menuData = (
 			(_("&File"),(wx.ID_EXIT, _("&Quit"), _("Quit"), "", self.onClickExit)),
@@ -405,6 +406,7 @@ class MyFrame(wx.Frame):
 		return menubar
 	
 	def createMenu(self, menuData):
+		""" crea i menu """
 		menu = wx.Menu()
 		for eachID, eachLabel, eachStatus, eachIcon, eachHandler in menuData:
 			if not eachLabel:
@@ -418,6 +420,7 @@ class MyFrame(wx.Frame):
 		return menu
 	
 	def __DoLayout(self):
+		""" crea il layout del pannello """
 		self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
 		
 		self.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -444,9 +447,11 @@ class MyFrame(wx.Frame):
 		self.sizer.Fit(self)
 	
 	def onClickHelp(self, event):
+		""" """
 		pass
 	
 	def onClickInstall(self, evt):
+		""" """
 		self.install.Disable()
 		if not self.panel.SetGlob():
 			self.install.Enable()
