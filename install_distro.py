@@ -774,7 +774,7 @@ class MyFrame(wx.Frame):
 				Glob.PROC.terminate()
 		proc = subprocess.Popen(["pgrep", "rsync"], stdout=subprocess.PIPE)
 		for pid in proc.stdout:
-			os.kill(int(pid), signal.SIGTERM)
+			os.kill(int(pid), signal.SIGKILL)
 			try:
 				os.kill(int(pid), 0)
 #				raise Exception(""""wasn't able to kill the process\nHINT:use signal.SIGKILL or signal.SIGABORT""")
