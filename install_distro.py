@@ -784,10 +784,10 @@ class MyFrame(wx.Frame):
 		Glob.PROC = runProcess("sync")
 		if Glob.PROC.returncode: self.checkError()
 		if isdevmount(Glob.HOME_PARTITION):
-			Glob.PROC = runProcess("fuser-k %s" % Glob.HOME_PARTITION)
+			Glob.PROC = runProcess("fuser -k %s" % Glob.HOME_PARTITION)
 			Glob.PROC = runProcess("umount %s" % Glob.HOME_PARTITION)
 		if isdevmount(Glob.ROOT_PARTITION):
-			Glob.PROC = runProcess("fuser-k %s" % Glob.ROOT_PARTITION)
+			Glob.PROC = runProcess("fuser -k %s" % Glob.ROOT_PARTITION)
 			Glob.PROC = runProcess("umount %s" % Glob.ROOT_PARTITION)
 		Glob.FILE_LOG.close()
 	
