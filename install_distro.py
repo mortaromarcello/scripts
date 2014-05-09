@@ -101,7 +101,7 @@ def is31rsync():
 			break
 	return False
 
-#
+#-----------------------------------------------------------------------
 
 class Logger(object):
 	""" Class Logger """
@@ -111,6 +111,7 @@ class Logger(object):
 		dateFormat = "%H:%M:%S"
 		logging.basicConfig(stream=stream, level=log_level, format=consoleFormat, datefmt=dateFormat)
 
+#-----------------------------------------------------------------------
 class Glob:
 	""" Class Glob """
 	# action constants in alphabet order
@@ -165,7 +166,7 @@ class Glob:
 	LICENSE             = ''
 	AUTHOR              = 'Mortaro Marcello'
 
- 
+#-----------------------------------------------------------------------
 class RedirectText:
 	""" redireziona l'output su una wx.TextCrtl. Se il file esiste scrive l'output sul file """
 	def __init__(self,aWxTextCtrl, file=None):
@@ -181,6 +182,7 @@ class RedirectText:
 				print 'Problem on the file %s.' % self.file.name
 				pass
 
+#-----------------------------------------------------------------------
 class MyPanel(wx.Panel):
 	""" Pannello """
 	def __init__(self, parent):
@@ -345,6 +347,7 @@ class MyPanel(wx.Panel):
 		logging.debug("distro:%s, root partition:%s, uuid root partition:%s, home partition:%s, format home:%s, autologin:%s, uuid home partition:%s, swap partition:%s, uuid swap partition:%s, drive inst:%s, dir root inst:%s, user:%s, crypt user password:%s, crypt root password:%s, locale:%s, lang:%s, keyboard:%s, hostname:%s, groups:%s, timezone:%s, shell user:%s" % (Glob.DISTRO, Glob.ROOT_PARTITION, Glob.UUID_ROOT_PARTITION, Glob.HOME_PARTITION, Glob.FORMAT_HOME, Glob.AUTOLOGIN, Glob.UUID_HOME_PARTITION, Glob.SWAP_PARTITION, Glob.UUID_SWAP_PARTITION, Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER))
 		return True
 
+#-----------------------------------------------------------------------
 class MyPanelInfo(wx.Panel):
 	""" Pannello delle informazioni """
 	def __init__(self, parent):
@@ -362,6 +365,7 @@ class MyPanelInfo(wx.Panel):
 	def clearInfo(self):
 		self.info.Clear()
 
+#-----------------------------------------------------------------------
 class MyFrame(wx.Frame):
 	""" """
 	def __init__(self, parent=None, ID=-1, title=_(_(Glob.PACKAGE_TITLE))):
@@ -797,7 +801,7 @@ class MyFrame(wx.Frame):
 		logging.debug("Subprocess error:%s" % Glob.PROC.returncode)
 		return True
 
-
+#-----------------------------------------------------------------------
 class MyApp(wx.App):
 	""" """
 	def OnInit(self):
@@ -822,6 +826,7 @@ class MyApp(wx.App):
 		self.SetTopWindow(self.frame)
 		return True
 
+#-----------------------------------------------------------------------
 def main():
 	""" """
 	app = MyApp()
@@ -832,5 +837,6 @@ def main():
 		if os.path.exists('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG)):
 			os.remove('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG))
 
+#-----------------------------------------------------------------------
 if __name__ == '__main__':
 	main()
