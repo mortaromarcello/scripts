@@ -147,6 +147,7 @@ class Glob:
 	PROC                  = None
 	PATH_FILE_LOG         = '/tmp/install.log'
 	PATH_PROG             = os.path.realpath(sys.argv[0])
+	PATH_PROG_ICON        = os.path.abspath('./installer.png')
 	PATH_PROG_LANGS       = ('/usr/local/share/locale/it/%s.mo' % sys.argv[0],)
 	FILE_LOG              = None
 	INSTALLED_OK          = False
@@ -820,7 +821,9 @@ class MyApp(wx.App):
 		#
 		Glob.FILE_LOG = open(Glob.PATH_FILE_LOG, 'w')
 		Glob.FILE_LOG.write(time.strftime("%a, %d %b %Y %H:%M:%S +0000\n", time.gmtime()))
+		icon = wx.Icon(Glob.PATH_PROG_ICON, wx.BITMAP_TYPE_PNG)
 		self.frame = MyFrame(None)
+		self.frame.SetIcon(icon)
 		self.frame.Centre()
 		self.frame.Show()
 		self.SetTopWindow(self.frame)
