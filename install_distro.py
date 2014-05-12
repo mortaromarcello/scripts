@@ -3,7 +3,6 @@
 import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
 import signal
 import shutil
-#import psutil
 from optparse import OptionParser
 
 # variabili globali
@@ -393,7 +392,7 @@ class MyFrame(wx.Frame):
 		#self.progress
 		self.progress = 0
 		self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
-		self.SetStatusText("Welcome to Setup Livedevelop")
+		self.SetStatusText(_("Welcome to Setup Livedevelop"))
 		#
 		self.__DoLayout()
 	
