@@ -727,7 +727,7 @@ class MyFrame(wx.Frame):
 		f.close()
 		# set the time
 		try:
-			shutil.copy("/usr/share/zoneinfo/%s" % Glob.TIMEZONE, "/etc/localtime")
+			shutil.copy("%s/usr/share/zoneinfo/%s" % (Glob.INST_ROOT_DIRECTORY,Glob.TIMEZONE), "%s/etc/localtime" % Glob.INST_ROOT_DIRECTORY)
 		except shutil.Error as e:
 			print('Error: %s' % e)
 		# eg. source or destination doesn't exist
