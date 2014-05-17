@@ -1,0 +1,4 @@
+#!/bin/bash
+PATH_INSTALL_DISTRO="/usr/local/share/install_distro"
+${PATH_INSTALL_DISTRO}/install_distro.py
+
