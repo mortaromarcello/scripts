@@ -146,8 +146,9 @@ class Glob:
 	PROC                  = None
 	PATH_FILE_LOG         = '/tmp/install.log'
 	PATH_PROG             = os.path.realpath(sys.argv[0])
+	PATH                  = os.path.split(PATH_PROG)[0]
 	NAME_PROG             = os.path.basename(os.path.splitext(PATH_PROG)[0])
-	PATH_PROG_ICON        = os.path.abspath('./%s.png' % NAME_PROG)
+	PATH_PROG_ICON        = os.path.abspath('%s/%s.png' % (PATH, NAME_PROG))
 	PATH_PROG_LANGS       = ('./locale/it/%s.mo' % NAME_PROG,)
 	FILE_LOG              = None
 	INSTALLED_OK          = False
