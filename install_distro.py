@@ -836,10 +836,12 @@ def main():
 	app = MyApp()
 	app.MainLoop()
 	if Glob.INSTALLED_OK:
-		if os.path.exists('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG_LANGS)):
-			os.remove('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG_LANGS))
-		if os.path.exists('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG)):
-			os.remove('%s/%s'% (Glob.INST_ROOT_DIRECTORY, Glob.PATH_PROG))
+		if os.path.exists('/usr/local/share/install_distro'):
+			os.rmtree('/usr/local/share/install_distro')
+		if os.path.exists('/usr/local/bin/install_distro'):
+			os.remove('/usr/local/bin/install_distro')
+		if os.path.exists('/usr/share/applications/install_distro.desktop'):
+			os.remove('/usr/share/applications/install_distro.desktop')
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
