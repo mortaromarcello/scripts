@@ -837,7 +837,7 @@ def main():
 	app.MainLoop()
 	if Glob.INSTALLED_OK:
 		if os.path.exists('/usr/local/share/install_distro'):
-			os.rmtree('/usr/local/share/install_distro')
+			shutil.rmtree('/usr/local/share/install_distro')
 		if os.path.exists('/usr/local/bin/install_distro'):
 			os.remove('/usr/local/bin/install_distro')
 		if os.path.exists('/usr/share/applications/install_distro.desktop'):
