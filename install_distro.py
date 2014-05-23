@@ -143,6 +143,8 @@ class Glob:
 	USE_HOME              = False
 	CONSOLE_LOG_LEVEL     = logging.DEBUG
 	DEBUG                 = False
+	UPGRADE               = False
+	NOPASSWD              = False
 	PROC                  = None
 	PATH_FILE_LOG         = '/tmp/install.log'
 	PATH_PROG             = os.path.realpath(sys.argv[0])
@@ -217,6 +219,10 @@ class MyPanel(wx.Panel):
 		self.check_format_home.SetValue(Glob.FORMAT_HOME)
 		self.check_autologin =  wx.CheckBox(self, -1, _("Automatic login"))
 		self.check_autologin.SetValue(Glob.AUTOLOGIN)
+		self.upgrade = wx.CheckBox(self, -1, _("Upgrade the system"))
+		self.upgrade.SetValue(Glob.UPGRADE)
+		self.nopasswd = wx.CheckBox(self, -1, _("No password for sudo users (Dangerous!)"))
+		self.nopasswd.SetValue(Glob.NOPASSWD)
 		self.user = wx.TextCtrl(self, -1, 'debian-user')
 		self.password_user = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
 		self.password_root = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
@@ -252,15 +258,19 @@ class MyPanel(wx.Panel):
 		grid_sizer1.Add(self.check_format_home, 0, wx.EXPAND|wx.ALL, padding)
 		grid_sizer1.Add(self.check_autologin, 0, wx.EXPAND|wx.ALL, padding)
 		# 4
+		grid_sizer1.Add(self.upgrade, 0, wx.EXPAND|wx.ALL, padding)
+		#grid_sizer1.Add(wx.StaticText(self, -1, ''), 0, wx.EXPAND|wx.ALL, padding)
+		grid_sizer1.Add(self.nopasswd, 0, wx.EXPAND|wx.ALL, padding)
+		# 5
 		grid_sizer1.Add(wx.StaticText(self, -1, _('Installation drive (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
 		grid_sizer1.Add(self.disk_inst, 0, wx.EXPAND|wx.ALL, padding)
-		# 5 
+		# 6 
 		grid_sizer1.Add(wx.StaticText(self, -1, _('Username (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
 		grid_sizer1.Add(self.user, 0, wx.EXPAND|wx.ALL, padding)
-		# 6
+		# 7
 		grid_sizer1.Add(wx.StaticText(self, -1, _('User password (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
 		grid_sizer1.Add(self.password_user, 0, wx.EXPAND|wx.ALL, padding)
-		# 7
+		# 8
 		grid_sizer1.Add(wx.StaticText(self, -1, _('Root password (*)')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
 		grid_sizer1.Add(self.password_root, 0, wx.EXPAND|wx.ALL, padding)
 		# 1
@@ -319,6 +329,8 @@ class MyPanel(wx.Panel):
 			Glob.UUID_HOME_PARTITION = blkid(Glob.HOME_PARTITION)
 			Glob.FORMAT_HOME = self.check_format_home.GetValue()
 		Glob.AUTOLOGIN = self.check_autologin.GetValue()
+		Glob.UPDATE = self.update.GetValue()
+		Glop.NOPASSWD = self.nopasswd.GetValue()
 		if Glob.SWAP_PARTITION:
 			Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
 		Glob.INST_DRIVE = self.disk_inst.GetValue()
@@ -517,6 +529,8 @@ class MyFrame(wx.Frame):
 			self.setHostname()
 			self.updateMinidlna()
 			self.installGrub()
+			if Glob.UPGRADE:
+				self.upgradeSystem()
 			self.runInst = False
 			self.panel_info.clearInfo()
 			self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
@@ -671,6 +685,14 @@ class MyFrame(wx.Frame):
 		self.SetStatusText(_("Add the user to the sudo group"))
 		Glob.PROC = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
 		if Glob.PROC.returncode: self.checkError()
+		if Glob.NOPASSWD:
+			line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
+			if line:
+				edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL", one=True)
+			else:
+				f = file("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
+				f.write("\n# Allow members of group sudo to execute any command\n%sudo	ALL=(ALL) NOPASSWD: ALL\n")
+				f.close()
 	
 	def setAutologin(self):
 		""" setta l'autologin '"""
@@ -770,6 +792,8 @@ class MyFrame(wx.Frame):
 		for dir in ['dev','sys', 'proc']:
 			Glob.PROC = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, dir))
 			if Glob.PROC.returncode: self.checkError()
+	
+	def upgradeSystem(): pass
 	
 	def endInstall(self):
 		""" finisce l'installazione """
