@@ -793,7 +793,9 @@ class MyFrame(wx.Frame):
 			Glob.PROC = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, dir))
 			if Glob.PROC.returncode: self.checkError()
 	
-	def upgradeSystem(): pass
+	def upgradeSystem(): 
+		runProcess("apt-get -y update")
+		runProcess("apt-get -yV upgrade")
 	
 	def endInstall(self):
 		""" finisce l'installazione """
