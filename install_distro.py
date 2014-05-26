@@ -536,6 +536,7 @@ class MyFrame(wx.Frame):
 			self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
 			Glob.INSTALLED_OK = True
 		except: pass
+	
 	def checkRequisites(self):
 		""" controlla che i requisiti siano rispettati """
 		print 'checkRequisites'
@@ -834,6 +835,7 @@ class MyApp(wx.App):
 	""" """
 	def OnInit(self):
 		""" """
+		self.checkRoot()
 		parser = OptionParser("usage: %prog [options] args")
 		parser.add_option("-d", "--inst-drive", metavar="DRIVE", help="Drive of installation")
 		parser.add_option("-g", "--groups", metavar="GROUPS", help="Groups of user")
@@ -856,10 +858,17 @@ class MyApp(wx.App):
 		self.SetTopWindow(self.frame)
 		return True
 
+	def checkRoot(self):
+		""" """
+		if os.getuid() != 0:
+			wx.MessageDialog(None, _("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting."), _("Attention"), wx.OK).ShowModal()
+			exit(-1)
+
 #-----------------------------------------------------------------------
 def main():
 	""" """
 	app = MyApp()
+	checkRoot()
 	app.MainLoop()
 	if Glob.INSTALLED_OK:
 		if os.path.exists('/usr/local/share/install_distro'):
