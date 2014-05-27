@@ -862,7 +862,7 @@ class MyApp(wx.App):
 		""" """
 		if os.getuid() != 0:
 			wx.MessageDialog(None, _("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting."), _("Attention"), wx.OK).ShowModal()
-			exit(-1)
+			exit()
 
 #-----------------------------------------------------------------------
 def main():
