@@ -140,6 +140,7 @@ class Glob:
 	TIMEZONE              = 'Europe/Rome'
 	SHELL_USER            = '/bin/bash'
 	SQUASH_FS             = '/lib/live/mount/rootfs/filesystem.squashfs'
+	SQUASH_FILE           = ''
 	USE_HOME              = False
 	CONSOLE_LOG_LEVEL     = logging.DEBUG
 	DEBUG                 = False
