@@ -31,13 +31,17 @@ def ispathmount(path):
     return ''
 
 def blkid(device):
-    """ chiama il comando blkid per ottenere l'UUID """
+    """
+    Chiama il comando blkid per ottenere l'UUID
+    """
     command = "/sbin/blkid -o value -s UUID %s" % device
     proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     return proc.stdout.readline().strip()
 
 def crypt_password(password):
-    """ ritorna una stringa con la password criptata """
+    """
+    Ritorna una stringa con la password criptata
+    """
     command = "perl -e \'print crypt($ARGV[0], \"password\")\' %s" % password
     proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     return proc.stdout.readline().strip()
@@ -57,7 +61,7 @@ def grep(namefile, string):
 
 def edsub(namefile, string, substring, one=False):
     """
-    sostituisce tutte le occorrenze di 'string ' con 'substring'
+    Sostituisce tutte le occorrenze di 'string ' con 'substring'
     e la scrive nel file 'namefile'
     Se one=True dopo la prima sostituzione esce.
     """
@@ -132,7 +136,7 @@ class Logger(object):
 #-----------------------------------------------------------------------
 class Glob:
     """ Class Glob """
-    # action constants in alphabet order
+    #
     DISTRO                = 'debian'
     ROOT_PARTITION        = ''
     UUID_ROOT_PARTITION   = ''
@@ -458,7 +462,9 @@ class MyFrame(wx.Frame):
         return menu
 
     def __DoLayout(self):
-        """ crea il layout del pannello """
+        """
+        Crea il layout del pannello
+        """
         self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -485,11 +491,13 @@ class MyFrame(wx.Frame):
         self.sizer.Fit(self)
 
     def onClickHelp(self, event):
-        """ """
+        """
+        """
         pass
 
     def onClickInstall(self, evt):
-        """ """
+        """
+        """
         self.install.Disable()
         if not self.panel.SetGlob():
             self.install.Enable()
@@ -497,7 +505,8 @@ class MyFrame(wx.Frame):
             self.goInstall()
 
     def onClickExit(self, evt):
-        """ """
+        """
+        """
         if self.runInst:
             result = wx.MessageDialog(None, _("Attention! Installation is in progress! Are you sure?"), _("Attention"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
             if result == wx.ID_NO:
@@ -506,7 +515,8 @@ class MyFrame(wx.Frame):
         self.Close()
 
     def goInstall(self):
-        """ """
+        """
+        """
         print 'GoInstall'
         self.SetStatusText(_('Beginning installation...'))
         if not self.checkRequisites():
@@ -818,6 +828,9 @@ class MyFrame(wx.Frame):
             if Glob.PROC.returncode: self.checkError()
 
     def upgradeSystem(self):
+		print "upgradeSystem"
+		if Glob.DEBUG: return
+		self.SetStatusText(_("Upgrade system"))
         runProcess("apt-get -y update")
         runProcess("apt-get -yV upgrade")
 
