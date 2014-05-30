@@ -835,7 +835,9 @@ class MyFrame(wx.Frame):
         runProcess("apt-get -yV upgrade")
 
     def endInstall(self):
-        """ finisce l'installazione """
+        """
+        Finisce l'installazione
+        """
         print 'endInstall'
         if Glob.DEBUG: return
         if Glob.PROC:
@@ -895,7 +897,8 @@ class MyApp(wx.App):
         return True
 
     def checkRoot(self):
-        """ """
+        """
+        """
         if os.getuid() != 0:
             wx.MessageDialog(None, _("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting."), _("Attention"), wx.OK).ShowModal()
             exit()
