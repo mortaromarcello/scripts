@@ -245,7 +245,7 @@ class MyPanel(wx.Panel):
         self.check_autologin.SetValue(Glob.AUTOLOGIN)
         self.upgrade = wx.CheckBox(self, -1, _("Upgrade the system"))
         self.upgrade.SetValue(Glob.UPGRADE)
-        self.nopasswd = wx.CheckBox(self, -1, _("No password for sudo users (Dangerous!)"))
+        self.nopasswd = wx.CheckBox(self, -1, _("'NOPASSWD' sudo"))
         self.nopasswd.SetValue(Glob.NOPASSWD)
         self.user = wx.TextCtrl(self, -1, 'debian-user')
         self.password_user = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
@@ -468,15 +468,16 @@ class MyFrame(wx.Frame):
         self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        log = wx.TextCtrl(self, wx.ID_ANY, size=(-1,120), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
-        log.SetForegroundColour(wx.WHITE)
-        log.SetBackgroundColour(wx.BLACK)
-        self.redir = RedirectText(log, Glob.FILE_LOG)
+        self.log = wx.TextCtrl(self, wx.ID_ANY, size=(-1,120), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
+        self.log.SetForegroundColour(wx.WHITE)
+        self.log.SetBackgroundColour(wx.BLACK)
+        self.log.Hide()
+        self.redir = RedirectText(self.log, Glob.FILE_LOG)
         sys.stdout = self.redir
         Logger.initLogging(self.redir, Glob.CONSOLE_LOG_LEVEL)
         self.sizer_vertical.Add(self.panel, 1, wx.EXPAND|wx.ALL, padding)
         self.sizer_vertical.Add(self.panel_info, 1, wx.EXPAND|wx.ALL, padding)
-        self.sizer_vertical.Add(log, 0, wx.EXPAND|wx.ALL, padding)
+        self.sizer_vertical.Add(self.log, 0, wx.EXPAND|wx.ALL, padding)
 
         self.install = wx.Button(self, -1, _("Install"))
         self.install.Bind(wx.EVT_BUTTON, self.onClickInstall)
@@ -526,6 +527,7 @@ class MyFrame(wx.Frame):
             #----
         self.panel.Hide()
         self.panel_info.Show()
+        self.log.Show()
         self.sizer.Fit(self)
         self.panel_info.updateInfo("\n Name Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
         if Glob.HOME_PARTITION: self.panel_info.updateInfo(" Home partition:\t\t\t%s\n" % Glob.HOME_PARTITION)
@@ -828,9 +830,9 @@ class MyFrame(wx.Frame):
             if Glob.PROC.returncode: self.checkError()
 
     def upgradeSystem(self):
-		print "upgradeSystem"
-		if Glob.DEBUG: return
-		self.SetStatusText(_("Upgrade system"))
+        print "upgradeSystem"
+        if Glob.DEBUG: return
+        self.SetStatusText(_("Upgrade system"))
         runProcess("apt-get -y update")
         runProcess("apt-get -yV upgrade")
 
