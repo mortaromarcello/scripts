@@ -872,6 +872,8 @@ class MyFrame(wx.Frame):
             if Glob.PROC.returncode: self.checkError()
 
     def upgradeSystem(self):
+        """
+        """
         print "upgradeSystem"
         if Glob.DEBUG: return
         self.SetStatusText(_("Upgrade system"))
@@ -914,7 +916,8 @@ class MyFrame(wx.Frame):
 
 #-----------------------------------------------------------------------
 class MyApp(wx.App):
-    """ """
+    """
+    """
     def OnInit(self):
         """ """
         self.checkRoot()
@@ -949,7 +952,8 @@ class MyApp(wx.App):
 
 #-----------------------------------------------------------------------
 def main():
-    """ """
+    """
+    """
     app = MyApp()
     app.MainLoop()
     if Glob.INSTALLED_OK:
