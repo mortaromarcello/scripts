@@ -212,7 +212,9 @@ class RedirectText:
 
 #-----------------------------------------------------------------------
 class MyPanel(wx.Panel):
-    """ Pannello """
+    """
+    Pannello
+    """
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
@@ -228,7 +230,9 @@ class MyPanel(wx.Panel):
         self.initGui()
 
     def initGui(self):
-        """ inizializza l'interfaccia """
+        """
+        Inizializza l'interfaccia
+        """
         self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
 
         grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
@@ -326,7 +330,9 @@ class MyPanel(wx.Panel):
         self.sizer.Fit(self)
 
     def initDisks(self):
-        """ inizializza le informazioni sui dischi """
+        """
+        Inizializza le informazioni sui dischi
+        """
         print 'initDisks'
         # Inizializza le informazioni dei dischi
         devices = parted.getAllDevices()
@@ -345,7 +351,9 @@ class MyPanel(wx.Panel):
                     else: self.parts += [i.path]
 
     def SetGlob(self):
-        """ setta le variabili Globali """
+        """
+        Setta le variabili Globali
+        """
         #--------------------------------------
         Glob.ROOT_PARTITION = self.part_root.GetValue()
         Glob.HOME_PARTITION = self.part_home.GetValue()
@@ -387,7 +395,9 @@ class MyPanel(wx.Panel):
 
 #-----------------------------------------------------------------------
 class MyPanelInfo(wx.Panel):
-    """ Pannello delle informazioni """
+    """
+    Pannello delle informazioni
+    """
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
         self.info = wx.TextCtrl(self, size=(800, 400), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
@@ -405,7 +415,8 @@ class MyPanelInfo(wx.Panel):
 
 #-----------------------------------------------------------------------
 class MyFrame(wx.Frame):
-    """ """
+    """
+    """
     def __init__(self, parent=None, ID=-1, title=_(_(Glob.PACKAGE_TITLE))):
         wx.Frame.__init__(self, parent, ID, title)
         mylocale = wx.Locale()
@@ -435,7 +446,9 @@ class MyFrame(wx.Frame):
         self.__DoLayout()
 
     def createMenuBar(self):
-        """ crea la barra dei menu """
+        """
+        Crea la barra dei menu
+        """
         menubar = wx.MenuBar()
         menuData = (
             (_("&File"),(wx.ID_EXIT, _("&Quit"), _("Quit"), "", self.onClickExit)),
@@ -448,7 +461,9 @@ class MyFrame(wx.Frame):
         return menubar
 
     def createMenu(self, menuData):
-        """ crea i menu """
+        """
+        Crea i menu
+        """
         menu = wx.Menu()
         for eachID, eachLabel, eachStatus, eachIcon, eachHandler in menuData:
             if not eachLabel:
@@ -570,7 +585,9 @@ class MyFrame(wx.Frame):
         except: pass
 
     def checkRequisites(self):
-        """ controlla che i requisiti siano rispettati """
+        """
+        Controlla che i requisiti siano rispettati
+        """
         print 'checkRequisites'
         self.SetStatusText(_("Checking the prerequisites"))
         if (not Glob.ROOT_PARTITION) or (not Glob.INST_DRIVE) or (not Glob.USER) or (not Glob.CRYPT_USER_PASSWORD) or (not Glob.CRYPT_ROOT_PASSWORD) or (not Glob.HOSTNAME) or (not Glob.GROUPS):
@@ -590,7 +607,8 @@ class MyFrame(wx.Frame):
         return True
 
     def createRootAndMountPartition(self):
-        """ """
+        """
+        """
         print 'createRootAndMountPartition'
         if Glob.DEBUG: return
         self.SetStatusText(_("I create the root filesystem, and I mount it"))
@@ -607,7 +625,8 @@ class MyFrame(wx.Frame):
         else: self.checkError()
 
     def createHomeAndMountPartition(self):
-        """ """
+        """
+        """
         print 'createHomeAndMountPartition'
         if Glob.DEBUG: return
         if not Glob.HOME_PARTITION:
@@ -625,7 +644,8 @@ class MyFrame(wx.Frame):
         else: self.checkError()
 
     def createSwapPartition(self):
-        """ """
+        """
+        """
         if not Glob.SWAP_PARTITION: return
         print 'createSwapPartition'
         if Glob.DEBUG: return
@@ -635,7 +655,9 @@ class MyFrame(wx.Frame):
         if Glob.PROC.returncode: self.checkError()
 
     def copyRoot(self):
-        """ copia la root """
+        """
+        Copia la root
+        """
         print 'copyRoot'
         self.SetStatusText(_("I copy the files (It takes time)..."))
         #preparo la progress_bar
@@ -699,7 +721,9 @@ class MyFrame(wx.Frame):
             self.timer.Stop()
 
     def addUser(self):
-        """ aggiunge utente """
+        """
+        Aggiunge utente
+        """
         print 'addUser'
         if Glob.DEBUG: return
         self.SetStatusText(_("Add user"))
@@ -707,7 +731,9 @@ class MyFrame(wx.Frame):
         if Glob.PROC.returncode: self.checkError()
 
     def changeRootPassword(self):
-        """ cambia root password """
+        """
+        Cambia root password
+        """
         print 'changeRootPassword'
         if Glob.DEBUG: return
         self.SetStatusText(_("Change the root password"))
@@ -715,7 +741,9 @@ class MyFrame(wx.Frame):
         if Glob.PROC.returncode: self.checkError()
 
     def addSudoUser(self):
-        """ aggiunge user a l gruppo sudo """
+        """
+        Aggiunge user a l gruppo sudo
+        """
         print 'addSudoUser'
         if Glob.DEBUG: return
         self.SetStatusText(_("Add the user to the sudo group"))
@@ -731,7 +759,9 @@ class MyFrame(wx.Frame):
                 f.close()
 
     def setAutologin(self):
-        """ setta l'autologin '"""
+        """
+        Setta l'autologin
+        """
         if not Glob.AUTOLOGIN: return
         print 'setAutologin'
         if Glob.DEBUG: return
