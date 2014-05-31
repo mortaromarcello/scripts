@@ -748,7 +748,9 @@ class MyFrame(wx.Frame):
             if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0\n')
 
     def createFstab(self):
-        """ crea /etc/fstab """
+        """
+        Crea /etc/fstab
+        """
         print 'createFstab'
         if Glob.DEBUG: return
         self.SetStatusText('Creo /etc/fstab')
@@ -763,7 +765,9 @@ class MyFrame(wx.Frame):
         f.close()
 
     def setLocale(self):
-        """ setta il locale """
+        """
+        Setta il locale
+        """
         print 'setLocale'
         if Glob.DEBUG: return
         self.SetStatusText(_("Set locale"))
@@ -778,7 +782,9 @@ class MyFrame(wx.Frame):
         else: self.checkError()
 
     def setTimezone(self):
-        """" setta timezone """
+        """"
+        Setta timezone
+        """
         print 'setTimezone'
         if Glob.DEBUG: return
         self.SetStatusText(_("Set timezone"))
@@ -795,7 +801,9 @@ class MyFrame(wx.Frame):
             print('Error: %s' % e.strerror)
 
     def setHostname(self):
-        """" setta hostname """
+        """"
+        Setta hostname
+        """
         print 'setHostname'
         if Glob.DEBUG: return
         self.SetStatusText(_("Set hostname"))
@@ -807,14 +815,18 @@ class MyFrame(wx.Frame):
         f.close()
 
     def updateMinidlna(self):
-        """ setta minidlna.conf se esiste """
+        """
+        Setta minidlna.conf se esiste
+        """
         if not os.path.isfile('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY): return
         print 'updateMinidlna'
         if Glob.DEBUG: return
         edsub('%s/etc/minidlna.conf' % Glob.INST_ROOT_DIRECTORY, 'live-user', Glob.USER)
 
     def installGrub(self):
-        """ installa grub """
+        """
+        Installa grub
+        """
         print 'installGrub'
         if Glob.DEBUG: return
         self.SetStatusText(_("Install grub"))
@@ -833,8 +845,8 @@ class MyFrame(wx.Frame):
         print "upgradeSystem"
         if Glob.DEBUG: return
         self.SetStatusText(_("Upgrade system"))
-        runProcess("apt-get -y update")
-        runProcess("apt-get -yV upgrade")
+        runProcess("apt-get --yes update")
+        runProcess("apt-get --yes -V upgrade")
 
     def endInstall(self):
         """
