@@ -900,6 +900,13 @@ class MyFrame(wx.Frame):
 
         Glob.PROC = runProcess("sync")
         if Glob.PROC.returncode: self.checkError()
+        if Glob.INSTALLED_OK:
+            if os.path.exists('%s/usr/local/share/install_distro' % Glob.INST_ROOT_DIRECTORY):
+                shutil.rmtree('%s/usr/local/share/install_distro' % Glob.INST_ROOT_DIRECTORY)
+            if os.path.exists('%s/usr/local/bin/install_distro' % Glob.INST_ROOT_DIRECTORY):
+                os.remove('%s/usr/local/bin/install_distro' % Glob.INST_ROOT_DIRECTORY)
+            if os.path.exists('%s/usr/share/applications/install_distro.desktop' % Glob.INST_ROOT_DIRECTORY):
+                os.remove('%s/usr/share/applications/install_distro.desktop' % Glob.INST_ROOT_DIRECTORY)
         if isdevmount(Glob.HOME_PARTITION):
             Glob.PROC = runProcess("fuser -k %s" % Glob.HOME_PARTITION)
             Glob.PROC = runProcess("umount %s" % Glob.HOME_PARTITION)
@@ -956,13 +963,6 @@ def main():
     """
     app = MyApp()
     app.MainLoop()
-    if Glob.INSTALLED_OK:
-        if os.path.exists('/usr/local/share/install_distro'):
-            shutil.rmtree('/usr/local/share/install_distro')
-        if os.path.exists('/usr/local/bin/install_distro'):
-            os.remove('/usr/local/bin/install_distro')
-        if os.path.exists('/usr/share/applications/install_distro.desktop'):
-            os.remove('/usr/share/applications/install_distro.desktop')
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
