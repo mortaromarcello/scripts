@@ -59,11 +59,10 @@ def grep(namefile, string):
         if re.search(string, line):
             return line
 
-def edsub(namefile, string, substring, one=False):
+def edsub(namefile, string, substring):
     """
-    Sostituisce tutte le occorrenze di 'string ' con 'substring'
+    Sostituisce tutte le occorrenze di 'string' con 'substring'
     e la scrive nel file 'namefile'
-    Se one=True dopo la prima sostituzione esce.
     """
     try:
         with open(namefile, 'r') as sources:
@@ -71,7 +70,6 @@ def edsub(namefile, string, substring, one=False):
         with open(namefile, 'w') as sources:
             for line in lines:
                 sources.write(re.sub(string, substring, line))
-                if one: return 0
     except:
         return -1
     return 0
@@ -752,7 +750,7 @@ class MyFrame(wx.Frame):
         if Glob.NOPASSWD:
             line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
             if line:
-                edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL", one=True)
+                edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL")
             else:
                 f = file("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
                 f.write("\n# Allow members of group sudo to execute any command\n%sudo    ALL=(ALL) NOPASSWD: ALL\n")
