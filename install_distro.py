@@ -758,7 +758,7 @@ class MyFrame(wx.Frame):
         if Glob.NOPASSWD:
             line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
             if line:
-                edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL")
+                edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL", 1)
             else:
                 f = file("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
                 f.write("\n# Allow members of group sudo to execute any command\n%sudo    ALL=(ALL) NOPASSWD: ALL\n")
