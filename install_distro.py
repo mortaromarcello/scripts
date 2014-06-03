@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, re, os, time, string, subprocess, wx, parted, parted.disk, logging
+import sys, re, os, time, subprocess, wx, parted, parted.disk, logging
 import signal
 import shutil
 from optparse import OptionParser
@@ -59,17 +59,25 @@ def grep(namefile, string):
         if re.search(string, line):
             return line
 
-def edsub(namefile, string, substring):
+def edsub(namefile, string, substring, nrep=0):
     """
-    Sostituisce tutte le occorrenze di 'string' con 'substring'
+    Sostituisce le occorrenze di 'string' con 'substring'
+    nrep volte (se nrep=0 sostituisce tutte le occorrenze)
     e la scrive nel file 'namefile'
     """
+    count = 0
     try:
         with open(namefile, 'r') as sources:
             lines = sources.readlines()
         with open(namefile, 'w') as sources:
             for line in lines:
-                sources.write(re.sub(string, substring, line))
+                tmpstr = re.sub(string, substring, line)
+                if tmpstr != line:
+                    count += 1
+                if nrep and count > nrep:
+                    sources.write(line)
+                else:
+                    sources.write(tmpstr)
     except:
         return -1
     return 0
@@ -343,7 +351,7 @@ class MyPanel(wx.Panel):
             for i in disk.partitions:
                 if i.fileSystem:
                     # Cerca la partizione di swap se esiste
-                    if string.find(i.fileSystem.type, "linux-swap") != -1:
+                    if str.find(i.fileSystem.type, "linux-swap") != -1:
                         Glob.SWAP_PARTITION = i.path
                         logging.debug("swap:%s" % (Glob.SWAP_PARTITION))
                     else: self.parts += [i.path]
@@ -575,7 +583,7 @@ class MyFrame(wx.Frame):
             self.updateMinidlna()
             self.installGrub()
             if Glob.UPGRADE:
-                   self.upgradeSystem()
+                self.upgradeSystem()
             self.runInst = False
             self.panel_info.clearInfo()
             self.panel_info.updateInfo(_("\t<--installation completed successfully-->"))
