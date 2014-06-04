@@ -347,7 +347,10 @@ class MyPanel(wx.Panel):
         # Inizializza le informazioni dei dischi
         devices = parted.getAllDevices()
         for dev in devices:
-            disk = parted.Disk(dev)
+            try:
+                disk = parted.Disk(dev)
+            except:
+                continue
             self.disks += [disk.device.path]
             for i in disk.partitions:
                 if i.fileSystem:
@@ -756,13 +759,18 @@ class MyFrame(wx.Frame):
         Glob.PROC = runProcess("chroot %s gpasswd -a %s sudo" % (Glob.INST_ROOT_DIRECTORY, Glob.USER))
         if Glob.PROC.returncode: self.checkError()
         if Glob.NOPASSWD:
-            line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
-            if line:
-                edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL", 1)
-            else:
-                f = file("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
-                f.write("\n# Allow members of group sudo to execute any command\n%sudo    ALL=(ALL) NOPASSWD: ALL\n")
-                f.close()
+            f = open("%s/etc/sudoers.d/nopasswd" % Glob.INST_ROOT_DIRECTORY, 'w')
+            f.write("%s ALL=(ALL) NOPASSWD: ALL\n" % Glob.USER)
+            f.close()
+            #line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
+            #print "Glob.PASSWD:%s, line=%s" % (Glob.PASSWD, line)
+            #if line:
+            #    edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL\n", 1)
+            #else:
+            #    f = open("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
+            #    f.write("\n# Allow members of group sudo to execute any command\n%sudo    #ALL=(ALL) NOPASSWD: ALL\n")
+            #    print f.read()
+            #    f.close()
 
     def setAutologin(self):
         """
@@ -934,7 +942,8 @@ class MyApp(wx.App):
     """
     """
     def OnInit(self):
-        """ """
+        """ 
+        """
         self.checkRoot()
         parser = OptionParser("usage: %prog [options] args")
         parser.add_option("-d", "--inst-drive", metavar="DRIVE", help="Drive of installation")
