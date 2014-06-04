@@ -762,15 +762,6 @@ class MyFrame(wx.Frame):
             f = open("%s/etc/sudoers.d/nopasswd" % Glob.INST_ROOT_DIRECTORY, 'w')
             f.write("%s ALL=(ALL) NOPASSWD: ALL\n" % Glob.USER)
             f.close()
-            #line = grep("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, "%sudo")
-            #print "Glob.PASSWD:%s, line=%s" % (Glob.PASSWD, line)
-            #if line:
-            #    edsub("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, line, "%sudo ALL=(ALL) NOPASSWD: ALL\n", 1)
-            #else:
-            #    f = open("%s/etc/sudoers" % Glob.INST_ROOT_DIRECTORY, 'a')
-            #    f.write("\n# Allow members of group sudo to execute any command\n%sudo    #ALL=(ALL) NOPASSWD: ALL\n")
-            #    print f.read()
-            #    f.close()
 
     def setAutologin(self):
         """
