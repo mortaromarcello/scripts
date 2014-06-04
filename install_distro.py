@@ -53,7 +53,7 @@ def grep(namefile, string):
     """
     try:
         f = open(namefile, 'r')
-    except:
+    except IOError:
         return None
     for line in f:
         if re.search(string, line):
@@ -78,7 +78,7 @@ def edsub(namefile, string, substring, nrep=0):
                     sources.write(line)
                 else:
                     sources.write(tmpstr)
-    except:
+    except IOError:
         return -1
     return 0
 
@@ -140,8 +140,10 @@ class Logger(object):
         logging.basicConfig(stream=stream, level=log_level, format=consoleFormat, datefmt=dateFormat)
 
 #-----------------------------------------------------------------------
-class Glob:
-    """ Class Glob """
+class Glob(object):
+    """ 
+    Class Glob 
+    """
     #
     DISTRO                = 'debian'
     ROOT_PARTITION        = ''
@@ -198,23 +200,22 @@ class Glob:
     PACKAGE_COPYRIGHT   = ''
     DEFAULT_CONFIG_FILE = ''
     LICENSE             = ''
-    AUTHOR              = 'Mortaro Marcello'
+    AUTHOR              = 'Mortaro Marcello'    
 
 #-----------------------------------------------------------------------
 class RedirectText:
     """ redireziona l'output su una wx.TextCrtl. Se il file esiste scrive l'output sul file """
-    def __init__(self,aWxTextCtrl, file=None):
+    def __init__(self,aWxTextCtrl, filename=None):
         self.out=aWxTextCtrl
-        self.file = file
+        self.file = filename
 
     def write(self,string):
         self.out.WriteText(string)
         if self.file:
             try:
                 self.file.write(string)
-            except:
+            except IOError:
                 print 'Problem on the file %s.' % self.file.name
-                pass
 
 #-----------------------------------------------------------------------
 class MyPanel(wx.Panel):
@@ -224,14 +225,35 @@ class MyPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
-        self.parts          = []
-        self.disks          = []
-        self.str_locals     = ['it_IT.UTF-8 UTF-8', 'en_US.UTF-8 UTF-8', 'es_ES.UTF-8 UTF-8', 'de_DE.UTF-8 UTF-8', 'fr_FR.UTF-8 UTF-8']
-        self.str_langs      = ['it_IT.UTF-8', 'en_US.UTF-8', 'es_ES.UTF-8', 'de_DE.UTF-8', 'fr_FR.UTF-8']
-        self.str_keyboards  = ['it', 'us', 'es', 'de', 'fr']
-        self.str_timezones  = ['Europe/Rome', 'Europe/London', 'Europe/Madrid', 'Europe/Berlin', 'Europe/Paris', 'Etc/UTC']
-        self.str_shells     = ['/bin/bash', '/bin/sh']
+        self.parts              = []
+        self.disks              = []
         self.initDisks()
+        self.str_locals         = ['it_IT.UTF-8 UTF-8', 'en_US.UTF-8 UTF-8', 'es_ES.UTF-8 UTF-8', 'de_DE.UTF-8 UTF-8', 'fr_FR.UTF-8 UTF-8']
+        self.str_langs          = ['it_IT.UTF-8', 'en_US.UTF-8', 'es_ES.UTF-8', 'de_DE.UTF-8', 'fr_FR.UTF-8']
+        self.str_keyboards      = ['it', 'us', 'es', 'de', 'fr']
+        self.str_timezones      = ['Europe/Rome', 'Europe/London', 'Europe/Madrid', 'Europe/Berlin', 'Europe/Paris', 'Etc/UTC']
+        self.str_shells         = ['/bin/bash', '/bin/sh']
+        self.sizer              = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
+        self.part_root          = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
+        self.part_home          = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
+        self.disk_inst          = wx.ComboBox(self, -1, choices=self.disks, style=wx.CB_READONLY)
+        self.check_format_home  = wx.CheckBox(self, -1, _("Format the partition  home"))
+        self.check_autologin    =  wx.CheckBox(self, -1, _("Automatic login"))
+        self.upgrade            = wx.CheckBox(self, -1, _("Upgrade the system"))
+        self.nopasswd           = wx.CheckBox(self, -1, _("'NOPASSWD' sudo"))
+        self.user               = wx.TextCtrl(self, -1, 'debian-user')
+        self.password_user      = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
+        self.password_root      = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
+        self.locale             = wx.ComboBox(self, -1, choices=self.str_locals, style=wx.CB_READONLY)
+        self.lang               = wx.ComboBox(self, -1, choices=self.str_langs, style=wx.CB_READONLY)
+        self.keyboard           = wx.ComboBox(self, -1, choices=self.str_keyboards, style=wx.CB_READONLY)
+        self.hostname           = wx.TextCtrl(self, -1, Glob.HOSTNAME)
+        self.groups             = wx.TextCtrl(self, -1, Glob.GROUPS)
+        self.timezone           = wx.ComboBox(self, -1, choices=self.str_timezones, style=wx.CB_READONLY)
+        self.shell              = wx.ComboBox(self, -1, choices=self.str_shells, style=wx.CB_READONLY)
+        
+        
+        #
         # inizializza l'interfaccia
         self.initGui()
 
@@ -239,39 +261,21 @@ class MyPanel(wx.Panel):
         """
         Inizializza l'interfaccia
         """
-        self.sizer = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
+        
 
         grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
         grid_sizer2 = wx.FlexGridSizer(7, 2, padding, padding)
         horizontal_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.SetSizer(self.sizer)
-
-        self.part_root = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
-        self.part_home = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
-        self.disk_inst = wx.ComboBox(self, -1, choices=self.disks, style=wx.CB_READONLY)
-        self.check_format_home = wx.CheckBox(self, -1, _("Format the partition  home"))
+        self.SetSizer(self.sizer)        
         self.check_format_home.SetValue(Glob.FORMAT_HOME)
-        self.check_autologin =  wx.CheckBox(self, -1, _("Automatic login"))
         self.check_autologin.SetValue(Glob.AUTOLOGIN)
-        self.upgrade = wx.CheckBox(self, -1, _("Upgrade the system"))
         self.upgrade.SetValue(Glob.UPGRADE)
-        self.nopasswd = wx.CheckBox(self, -1, _("'NOPASSWD' sudo"))
         self.nopasswd.SetValue(Glob.NOPASSWD)
-        self.user = wx.TextCtrl(self, -1, 'debian-user')
-        self.password_user = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
-        self.password_root = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
-        self.locale = wx.ComboBox(self, -1, choices=self.str_locals, style=wx.CB_READONLY)
-        self.lang = wx.ComboBox(self, -1, choices=self.str_langs, style=wx.CB_READONLY)
-        self.keyboard = wx.ComboBox(self, -1, choices=self.str_keyboards, style=wx.CB_READONLY)
-        self.hostname = wx.TextCtrl(self, -1, Glob.HOSTNAME)
-        self.groups = wx.TextCtrl(self, -1, Glob.GROUPS)
-        self.timezone = wx.ComboBox(self, -1, choices=self.str_timezones, style=wx.CB_READONLY)
-        self.shell = wx.ComboBox(self, -1, choices=self.str_shells, style=wx.CB_READONLY)
         if self.parts: self.part_root.SetStringSelection(self.parts[0])
         if self.disks:
             if Glob.INST_DRIVE:
                 for disk in self.disks:
-                    if Glob.INST_DRIVE == disk:
+                    if (Glob.INST_DRIVE == disk):
                         self.disk_inst.SetStringSelection(disk)
                         break
             else: self.disk_inst.SetStringSelection(self.disks[0])
@@ -343,17 +347,14 @@ class MyPanel(wx.Panel):
         # Inizializza le informazioni dei dischi
         devices = parted.getAllDevices()
         for dev in devices:
-            try:
-                disk = parted.Disk(dev)
-            except:
-                continue
+            disk = parted.Disk(dev)
             self.disks += [disk.device.path]
             for i in disk.partitions:
                 if i.fileSystem:
                     # Cerca la partizione di swap se esiste
                     if str.find(i.fileSystem.type, "linux-swap") != -1:
                         Glob.SWAP_PARTITION = i.path
-                        logging.debug("swap:%s" % (Glob.SWAP_PARTITION))
+                        logging.debug("swap:%s" % Glob.SWAP_PARTITION)
                     else: self.parts += [i.path]
 
     def SetGlob(self):
@@ -449,6 +450,13 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.SetStatusText(_("Welcome to Setup Livedevelop"))
         #
+        self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
+        self.sizer          = wx.BoxSizer(wx.HORIZONTAL)
+        self.log            = wx.TextCtrl(self, wx.ID_ANY, size=(-1,120), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
+        self.install        = wx.Button(self, -1, _("Install"))
+        self.exit           = wx.Button(self, wx.ID_EXIT)
+        self.redir = RedirectText(self.log, Glob.FILE_LOG)        
+        #
         self.__DoLayout()
 
     def createMenuBar(self):
@@ -486,23 +494,15 @@ class MyFrame(wx.Frame):
         """
         Crea il layout del pannello
         """
-        self.sizer_vertical = wx.BoxSizer(wx.VERTICAL)
-
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.log = wx.TextCtrl(self, wx.ID_ANY, size=(-1,120), style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH)
         self.log.SetForegroundColour(wx.WHITE)
         self.log.SetBackgroundColour(wx.BLACK)
         self.log.Hide()
-        self.redir = RedirectText(self.log, Glob.FILE_LOG)
         sys.stdout = self.redir
         Logger.initLogging(self.redir, Glob.CONSOLE_LOG_LEVEL)
         self.sizer_vertical.Add(self.panel, 1, wx.EXPAND|wx.ALL, padding)
         self.sizer_vertical.Add(self.panel_info, 1, wx.EXPAND|wx.ALL, padding)
         self.sizer_vertical.Add(self.log, 0, wx.EXPAND|wx.ALL, padding)
-
-        self.install = wx.Button(self, -1, _("Install"))
         self.install.Bind(wx.EVT_BUTTON, self.onClickInstall)
-        self.exit = wx.Button(self, wx.ID_EXIT)
         self.exit.Bind(wx.EVT_BUTTON, self.onClickExit)
         sizer_buttons = wx.BoxSizer(wx.VERTICAL)
         sizer_buttons.Add(self.install, 0, wx.EXPAND|wx.ALL, padding)
@@ -866,15 +866,15 @@ class MyFrame(wx.Frame):
         print 'installGrub'
         if Glob.DEBUG: return
         self.SetStatusText(_("Install grub"))
-        for dir in ['dev', 'sys', 'proc']:
-            Glob.PROC = runProcess("mount -B /%s %s/%s" % (dir, Glob.INST_ROOT_DIRECTORY, dir))
+        for directory in ['dev', 'sys', 'proc']:
+            Glob.PROC = runProcess("mount -B /%s %s/%s" % (directory, Glob.INST_ROOT_DIRECTORY, directory))
             if Glob.PROC.returncode: self.checkError()
         Glob.PROC = runProcess("chroot %s grub-install --no-floppy %s" % (Glob.INST_ROOT_DIRECTORY, Glob.INST_DRIVE))
         if Glob.PROC.returncode: self.checkError()
         Glob.PROC = runProcess("chroot %s update-grub" % Glob.INST_ROOT_DIRECTORY)
         if Glob.PROC.returncode: self.checkError()
-        for dir in ['dev','sys', 'proc']:
-            Glob.PROC = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, dir))
+        for directory in ['dev','sys', 'proc']:
+            Glob.PROC = runProcess("umount %s/%s" % (Glob.INST_ROOT_DIRECTORY, directory))
             if Glob.PROC.returncode: self.checkError()
 
     def upgradeSystem(self):
@@ -901,7 +901,7 @@ class MyFrame(wx.Frame):
             try:
                 os.kill(int(pid), 0)
 #                raise Exception(""""wasn't able to kill the process\nHINT:use signal.SIGKILL or signal.SIGABORT""")
-            except OSError as ex:
+            except OSError:
                 continue
 
         Glob.PROC = runProcess("sync")
@@ -922,7 +922,9 @@ class MyFrame(wx.Frame):
         Glob.FILE_LOG.close()
 
     def checkError(self):
-        """ controlla errori """
+        """
+        Controlla errori
+        """
         print 'checkError'
         logging.debug("Subprocess error:%s" % Glob.PROC.returncode)
         return True
@@ -949,11 +951,11 @@ class MyApp(wx.App):
         Glob.FILE_LOG = open(Glob.PATH_FILE_LOG, 'w')
         Glob.FILE_LOG.write(time.strftime("%a, %d %b %Y %H:%M:%S +0000\n", time.gmtime()))
         icon = wx.Icon(Glob.PATH_PROG_ICON, wx.BITMAP_TYPE_PNG)
-        self.frame = MyFrame(None)
-        self.frame.SetIcon(icon)
-        self.frame.Centre()
-        self.frame.Show()
-        self.SetTopWindow(self.frame)
+        frame = MyFrame(None)
+        frame.SetIcon(icon)
+        frame.Centre()
+        frame.Show()
+        self.SetTopWindow(frame)
         return True
 
     def checkRoot(self):
