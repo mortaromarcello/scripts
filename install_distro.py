@@ -7,6 +7,7 @@ from optparse import OptionParser
 
 # variabili globali
 _ = wx.GetTranslation
+ID_ADVANCED_OPTIONS = wx.NewId()
 padding = 5 # pixels fra gli oggetti delle box
 
 #--------------Funzioni-----------------
@@ -251,8 +252,6 @@ class MyPanel(wx.Panel):
         self.groups             = wx.TextCtrl(self, -1, Glob.GROUPS)
         self.timezone           = wx.ComboBox(self, -1, choices=self.str_timezones, style=wx.CB_READONLY)
         self.shell              = wx.ComboBox(self, -1, choices=self.str_shells, style=wx.CB_READONLY)
-        
-        
         #
         # inizializza l'interfaccia
         self.initGui()
@@ -262,7 +261,6 @@ class MyPanel(wx.Panel):
         Inizializza l'interfaccia
         """
         
-
         grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
         grid_sizer2 = wx.FlexGridSizer(7, 2, padding, padding)
         horizontal_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -349,7 +347,7 @@ class MyPanel(wx.Panel):
         for dev in devices:
             try:
                 disk = parted.Disk(dev)
-            except:
+            except IOError:
                 continue
             self.disks += [disk.device.path]
             for i in disk.partitions:
@@ -424,6 +422,39 @@ class MyPanelInfo(wx.Panel):
         self.info.Clear()
 
 #-----------------------------------------------------------------------
+class AdvancedDialog(wx.Dialog):
+    def __init__(self, *args, **kwargs):
+        wx.Dialog.__init__(self, *args, **kwargs)
+        #self.default_config_file = wx.TextCtrl(self)
+        self.path_file_log = wx.TextCtrl(self)
+        self.squash_file = wx.TextCtrl(self)
+        self.squash_fs = wx.TextCtrl(self)
+        s1 = wx.FlexGridSizer(3, 2, padding, padding)
+        s1.AddGrowableCol(1)
+        s1.Add(wx.StaticText(self, -1, _("Path of Log File:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s1.Add(self.path_file_log, 1, wx.EXPAND)
+        self.path_file_log.SetValue(Glob.PATH_FILE_LOG)
+        s1.Add(wx.StaticText(self, -1, _("Squash FS file:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s1.Add(self.squash_file, 1, wx.EXPAND)
+        self.squash_file.SetValue(Glob.SQUASH_FILE)
+        s1.Add(wx.StaticText(self, -1, _("Path of mounted Squash FS:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s1.Add(self.squash_fs, -1, wx.EXPAND)
+        self.squash_fs.SetValue(Glob.SQUASH_FS)
+        s2 = wx.BoxSizer()
+        s2.Add(wx.Button(self, wx.ID_OK), 1, wx.EXPAND|wx.ALL, padding)
+        s2.Add(wx.Button(self, wx.ID_CANCEL), 1, wx.EXPAND|wx.ALL, padding)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(s1, 1, wx.EXPAND|wx.ALL, padding)
+        sizer.Add(s2, 0, wx.EXPAND|wx.ALL, padding)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+    def GetValue(self):
+        return {'path_file_log' : self.path_file_log.GetValue(),
+                'squash_file'   : self.squash_file.GetValue(),
+                'squash_fs'     : self.squash_fs.GetValue()}
+
+#-----------------------------------------------------------------------
 class MyFrame(wx.Frame):
     """
     """
@@ -469,7 +500,8 @@ class MyFrame(wx.Frame):
         menubar = wx.MenuBar()
         menuData = (
             (_("&File"),(wx.ID_EXIT, _("&Quit"), _("Quit"), "", self.onClickExit)),
-            (_("&Help"),(wx.ID_HELP, _("&Help"), _("Help"), "", self.onClickHelp))
+            (_("&Edit"),(ID_ADVANCED_OPTIONS, _("&Advanced options"), _("Adavanced options"), "", self.onAdvancedOptions)),
+            (_("&Help"),(wx.ID_HELP, _("A&bout"), _("About"), "", self.onClickAbout))
         )
         for eachMenuData in menuData:
             menuLabel = eachMenuData[0]
@@ -515,10 +547,21 @@ class MyFrame(wx.Frame):
         self.SetSizer(self.sizer)
         self.sizer.Fit(self)
 
-    def onClickHelp(self, event):
+    def onClickAbout(self, evt):
         """
         """
-        pass
+        info = wx.AboutDialogInfo()
+        desc = [_("\nDescription program\n"), _("Platform Info: %s, %s"), _("License: GPL v2")]
+        desc = "\n".join(desc)
+        py_version = "%s, python %s" % (sys.platform, sys.version.split()[0])
+        platform = list(wx.PlatformInfo[1:])
+        platform[0] += (" " + wx.VERSION_STRING)
+        wx_info = ", ".join(platform)
+        info.SetName(Glob.NAME_PROG)
+        info.SetVersion(Glob.PACKAGE_VERSION)
+        info.SetCopyright(Glob.PACKAGE_COPYRIGHT)
+        info.SetDescription(desc % (py_version, wx_info))
+        wx.AboutBox(info)
 
     def onClickInstall(self, evt):
         """
@@ -538,6 +581,18 @@ class MyFrame(wx.Frame):
                 return
         self.endInstall()
         self.Close()
+
+    def onAdvancedOptions(self, evt):
+        """
+        """
+        dlg = AdvancedDialog(self, title=_("Adavanced Options"))
+        retcode = dlg.ShowModal()
+        if retcode == wx.ID_OK:
+            data = dlg.GetValue()
+            Glob.PATH_FILE_LOG  = data['path_file_log']
+            Glob.SQUASH_FILE    = data['squash_file']
+            Glob.SQUASH_FS      = data['squash_fs']
+            
 
     def goInstall(self):
         """
