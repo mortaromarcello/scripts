@@ -157,7 +157,7 @@ class Glob(object):
     INST_DRIVE            = ''
     INST_ROOT_DIRECTORY   = '/mnt/' + DISTRO
     TYPE_FS               = 'ext4'
-    USER                  = ''
+    USER                  = 'debian-user'
     AUTOLOGIN             = True
     CRYPT_USER_PASSWORD   = ''
     CRYPT_ROOT_PASSWORD   = ''
@@ -221,7 +221,7 @@ class RedirectText:
 #-----------------------------------------------------------------------
 class MyPanel(wx.Panel):
     """
-    Pannello
+    Pannello principale
     """
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
@@ -242,7 +242,7 @@ class MyPanel(wx.Panel):
         self.check_autologin    =  wx.CheckBox(self, -1, _("Automatic login"))
         self.upgrade            = wx.CheckBox(self, -1, _("Upgrade the system"))
         self.nopasswd           = wx.CheckBox(self, -1, _("'NOPASSWD' sudo"))
-        self.user               = wx.TextCtrl(self, -1, 'debian-user')
+        self.user               = wx.TextCtrl(self, -1, Glob.USER)
         self.password_user      = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
         self.password_root      = wx.TextCtrl(self, -1,'', style=wx.TE_PASSWORD)
         self.locale             = wx.ComboBox(self, -1, choices=self.str_locals, style=wx.CB_READONLY)
@@ -261,7 +261,7 @@ class MyPanel(wx.Panel):
         Inizializza l'interfaccia
         """
         
-        grid_sizer1 = wx.FlexGridSizer(7, 2, padding, padding)
+        grid_sizer1 = wx.FlexGridSizer(8, 2, padding, padding)
         grid_sizer2 = wx.FlexGridSizer(7, 2, padding, padding)
         horizontal_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.sizer)        
@@ -347,7 +347,8 @@ class MyPanel(wx.Panel):
         for dev in devices:
             try:
                 disk = parted.Disk(dev)
-            except IOError:
+            except:
+                # Continua nonostante le eccezioni
                 continue
             self.disks += [disk.device.path]
             for i in disk.partitions:
@@ -429,23 +430,26 @@ class AdvancedDialog(wx.Dialog):
         self.path_file_log = wx.TextCtrl(self)
         self.squash_file = wx.TextCtrl(self)
         self.squash_fs = wx.TextCtrl(self)
-        s1 = wx.FlexGridSizer(3, 2, padding, padding)
-        s1.AddGrowableCol(1)
-        s1.Add(wx.StaticText(self, -1, _("Path of Log File:")), 0, wx.ALIGN_CENTER_VERTICAL)
-        s1.Add(self.path_file_log, 1, wx.EXPAND)
+        s1 = wx.StaticBoxSizer(wx.StaticBox(self, -1, _("Advertiment")), wx.VERTICAL)
+        s1.Add(wx.StaticText(self, -1, _("Queste opzioni sono per installazioni particolari dove si\npresuppone che l'utente sappia quello che sta facendo.\n")), 0, wx.ALL, padding)
+        s2 = wx.FlexGridSizer(3, 2, padding, padding)
+        s2.AddGrowableCol(1)
+        s2.Add(wx.StaticText(self, -1, _("Path of Log File:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s2.Add(self.path_file_log, 1, wx.EXPAND)
         self.path_file_log.SetValue(Glob.PATH_FILE_LOG)
-        s1.Add(wx.StaticText(self, -1, _("Squash FS file:")), 0, wx.ALIGN_CENTER_VERTICAL)
-        s1.Add(self.squash_file, 1, wx.EXPAND)
+        s2.Add(wx.StaticText(self, -1, _("Squash FS file:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s2.Add(self.squash_file, 1, wx.EXPAND)
         self.squash_file.SetValue(Glob.SQUASH_FILE)
-        s1.Add(wx.StaticText(self, -1, _("Path of mounted Squash FS:")), 0, wx.ALIGN_CENTER_VERTICAL)
-        s1.Add(self.squash_fs, -1, wx.EXPAND)
+        s2.Add(wx.StaticText(self, -1, _("Path of mounted Squash FS:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s2.Add(self.squash_fs, -1, wx.EXPAND)
         self.squash_fs.SetValue(Glob.SQUASH_FS)
-        s2 = wx.BoxSizer()
-        s2.Add(wx.Button(self, wx.ID_OK), 1, wx.EXPAND|wx.ALL, padding)
-        s2.Add(wx.Button(self, wx.ID_CANCEL), 1, wx.EXPAND|wx.ALL, padding)
+        s3 = wx.BoxSizer()
+        s3.Add(wx.Button(self, wx.ID_OK), 1, wx.EXPAND|wx.ALL, padding)
+        s3.Add(wx.Button(self, wx.ID_CANCEL), 1, wx.EXPAND|wx.ALL, padding)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(s1, 1, wx.EXPAND|wx.ALL, padding)
-        sizer.Add(s2, 0, wx.EXPAND|wx.ALL, padding)
+        sizer.Add(s1, 0, wx.EXPAND|wx.ALL, padding)
+        sizer.Add(s2, 1, wx.EXPAND|wx.ALL, padding)
+        sizer.Add(s3, 0, wx.EXPAND|wx.ALL, padding)
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -551,7 +555,7 @@ class MyFrame(wx.Frame):
         """
         """
         info = wx.AboutDialogInfo()
-        desc = [_("\nDescription program\n"), _("Platform Info: %s, %s"), _("License: GPL v2")]
+        desc = [_("\nLivedevelop installator.\n"), _("Platform Info: %s, %s"), _("License: GPL v2")]
         desc = "\n".join(desc)
         py_version = "%s, python %s" % (sys.platform, sys.version.split()[0])
         platform = list(wx.PlatformInfo[1:])
@@ -668,6 +672,9 @@ class MyFrame(wx.Frame):
         if ispathmount(Glob.SQUASH_FS) == '':
             if (Glob.SQUASH_FS != '') and (Glob.SQUASH_FILE != ''):
                 Glob.PROC = runProcess("mount -t squashfs -o ro %s %s" % (Glob.SQUASH_FILE, Glob.SQUASH_FS))
+                if Glob.PROC.returncode:
+                    wx.MessageBox(_("Unable to mount squashfs file %s in in %s." % (Glob.SQUASH_FILE, Glob.SQUASH_FS)), _("Error"), wx.OK|wx.ICON_ERROR)
+                    return False
         return True
 
     def createRootAndMountPartition(self):
@@ -933,12 +940,13 @@ class MyFrame(wx.Frame):
 
     def upgradeSystem(self):
         """
+        Aggiorna il sistema
         """
         print "upgradeSystem"
         if Glob.DEBUG: return
         self.SetStatusText(_("Upgrade system"))
-        runProcess("apt-get --yes update")
-        runProcess("apt-get --yes -V upgrade")
+        Glob.PROC = runProcess("apt-get --yes update")
+        Glob.PROC = runProcess("apt-get --yes -V dist-upgrade")
 
     def endInstall(self):
         """
