@@ -356,7 +356,8 @@ class MyPanel(wx.Panel):
                     # Cerca la partizione di swap se esiste
                     if str.find(i.fileSystem.type, "linux-swap") != -1:
                         Glob.SWAP_PARTITION = i.path
-                        logging.debug("swap:%s" % Glob.SWAP_PARTITION)
+                        msg = "swap:%s" % Glob.SWAP_PARTITION
+                        logging.debug(msg)
                     else: self.parts += [i.path]
 
     def SetGlob(self):
@@ -399,7 +400,8 @@ class MyPanel(wx.Panel):
         Glob.SHELL_USER = self.shell.GetValue()
 
         #-------------------------------------
-        logging.debug("distro:%s, root partition:%s, uuid root partition:%s, home partition:%s, format home:%s, autologin:%s, update:%s, nopasswd:%s, uuid home partition:%s, swap partition:%s, uuid swap partition:%s, drive inst:%s, dir root inst:%s, user:%s, crypt user password:%s, crypt root password:%s, locale:%s, lang:%s, keyboard:%s, hostname:%s, groups:%s, timezone:%s, shell user:%s" % (Glob.DISTRO, Glob.ROOT_PARTITION, Glob.UUID_ROOT_PARTITION, Glob.HOME_PARTITION, Glob.FORMAT_HOME, Glob.AUTOLOGIN, Glob.UPDATE, Glob.NOPASSWD, Glob.UUID_HOME_PARTITION, Glob.SWAP_PARTITION, Glob.UUID_SWAP_PARTITION, Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER))
+        msg = "distro:%s, root partition:%s, uuid root partition:%s, home partition:%s, format home:%s, autologin:%s, update:%s, nopasswd:%s, uuid home partition:%s, swap partition:%s, uuid swap partition:%s, drive inst:%s, dir root inst:%s, user:%s, crypt user password:%s, crypt root password:%s, locale:%s, lang:%s, keyboard:%s, hostname:%s, groups:%s, timezone:%s, shell user:%s" % (Glob.DISTRO, Glob.ROOT_PARTITION, Glob.UUID_ROOT_PARTITION, Glob.HOME_PARTITION, Glob.FORMAT_HOME, Glob.AUTOLOGIN, Glob.UPDATE, Glob.NOPASSWD, Glob.UUID_HOME_PARTITION, Glob.SWAP_PARTITION, Glob.UUID_SWAP_PARTITION, Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER)
+        logging.debug(msg)
         return True
 
 #-----------------------------------------------------------------------
@@ -687,7 +689,8 @@ class MyFrame(wx.Frame):
         if not Glob.PROC.returncode:
             Glob.UUID_ROOT_PARTITION = blkid(Glob.ROOT_PARTITION)
         else: self.checkError()
-        logging.debug("uuid root partition:%s" % Glob.UUID_ROOT_PARTITION)
+        msg = "uuid root partition:%s" % Glob.UUID_ROOT_PARTITION
+        logging.debug(msg)
         if not Glob.PROC.returncode:
             Glob.PROC = runProcess("mkdir -p %s" % (Glob.INST_ROOT_DIRECTORY))
         else: self.checkError()
@@ -988,7 +991,8 @@ class MyFrame(wx.Frame):
         Controlla errori
         """
         print 'checkError'
-        logging.debug("Subprocess error:%s" % Glob.PROC.returncode)
+        msg = "Subprocess error:%s" % Glob.PROC.returncode
+        logging.debug(msg)
         return True
 
 #-----------------------------------------------------------------------
