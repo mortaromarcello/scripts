@@ -200,7 +200,7 @@ class Glob(object):
     PACKAGE_TITLE       = 'Install distro'
     PACKAGE_COPYRIGHT   = ''
     DEFAULT_CONFIG_FILE = ''
-    LICENSE             = ''
+    LICENSE             = 'GPLv3'
     AUTHOR              = 'Mortaro Marcello'    
 
 #-----------------------------------------------------------------------
