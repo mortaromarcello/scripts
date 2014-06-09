@@ -371,7 +371,7 @@ class MyPanel(wx.Panel):
             Glob.UUID_HOME_PARTITION = blkid(Glob.HOME_PARTITION)
             Glob.FORMAT_HOME = self.check_format_home.GetValue()
         Glob.AUTOLOGIN = self.check_autologin.GetValue()
-        Glob.UPDATE = self.upgrade.GetValue()
+        Glob.UPGRADE = self.upgrade.GetValue()
         Glob.NOPASSWD = self.nopasswd.GetValue()
         if Glob.SWAP_PARTITION:
             Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
