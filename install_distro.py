@@ -911,7 +911,7 @@ class MyFrame(wx.Frame):
         f.write("%s\n" % Glob.HOSTNAME)
         f.close()
         f = open('%s/etc/hosts' % Glob.INST_ROOT_DIRECTORY, 'w')
-        f.write("127.0.0.1       localhost %s\n::1             localhost ip6-localhost ip6-loopback\nfe00::0         ip6-localnet\nff00::0         ip6-mcastprefix\nff02::1         ip6-allnodes\nff02::2         ip6-allrouters\n" % Glob.HOSTNAME)
+        f.write("127.0.0.1       localhost\n127.0.1.1       %s\n::1             localhost ip6-localhost ip6-loopback\nfe00::0         ip6-localnet\nff00::0         ip6-mcastprefix\nff02::1         ip6-allnodes\nff02::2         ip6-allrouters\n" % Glob.HOSTNAME)
         f.close()
 
     def updateMinidlna(self):
