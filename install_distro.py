@@ -622,6 +622,7 @@ class MyFrame(wx.Frame):
         self.panel_info.updateInfo(" Drive installation:\t\t\t%s\n Directory root installation:\t%s\n Name User:\t\t\t\t%s\n Crypt user password:\t\t%s\n Crypt root password:\t\t%s\n Locale:\t\t\t\t\t%s\n Lang:\t\t\t\t\t%s\n Keyboard:\t\t\t\t%s\n Hostname:\t\t\t\t%s\n Groups:\t\t\t\t\t%s\n Timezone:\t\t\t\t%s\n Shell user:\t\t\t\t%s\n" % (Glob.INST_DRIVE, Glob.INST_ROOT_DIRECTORY, Glob.USER, Glob.CRYPT_USER_PASSWORD, Glob.CRYPT_ROOT_PASSWORD, Glob.LOCALE, Glob.LANG, Glob.KEYBOARD, Glob.HOSTNAME, Glob.GROUPS, Glob.TIMEZONE, Glob.SHELL_USER))
         result = wx.MessageDialog(None, _("Attention! The installation formats the partitions of the of the disk! Are you sure??"), _("Attention"), wx.YES_NO|wx.ICON_QUESTION).ShowModal()
         if result == wx.ID_NO:
+            self.install.Enable()
             self.panel_info.clearInfo()
             self.panel_info.Hide()
             self.panel.Show()
