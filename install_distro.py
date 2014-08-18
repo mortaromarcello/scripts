@@ -187,6 +187,7 @@ class Glob(object):
     PATH_PROG_LANGS       = ('./locale/it/%s.mo' % NAME_PROG,)
     FILE_LOG              = None
     INSTALLED_OK          = False
+    OPTIMIZE_DISK_USB     = False
 
     # user's home dir - works for windows/unix/linux
     HOME_DIR = os.getenv('USERPROFILE') or os.getenv('HOME')
@@ -252,6 +253,7 @@ class MyPanel(wx.Panel):
         self.groups             = wx.TextCtrl(self, -1, Glob.GROUPS)
         self.timezone           = wx.ComboBox(self, -1, choices=self.str_timezones, style=wx.CB_READONLY)
         self.shell              = wx.ComboBox(self, -1, choices=self.str_shells, style=wx.CB_READONLY)
+        self.optimize_usb       = wx.CheckBox(self, -1, _("Optimize USB"))
         #
         # inizializza l'interfaccia
         self.initGui()
@@ -282,6 +284,7 @@ class MyPanel(wx.Panel):
         self.keyboard.SetStringSelection(self.str_keyboards[0])
         self.timezone.SetStringSelection(self.str_timezones[0])
         self.shell.SetStringSelection(self.str_shells[0])
+        self.optimize_usb.SetValue(Glob.OPTIMIZE_DISK_USB)
         #
         self.sizer.AddWindow(wx.StaticText(self, -1, _('The options marked with an asterisk are required')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
         # 1 riga
@@ -330,6 +333,8 @@ class MyPanel(wx.Panel):
         # 7
         grid_sizer2.Add(wx.StaticText(self, -1, _('Shell')), 0, wx.ALIGN_LEFT|wx.ALL, padding)
         grid_sizer2.Add(self.shell, 0, wx.EXPAND|wx.ALL, padding)
+        # 8
+        grid_sizer2.Add(self.optimize_usb, 0, wx.EXPAND|wx.ALL, padding)
 
         horizontal_sizer.Add(grid_sizer1)
         horizontal_sizer.Add((50, -1))
@@ -373,8 +378,12 @@ class MyPanel(wx.Panel):
         Glob.AUTOLOGIN = self.check_autologin.GetValue()
         Glob.UPGRADE = self.upgrade.GetValue()
         Glob.NOPASSWD = self.nopasswd.GetValue()
+        Glob.OPTIMIZE_DISK_USB = self.optimize_usb.GetValue()
         if Glob.SWAP_PARTITION:
-            Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
+            if not Glob.OPTIMIZE_DISK_USB:
+                Glob.UUID_SWAP_PARTITION = blkid(Glob.SWAP_PARTITION)
+            else:
+                Glob.SWAP_PARTITION = ''
         Glob.INST_DRIVE = self.disk_inst.GetValue()
         Glob.USER = self.user.GetValue()
         if self.password_user.GetValue():
@@ -855,9 +864,15 @@ class MyFrame(wx.Frame):
         print 'createFstab'
         if Glob.DEBUG: return
         self.SetStatusText('Creo /etc/fstab')
-        buff = "# /etc/fstab: static file system information.\n#\n# Use 'blkid' to print the universally unique identifier for a\n# device; this may be used with UUID= as a more robust way to name devices\n# that works even if disks are added and removed. See fstab(5).\n#\n# <file system> <mount point> <type> <options> <dump> <pass>\nproc /proc proc defaults 0 0\nUUID=%s / %s errors=remount-ro 0 1\n" % (Glob.UUID_ROOT_PARTITION, Glob.TYPE_FS)
+        if Glob.OPTIMIZE_DISK_USB:
+            buff = "# /etc/fstab: static file system information.\n#\n# Use 'blkid' to print the universally unique identifier for a\n# device; this may be used with UUID= as a more robust way to name devices\n# that works even if disks are added and removed. See fstab(5).\n#\n# <file system> <mount point> <type> <options> <dump> <pass>\nproc /proc proc defaults 0 0\nUUID=%s / %s noatime,nodiratime,errors=remount-ro 0 1\n" % (Glob.UUID_ROOT_PARTITION, Glob.TYPE_FS)
+        else:
+            buff = "# /etc/fstab: static file system information.\n#\n# Use 'blkid' to print the universally unique identifier for a\n# device; this may be used with UUID= as a more robust way to name devices\n# that works even if disks are added and removed. See fstab(5).\n#\n# <file system> <mount point> <type> <options> <dump> <pass>\nproc /proc proc defaults 0 0\nUUID=%s / %s errors=remount-ro 0 1\n" % (Glob.UUID_ROOT_PARTITION, Glob.TYPE_FS)
         if Glob.UUID_HOME_PARTITION:
-            buff = buff + "UUID=%s /home %s defaults 0 2\n" % (Glob.UUID_HOME_PARTITION, Glob.TYPE_FS)
+            if Glob.OPTIMIZE_DISK_USB:
+                buff = buff + "UUID=%s /home %s noatime,nodiratime,defaults 0 2\n" % (Glob.UUID_HOME_PARTITION, Glob.TYPE_FS)
+            else:
+                buff = buff + "UUID=%s /home %s defaults 0 2\n" % (Glob.UUID_HOME_PARTITION, Glob.TYPE_FS)
         if Glob.UUID_SWAP_PARTITION:
             buff = buff + "UUID=%s none swap sw 0 0\n" % (Glob.UUID_SWAP_PARTITION)
         print buff
