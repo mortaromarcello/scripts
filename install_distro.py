@@ -146,6 +146,8 @@ class Glob(object):
     Class Glob 
     """
     #
+    DIRS_TO_COPY          = 'bin,boot,dev,etc,lib,opt,root,run,sbin,srv,usr,var'
+    DIRS_TO_CREATE        = 'home,media,mnt,proc,selinux,sys,tmp'
     DISTRO                = 'debian'
     ROOT_PARTITION        = ''
     UUID_ROOT_PARTITION   = ''
@@ -172,7 +174,7 @@ class Glob(object):
     TIMEZONE              = 'Europe/Rome'
     SHELL_USER            = '/bin/bash'
     SQUASH_FS             = '/lib/live/mount/rootfs/filesystem.squashfs'
-    SQUASH_FILE           = ''
+    SQUASH_FILE           = '/lib/live/mount/medium/live/filesystem.squashfs'
     USE_HOME              = False
     CONSOLE_LOG_LEVEL     = logging.DEBUG
     DEBUG                 = False
@@ -441,6 +443,7 @@ class AdvancedDialog(wx.Dialog):
         self.path_file_log = wx.TextCtrl(self)
         self.squash_file = wx.TextCtrl(self)
         self.squash_fs = wx.TextCtrl(self)
+        self.dirs_to_copy = wx.TextCtrl(self)
         s1 = wx.StaticBoxSizer(wx.StaticBox(self, -1, _("Advertiment")), wx.VERTICAL)
         s1.Add(wx.StaticText(self, -1, _("Queste opzioni sono per installazioni particolari dove si\npresuppone che l'utente sappia quello che sta facendo.\n")), 0, wx.ALL, padding)
         s2 = wx.FlexGridSizer(3, 2, padding, padding)
@@ -454,6 +457,9 @@ class AdvancedDialog(wx.Dialog):
         s2.Add(wx.StaticText(self, -1, _("Path of mounted Squash FS:")), 0, wx.ALIGN_CENTER_VERTICAL)
         s2.Add(self.squash_fs, -1, wx.EXPAND)
         self.squash_fs.SetValue(Glob.SQUASH_FS)
+        s2.Add(wx.StaticText(self, -1, _("Dirs to copy:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        s2.Add(self.dirs_to_copy, -1, wx.EXPAND)
+        self.dirs_to_copy.SetValue(Glob.DIRS_TO_COPY)
         s3 = wx.BoxSizer()
         s3.Add(wx.Button(self, wx.ID_OK), 1, wx.EXPAND|wx.ALL, padding)
         s3.Add(wx.Button(self, wx.ID_CANCEL), 1, wx.EXPAND|wx.ALL, padding)
