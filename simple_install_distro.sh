@@ -7,7 +7,7 @@
 #-----------------------------------------------------------------------
 
 #
-
+DIRS_TO_COPY="bin boot dev etc lib opt root run sbin srv usr var"
 DEBUG="false"
 FILE_DEBUG="./debug.txt"
 DISTRO="distro"
@@ -30,12 +30,13 @@ LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
 if [ "$(cat /etc/group|grep android)" ]; then
-  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
+  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,bluetooth,netdev,android"
 else
-  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev"
+  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,bluetooth,netdev"
 fi
 TIMEZONE="Europe/Rome"
 SHELL_USER="/bin/bash"
+AUTOLOGIN="true"
 
 #-----------------------------------------------------------------------
 
@@ -43,6 +44,7 @@ function help() {
   echo -e "
 ${0} <opzioni>
 Installa la Live su un disco.
+  -a | --autologin <true/false>          :Autologin utente. (default 'true').
   -c | --crypt-password <password>       :Password cifrata utente.
   -C | --crypt-root-password <password>  :Password cifrata root.
   -d | --inst-drive <drive>              :Drive di installazione per grub.
@@ -242,6 +244,10 @@ function add_user() {
 function add_sudo_user() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
+[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/sudoers.d/nopasswd" &>> ${FILE_DEBUG} || \
+  cat > ${INST_ROOT_DIRECTORY}/etc/sudoers.d/nopasswd <<EOF
+${USER} ALL=(ALL) NOPASSWD: ALL
+EOF
 }
 
 function change_root_password() {
@@ -326,6 +332,21 @@ ff02::2         ip6-allrouters
 EOF
 }
 
+function set_autologin() {
+	if [ ${AUTOLOGIN} = "true" ]; then
+		for DM in /usr/bin/gdm3 /usr/sbin/lightdm; do
+			RET=$(grep "${DM}" /etc/X11/default-display-manager)
+			if [ -n "${RET}" ]; then
+				break
+			fi
+		done
+		if [ "${DM}" = "/usr/sbin/lightdm" ]; then
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
+			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+		fi
+	fi
+}
+
 function update_minidlna() {
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:sed -i \"s/live-user/${USER}/\" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf" &>> ${FILE_DEBUG} || \
   sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
@@ -372,7 +393,8 @@ function run_inst {
   set_locale
   set_timezone
   set_hostname
-  update_minidlna
+  set_autologin
+#  update_minidlna
   install_grub
   end
 }
@@ -382,6 +404,10 @@ function run_inst {
 until [ -z "${1}" ]
 do
   case ${1} in
+    -a | --autologin)
+      shift
+      AUTOLOGIN=${1}
+      ;;
     -c | --crypt-password)
       shift
       CRYPT_PASSWORD=${1}
