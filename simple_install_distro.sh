@@ -30,9 +30,9 @@ LANG="it_IT.UTF-8"
 KEYBOARD="it"
 HOSTNAME="debian"
 if [ "$(cat /etc/group|grep android)" ]; then
-  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev,android"
+  ADD_GROUPS="dialout,cdrom,floppy,audio,dip,video,plugdev,netdev,scanner,bluetooth,android"
 else
-  ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,fuse,scanner,bluetooth,netdev"
+  ADD_GROUPS="dialout,cdrom,floppy,audio,dip,video,plugdev,netdev,scanner,bluetooth"
 fi
 TIMEZONE="Europe/Rome"
 SHELL_USER="/bin/bash"
@@ -372,7 +372,7 @@ function run_inst {
   set_locale
   set_timezone
   set_hostname
-  update_minidlna
+  #update_minidlna
   install_grub
   end
 }
