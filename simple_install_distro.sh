@@ -393,8 +393,12 @@ function run_inst {
   set_locale
   set_timezone
   set_hostname
+<<<<<<< HEAD
   set_autologin
 #  update_minidlna
+=======
+  #update_minidlna
+>>>>>>> 6af8d379b436f29651aa1e736ba6d6409744c98f
   install_grub
   end
 }
