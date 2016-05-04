@@ -3,6 +3,9 @@
 # per distro debian. Il pacchetto syslinux deve essere già installato nel sistema.
 #
 
+SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+MBR_DIR="/usr/lib/syslinux/mbr"
+
 if [ $UID != 0 ]; then
 	echo "Devi essere root per eseguire questo script."
 	exit
@@ -20,6 +23,7 @@ fi
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
+	umount ${1}{1,2}
 	echo "Sovrascrivo la tabella delle partizioni."
 	parted -s ${1} mktable msdos
 	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4" 
@@ -47,12 +51,12 @@ if [ -e /usr/bin/syslinux ]; then
 	fi
 	echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
 	read
-	cat /usr/lib/syslinux/mbr.bin > ${1}
+	cat ${MBR_DIR}/mbr.bin > ${1}
 	echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
 	read
 	syslinux --directory /boot/syslinux/ --install ${1}1
 	for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 memdisk menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
-		cp /usr/lib/syslinux/$i ${2}/boot/syslinux/
+		cp -v ${SYSLINUX_DIR}/$i ${2}/boot/syslinux/
 	done
 	if [ ! -d ${2}/menus/syslinux ]; then
 		echo "Creo la directory ${2}/menus/syslinux (premere Invio o Crtl-c per uscire)"
