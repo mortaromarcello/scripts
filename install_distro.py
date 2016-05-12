@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
- ChangeLog: 12-05-2016, add slim to display managers.
+ ChangeLog: 12-05-2016, add slim to display managers, add string modules for unicode
 """
 import sys, re, os, time, subprocess, wx, parted, parted.disk, logging, string
 import signal
