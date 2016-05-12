@@ -334,15 +334,16 @@ EOF
 
 function set_autologin() {
 	if [ ${AUTOLOGIN} = "true" ]; then
-		for DM in /usr/bin/gdm3 /usr/sbin/lightdm; do
-			RET=$(grep "${DM}" /etc/X11/default-display-manager)
-			if [ -n "${RET}" ]; then
-				break
-			fi
-		done
+    DM = $(cat /etc/X11/default-display-manager)
 		if [ "${DM}" = "/usr/sbin/lightdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
 			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+		fi
+    if [ "${DM}" = "/usr/bin/slim" ]; then
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#auto_login")
+			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+      LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
+      sed -i "s/${LINE}/default_user          \"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
 		fi
 	fi
 }

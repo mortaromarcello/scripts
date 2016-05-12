@@ -150,7 +150,7 @@ class Glob(object):
     #
     DIRS_TO_COPY          = 'bin,boot,dev,etc,lib,opt,root,run,sbin,srv,usr,var'
     DIRS_TO_CREATE        = 'home,media,mnt,proc,selinux,sys,tmp'
-    DISTRO                = 'debian'
+    DISTRO                = 'devuan'
     ROOT_PARTITION        = ''
     UUID_ROOT_PARTITION   = ''
     HOME_PARTITION        = ''
@@ -161,7 +161,7 @@ class Glob(object):
     INST_DRIVE            = ''
     INST_ROOT_DIRECTORY   = '/mnt/' + DISTRO
     TYPE_FS               = 'ext4'
-    USER                  = 'debian-user'
+    USER                  = 'devuan-user'
     AUTOLOGIN             = True
     CRYPT_USER_PASSWORD   = ''
     CRYPT_ROOT_PASSWORD   = ''
