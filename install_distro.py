@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+"""
+ ChangeLog: 12-05-2016, add slim to display managers.
+"""
 import sys, re, os, time, subprocess, wx, parted, parted.disk, logging
 import signal
 import shutil
@@ -862,6 +864,11 @@ class MyFrame(wx.Frame):
             if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user=%s\n' % Glob.USER)
             line = grep('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, '#autologin-user-timeout=0')
             if line: edsub('%s/etc/lightdm/lightdm.conf' % Glob.INST_ROOT_DIRECTORY, line, 'autologin-user-timeout=0\n')
+        elif grep('%s/etc/X11/default-display-manager' % Glob.INST_ROOT_DIRECTORY, '/usr/bin/slim'):
+            line = grep('%s/etc/slim.conf' % Glob.INST_ROOT_DIRECTORY, '#auto_login')
+            if line: edsub('%s/etc/slim.conf' % Glob.INST_ROOT_DIRECTORY, line, 'auto_login          yes\n')
+            line = grep('%s/etc/slim.conf' % Glob.INST_ROOT_DIRECTORY, '#default_user')
+            if line: edsub('%s/etc/slim.conf' % Glob.INST_ROOT_DIRECTORY, line, 'default_user          %s\n' % Glob.USER)
 
     def createFstab(self):
         """
