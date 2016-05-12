@@ -341,9 +341,9 @@ function set_autologin() {
 		fi
 		if [ ${DM} = /usr/bin/slim ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#auto_login")
-			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
-			sed -i "s/${LINE}/default_user          \"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+			sed -i "s/${LINE}/default_user          \"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 		fi
 	fi
 }
