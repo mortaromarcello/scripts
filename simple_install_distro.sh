@@ -340,10 +340,10 @@ function set_autologin() {
 			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
 		fi
 		if [ ${DM} = /usr/bin/slim ]; then
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#auto_login")
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
 			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
-			sed -i "s/${LINE}/default_user          \"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "default_user")
+			sed -i "s/${LINE}/default_user          ${USER}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 		fi
 	fi
 }
@@ -354,17 +354,17 @@ function update_minidlna() {
 }
 
 function install_grub() {
-  for dir in dev proc sys; do
+  for dir in dev dev/pts proc sys; do
 	[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
-	mount -B /${dir} ${INST_ROOT_DIRECTORY}/${dir}
+	mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
   done
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} update-grub" &>> ${FILE_DEBUG} || \
   chroot ${INST_ROOT_DIRECTORY} update-grub
-  for dir in dev proc sys; do
+  for dir in dev/pts dev proc sys; do
 	[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${INST_ROOT_DIRECTORY}/${dir}" &>> ${FILE_DEBUG} || \
-	umount ${INST_ROOT_DIRECTORY}/${dir}
+	umount -v ${INST_ROOT_DIRECTORY}/${dir}
   done
 }
 
@@ -375,10 +375,12 @@ function end() {
 		[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
 		umount ${HOME_PARTITION}
 	fi
-	[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
-	umount ${ROOT_PARTITION}
+	if [ -z ${ROOT_PARTITION} ]; then
+		[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:umount ${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
+		umount ${ROOT_PARTITION}
+	fi
 	[ ${DEBUG} = "true" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
-  echo "Installazione terminata."
+	echo "Installazione terminata."
 }
 
 function run_inst {
