@@ -2,6 +2,7 @@
 if [ -z $1 ]; then
 	exit
 fi
+FRONTEND=noninteractive
 LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 ARCHIVE=/home/marcello/Scaricati/deb
@@ -12,7 +13,7 @@ INCLUDES=devuan-keyring,linux-image-$ARCH,grub-pc,locales,console-setup,ssh
 #APT_OPTS="--no-install-recommends --assume-yes"
 APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-INSTALL_DISTRO_DEPS="python-wxgtk3.0 git gksu"
+INSTALL_DISTRO_DEPS="python-wxgtk3.0 git gksu parted"
 PACKAGES="task-$DE-desktop wicd"
 USER=user
 PASSWORD=user
@@ -35,17 +36,17 @@ done
 ########################################################################
 chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USER
 chroot $1 echo $TIMEZONE > /etc/timezone
-chroot $1 dpkg-reconfigure -f noninteractive tzdata
+chroot $1 dpkg-reconfigure --frontend=$FRONTEND tzdata
 chroot $1 sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 chroot $1 sed -i -e 's/# $LANG UTF-8/$LANG UTF-8/' /etc/locale.gen
 chroot $1 echo 'LANG=$LANG'>/etc/default/locale
-chroot $1 dpkg-reconfigure --frontend=noninteractive locales
+chroot $1 dpkg-reconfigure --frontend=$FRONTEND locales
 chroot $1 update-locale LANG=it_IT.UTF-8
-chroot $1 apt-get -y install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS
+chroot $1 DEBIAN_FRONTEND=$FRONTEND apt-get -y install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS
 chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
 chroot $1 dpkg -i /root/refractainstaller-base_9.1.8_all.deb
 #chroot $1 apt-get -fy install
-chroot $1 apt-get $APT_OPTS install $PACKAGES
+chroot $1 DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES
 
 ########################################################################
 #                         HOOKS                                        #
