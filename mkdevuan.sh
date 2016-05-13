@@ -2,6 +2,7 @@
 if [ -z $1 ]; then
 	exit
 fi
+
 FRONTEND=noninteractive
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
@@ -22,18 +23,30 @@ SHELL=/bin/bash
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 #MIRROR="http://packages.devuan.org/merged"
 MIRROR=http://auto.mirror.devuan.org/merged
+
+function bind() {
+	for dir in dev dev/pts proc sys; do
+		mount -v --bind /$dir $1/$dir
+	done
+}
+
+function unbind() {
+	for dir in sys proc dev/pts dev; do
+		umount -v $1/$dir
+	done
+}
+
 mkdir -p $1
 debootstrap --verbose --arch=$ARCH --include $INCLUDES $DIST $1 $MIRROR
 if [ $? -gt 0 ]; then
 	echo "Big problem!!!"
+	unbind
 	exit
 fi
 cp -va $ARCHIVE/refracta*_all.deb $1/root/
 
 ########################################################################
-for dir in dev dev/pts proc sys; do
-	mount -v --bind /$dir $1/$dir
-done
+bind
 ########################################################################
 chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USER
 echo $TIMEZONE > $1/etc/timezone
@@ -46,6 +59,7 @@ sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
 chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get -y install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS"
 if [ $? -gt 0 ]; then
 	echo "Big problem!!!"
+	unbind
 	exit
 fi
 chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
@@ -94,6 +108,4 @@ Devuan
 ANSWERS
 
 ########################################################################
-for dir in sys proc dev/pts dev; do
-	umount -v $1/$dir
-done
+unbind
