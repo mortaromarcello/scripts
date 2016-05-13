@@ -214,7 +214,16 @@ function copy_root() {
   cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
 }
 
+function remove_users() {
+  for user in $(ls /home); do
+    if [ $user != "lost+found" ]; then
+      deluser --remove-all-files $user
+    fi
+  done
+}
+
 function add_user() {
+  remove_users
   if [ -z ${USER} ]; then
 	read -p "Digita la username: " USER
 	if [ -z ${USER} ]; then
