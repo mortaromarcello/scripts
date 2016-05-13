@@ -215,15 +215,14 @@ function copy_root() {
 }
 
 function remove_users() {
-  for user in $(ls /home); do
+  for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
     if [ $user != "lost+found" ]; then
-      deluser --remove-all-files $user
+      chroot ${INST_ROOT_DIRECTORY} deluser --remove-all-files $user
     fi
   done
 }
 
 function add_user() {
-  remove_users
   if [ -z ${USER} ]; then
 	read -p "Digita la username: " USER
 	if [ -z ${USER} ]; then
@@ -400,6 +399,7 @@ function run_inst {
 	create_root_and_mount_partition
 	create_home_and_mount_partition
 	copy_root
+	remove_users
 	add_user
 	change_root_password
 	add_sudo_user
