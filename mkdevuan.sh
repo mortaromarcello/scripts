@@ -70,7 +70,7 @@ function fase1() {
 
 function fase2() {
 	wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb 
-	cp -va $ARCHIVE/snapshot-base_9.3.3_all.deb $1/root/
+	cp -va $ARCHIVE/refractasnapshot-base_9.3.3_all.deb $1/root/
 	bind $1
 	add_user $1
 	set_locale $1
@@ -82,18 +82,22 @@ function fase2() {
 	fi
 	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
 	chroot $1 dpkg -i /root/refractainstaller-base_9.1.8_all.deb
+	unbind $1
 }
 
 function fase3() {
+	bind $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
 		unbind $1
 		exit
 	fi
+	unbind $1
 }
 
 function fase4() {
+	bind $1
 	hook_install_distro $1
 	create_snapshot $1
 	unbind $1
@@ -130,4 +134,18 @@ case $2 in
 		;;
 	fase4)
 		fase4 $1
+		;;
+	min)
+		fase1 $1
+		fase2 $1
+		fase4 $1
+		;;
+	de)
+		fase1 $1
+		fase2 $1
+		fase3 $1
+		fase4 $1
+		;;
+	*)
+	;;
 esac
