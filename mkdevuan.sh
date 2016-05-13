@@ -17,7 +17,7 @@ DIST=stable
 INCLUDES=devuan-keyring,linux-image-$ARCH,grub-pc,locales,console-setup,ssh
 APT_OPTS="--assume-yes --force-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-INSTALL_DISTRO_DEPS="python-wxgtk3.0 python-parted git gksu parted"
+INSTALL_DISTRO_DEPS="git gksu parted"
 PACKAGES="task-$DE-desktop wicd geany geany-plugins smplayer putty"
 USER=user
 PASSWORD=user
@@ -81,7 +81,6 @@ function fase2() {
 		exit
 	fi
 	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
-	chroot $1 dpkg -i /root/refractainstaller-base_9.1.8_all.deb
 	unbind $1
 }
 
