@@ -24,7 +24,6 @@ PASSWORD=user
 SHELL=/bin/bash
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
-
 ########################################################################
 function bind() {
 	for dir in dev dev/pts proc sys; do
@@ -60,10 +59,47 @@ Devuan
 ANSWERS
 }
 
+function fase1() {
+	mkdir -p $1
+	debootstrap --verbose --arch=$ARCH --include $INCLUDES $DIST $1 $MIRROR
+	if [ $? -gt 0 ]; then
+		echo "Big problem!!!"
+		exit
+	fi
+}
+
+function fase2() {
+	wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb 
+	cp -va $ARCHIVE/snapshot-base_9.3.3_all.deb $1/root/
+	bind $1
+	add_user $1
+	set_locale $1
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS"
+	if [ $? -gt 0 ]; then
+		echo "Big problem!!!"
+		unbind $1
+		exit
+	fi
+	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
+	chroot $1 dpkg -i /root/refractainstaller-base_9.1.8_all.deb
+}
+
+function fase3() {
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
+	if [ $? -gt 0 ]; then
+		echo "Big problem!!!"
+		unbind $1
+		exit
+	fi
+	hook_install_distro $1
+	create_snapshot $1
+########################################################################
+	unbind $1
+}
 ########################################################################
 #                         HOOKS                                        #
 ########################################################################
-#                   install_distro                                     #
+#                   hook_install_distro                                     #
 function hook_install_distro() {
 	TMP="/tmp/scripts"
 	GIT_DIR="scripts"
@@ -81,41 +117,12 @@ case $2 in
 	"")
 		;&
 	fase1)
-		mkdir -p $1
-		debootstrap --verbose --arch=$ARCH --include $INCLUDES $DIST $1 $MIRROR
-		if [ $? -gt 0 ]; then
-			echo "Big problem!!!"
-			exit
-		fi
-		;&
+		fase1 $1
+		;;
 	fase2)
-		wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb 
-		cp -va $ARCHIVE/snapshot-base_9.3.3_all.deb $1/root/
-
-########################################################################
-		bind $1
-########################################################################
-		add_user $1
-		set_locale $1
-		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS"
-		if [ $? -gt 0 ]; then
-			echo "Big problem!!!"
-			unbind $1
-			exit
-		fi
-		chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
-		chroot $1 dpkg -i /root/refractainstaller-base_9.1.8_all.deb
-		;&
+		fase2 $1
+		;;
 	fase3)
-		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
-		if [ $? -gt 0 ]; then
-			echo "Big problem!!!"
-			unbind $1
-			exit
-		fi
-		hook_install_distro $1
-		create_snapshot $1
-########################################################################
-		unbind $1
+		fase3 $1
 		;;
 esac
