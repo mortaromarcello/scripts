@@ -15,6 +15,7 @@ DE=mate
 ARCH=amd64
 DIST=jessie
 INCLUDES="devuan-keyring,linux-image-$ARCH,grub-pc,locales,console-setup,ssh"
+#INCLUDES="linux-image-$ARCH,grub-pc,locales,console-setup,ssh"
 APT_OPTS="--assume-yes --force-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git gksu parted"
@@ -61,7 +62,7 @@ ANSWERS
 
 function fase1() {
 	mkdir -p $1
-	debootstrap --verbose --arch=$ARCH --include $INCLUDES $DIST $1 $MIRROR
+	debootstrap --verbose --arch=$ARCH $DIST $1 $MIRROR
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
 		exit
@@ -69,9 +70,17 @@ function fase1() {
 }
 
 function fase2() {
-	wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb 
-	cp -va $ARCHIVE/refractasnapshot-base_9.3.3_all.deb $1/root/
 	bind $1
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
+	if [ $? -gt 0 ]; then
+		echo "Big problem!!!"
+		unbind $1
+		exit
+	fi
+	if [ ! -f $ARCHIVE/refractasnapshot-base_9.3.3_all.deb ]; then
+		wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb
+	fi
+	cp -va $ARCHIVE/refractasnapshot-base_9.3.3_all.deb $1/root/
 	add_user $1
 	set_locale $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS"
