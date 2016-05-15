@@ -13,7 +13,7 @@ TIMEZONE="Europe/Rome"
 ARCHIVE=$(pwd)
 DE=mate
 ARCH=amd64
-DIST=stable
+DIST=jessie
 INCLUDES="devuan-keyring,linux-image-$ARCH,grub-pc,locales,console-setup,ssh"
 APT_OPTS="--assume-yes --force-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
@@ -26,13 +26,13 @@ CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD"
 MIRROR=http://auto.mirror.devuan.org/merged
 ########################################################################
 function bind() {
-	for dir in dev dev/pts proc sys; do
+	for dir in dev dev/pts proc sys run; do
 		mount -v --bind /$dir $1/$dir
 	done
 }
 
 function unbind() {
-	for dir in sys proc dev/pts dev; do
+	for dir in run sys proc dev/pts dev; do
 		umount -v $1/$dir
 	done
 }
