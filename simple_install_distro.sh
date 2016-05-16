@@ -28,7 +28,7 @@ YES_NO="no"
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 KEYBOARD="it"
-HOSTNAME="debian"
+HOSTNAME="devuan"
 if [ "$(cat /etc/group|grep android)" ]; then
   ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,android"
 else
@@ -58,7 +58,7 @@ Installa la Live su un disco.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --language                        :Lingua (default 'it_IT.UTF-8').
-  -n | --hostname                        :Nome hostname (default 'debian').
+  -n | --hostname                        :Nome hostname (default 'devuan').
   -r | --root-partition <partition>      :Partizione di root (default '/dev/sda1').
   -s | --swap-partition <partition>      :Partizione di swap.
   -S | --shell-user                      :Shell user (default '/bin/bash').

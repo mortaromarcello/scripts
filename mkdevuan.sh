@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-if [ -z $1 ]; then
-	#
-	exit
-fi
-
 ########################################################################
 FRONTEND=noninteractive
+ROOT_DIR=devuan
+STAGE=1
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
@@ -20,7 +17,7 @@ APT_OPTS="--assume-yes --force-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git gksu parted"
 PACKAGES="task-$DE-desktop wicd geany geany-plugins smplayer putty"
-USER=user
+USERNAME=user
 PASSWORD=user
 SHELL=/bin/bash
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
@@ -39,7 +36,7 @@ function unbind() {
 }
 
 function add_user() {
-	chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USER
+	chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USERNAME
 }
 
 function set_locale() {
@@ -127,32 +124,124 @@ function hook_install_distro() {
 ########################################################################
 
 ########################################################################
+function check_script() {
+	if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
+		$DIST=jessie
+	fi
+	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
+		$ARCH=amd64
+	fi
+	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ]; then
+		$DE="mate"
+	fi
+	! [[ $STAGE == ?([0-4]) ]] &&  $STAGE=1
+	if [ $(id -u) != 0 ]; then
+		echo -e "\nUser $USER not is root."
+		help
+		exit
+	fi
+	echo "Script verificato. OK."
+}
 
-case $2 in
+function help() {
+  echo -e "
+${0} <opzioni>
+Crea una live Devuan
+  -a | --arch <architecture>             :tipo di architettura.
+  -d | --distribuition <dist>            :tipo di distribuzione.
+  -D | --desktop <desktop>               :tipo di desktop
+  -h | --help                            :Stampa questa messaggio.
+  -k | --keyboard                        :Tipo di tastiera (default 'it').
+  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
+  -L | --language                        :Lingua (default 'it_IT.UTF-8').
+  -n | --hostname                        :Nome hostname (default 'devuan').
+  -s | --stage <number>                  :Numero fase.
+  -T | --timezone <timezone>             :Timezone (default 'Europe/Rome'.
+  -u | --user                            :Nome utente.
+"
+}
+
+until [ -z "${1}" ]
+do
+	case ${1} in
+		-a | --arch)
+			shift
+			ARCH=${1}
+			;;
+		-d | --dir-root)
+			shift
+			DIR_ROOT=${1}
+			;;
+		-D | --desktop)
+			shift
+			DE=${1}
+			;;
+		-h | --help)
+			shift
+			help
+			exit
+			;;
+		-k | --keyboard)
+			shift
+			KEYBOARD=${1}
+			;;
+		-l | --locale)
+			shift
+			LOCALE=${1}
+			;;
+		-L | --language)
+			shift
+			LANG=${1}
+			;;
+		-n | --hostname)
+			shift
+			HOSTNAME=${1}
+			;;
+		-s | --stage)
+			shift
+			STAGE=${1}
+			;;
+		-T | --timezone)
+			shift
+			TIMEZONE=${1}
+			;;
+		-u | --user)
+			shift
+			USERNAME=${1}
+			;;
+		*)
+			shift
+			;;
+	esac
+done
+
+check_script
+
+case $STAGE in
 	"")
 		;&
-	fase1)
-		fase1 $1
+	1)
+		fase1 $ROOT_DIR
 		;;
-	fase2)
-		fase2 $1
+	2)
+		fase2 $ROOT_DIR
 		;;
-	fase3)
-		fase3 $1
+	3)
+		fase3 $ROOT_DIR
 		;;
-	fase4)
-		fase4 $1
+	4)
+		fase4 $ROOT_DIR
 		;;
 	min)
-		fase1 $1
-		fase2 $1
-		fase4 $1
+		fase1 $ROOT_DIR
+		fase2 $ROOT_DIR
+		fase4 $ROOT_DIR
 		;;
 	de)
-		fase1 $1
-		fase2 $1
-		fase3 $1
-		fase4 $1
+		fase1 $ROOT_DIR
+		fase2 $ROOT_DIR
+		fase3 $ROOT_DIR
+		fase4 $ROOT_DIR
 		;;
 	*)
 	;;
