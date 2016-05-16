@@ -4,6 +4,8 @@
 FRONTEND=noninteractive
 ROOT_DIR=devuan
 STAGE=1
+CLEAN=0
+KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
@@ -58,6 +60,7 @@ ANSWERS
 }
 
 function fase1() {
+	[ $CLEAN = 1 ] && rm -R $ROOT_DIR
 	mkdir -p $1
 	debootstrap --verbose --arch=$ARCH $DIST $1 $MIRROR
 	if [ $? -gt 0 ]; then
@@ -140,6 +143,11 @@ function check_script() {
 		help
 		exit
 	fi
+	echo "distribution $DIST"
+	echo "architecture $ARCH"
+	echo "desktop $DE"
+	echo "stage $STAGE"
+	echo "root directory $ROOT_DIR"
 	echo "Script verificato. OK."
 }
 
@@ -149,7 +157,7 @@ ${0} <opzioni>
 Crea una live Devuan
   -a | --arch <architecture>             :tipo di architettura.
   -d | --distribuition <dist>            :tipo di distribuzione.
-  -D | --desktop <desktop>               :tipo di desktop
+  -D | --desktop <desktop>               :tipo di desktop mate(default), xfce o lxde.
   -h | --help                            :Stampa questa messaggio.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
@@ -168,9 +176,13 @@ do
 			shift
 			ARCH=${1}
 			;;
-		-d | --dir-root)
+		-c | --clean)
 			shift
-			DIR_ROOT=${1}
+			CLEAN=1
+			;;
+		-d | --distribution)
+			shift
+			DIST=${1}
 			;;
 		-D | --desktop)
 			shift
@@ -196,6 +208,10 @@ do
 		-n | --hostname)
 			shift
 			HOSTNAME=${1}
+			;;
+		-r | --root-dir)
+			shift
+			ROOT_DIR=$1
 			;;
 		-s | --stage)
 			shift
