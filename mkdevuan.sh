@@ -130,13 +130,13 @@ function hook_install_distro() {
 ########################################################################
 function check_script() {
 	if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
-		$DIST=jessie
+		DIST=jessie
 	fi
 	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
-		$ARCH=amd64
+		ARCH=amd64
 	fi
 	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ]; then
-		$DE="mate"
+		DE="mate"
 	fi
 	! [[ $STAGE == ?([0-4]) ]] &&  $STAGE=1
 	if [ $(id -u) != 0 ]; then
@@ -164,13 +164,14 @@ Crea una live Devuan
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --language                        :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
-  -s | --stage <number>                  :Numero fase: 1) crea la base del sistema
-                                                       2) installa refractasnapshot
-                                                          setta lo user la lingua
-                                                       3) installa pacchetti aggiuntivi e il
-                                                          desktop
-                                                       4) installa lo script d'installazione
-                                                          e crea la iso.
+  -s | --stage <number>                  :Numero fase:
+                                         1) crea la base del sistema
+                                         2) installa refractasnapshot
+                                            setta lo user e la lingua
+                                         3) installa pacchetti aggiuntivi e il
+                                            desktop
+                                         4) installa lo script d'installazione
+                                            e crea la iso.
   -r | --root-dir <dir>                  :Directory della root
   -T | --timezone <timezone>             :Timezone (default 'Europe/Rome'.
   -u | --user                            :Nome utente.
