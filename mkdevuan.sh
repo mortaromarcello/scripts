@@ -13,9 +13,10 @@ ARCHIVE=$(pwd)
 DE=mate
 ARCH=amd64
 DIST=jessie
-INCLUDES="devuan-keyring,linux-image-$ARCH,grub-pc,locales,console-setup,ssh"
-#INCLUDES="linux-image-$ARCH,grub-pc,locales,console-setup,ssh"
-APT_OPTS="--assume-yes --force-yes"
+#INCLUDES="devuan-keyring linux-image-$ARCH grub-pc locales console-setup ssh"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh"
+#APT_OPTS="--assume-yes --force-yes"
+APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git gksu parted"
 PACKAGES="task-$DE-desktop wicd geany geany-plugins smplayer putty"
@@ -163,7 +164,14 @@ Crea una live Devuan
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --language                        :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
-  -s | --stage <number>                  :Numero fase.
+  -s | --stage <number>                  :Numero fase: 1) crea la base del sistema
+                                                       2) installa refractasnapshot
+                                                          setta lo user la lingua
+                                                       3) installa pacchetti aggiuntivi e il
+                                                          desktop
+                                                       4) installa lo script d'installazione
+                                                          e crea la iso.
+  -r | --root-dir <dir>                  :Directory della root
   -T | --timezone <timezone>             :Timezone (default 'Europe/Rome'.
   -u | --user                            :Nome utente.
 "
