@@ -60,7 +60,7 @@ ANSWERS
 }
 
 function fase1() {
-	[ $CLEAN = 1 ] && rm -R $ROOT_DIR
+	[ $CLEAN = 1 ] && rm -vR $ROOT_DIR
 	mkdir -p $1
 	debootstrap --verbose --arch=$ARCH $DIST $1 $MIRROR
 	if [ $? -gt 0 ]; then
