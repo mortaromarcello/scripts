@@ -47,7 +47,7 @@ function update() {
 }
 
 function upgrade() {
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS upgrade"
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
 }
 
 function add_user() {
@@ -135,6 +135,7 @@ function fase3() {
 
 function fase4() {
 	bind $1
+	chroot $1 apt-get clean
 	hook_install_distro $1
 	create_snapshot $1
 	unbind $1
