@@ -15,7 +15,7 @@ DE=mate
 ARCH=amd64
 DIST=jessie
 #INCLUDES="devuan-keyring linux-image-$ARCH grub-pc locales console-setup ssh"
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux-free firmware-linux-free"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 #APT_OPTS="--assume-yes --force-yes"
 APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
@@ -41,7 +41,8 @@ function unbind() {
 }
 
 function update() {
-	chroot $1 /bin/bash -c "echo -e $APT_REPS > /etc/apt/sources.list"
+	echo -e $APT_REPS > $1/etc/apt/sources.list
+	echo -e $APT_CONF_OPTS >> $1/etc/apt/apt.conf.d/70debconf
 	chroot $1 apt update
 }
 
@@ -74,10 +75,13 @@ ANSWERS
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
+		APT_CONF_OPTS="APT::Default-Release \"jessie\";"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
+		APT_CONF_OPTS="APT::Default-Release \"testing\";"
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
+		APT_CONF_OPTS="APT::Default-Release \"testing\";"
 	fi
 }
 
@@ -192,15 +196,18 @@ Crea una live Devuan
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --language                        :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
-  -s | --stage <number>                  :Numero fase: 1) crea la base del sistema
-                                                       2) installa refractasnapshot
-                                                          setta lo user la lingua
-                                                       3) installa pacchetti aggiuntivi e il
-                                                          desktop
-                                                       4) installa lo script d'installazione
-                                                          e crea la iso.
+  -s | --stage <stage>                  :Numero fase:
+                                         1) crea la base del sistema
+                                         2) installa refractasnapshot,
+                                            setta lo user e la lingua
+                                         3) installa pacchetti aggiuntivi e il
+                                            desktop
+                                         4) installa lo script d'installazione
+                                            e crea la iso.
+                                         min) fase 1 + fase 2 + fase 4
+                                         de) fase 1 + fase 2 + fase 3 + fase 4
   -r | --root-dir <dir>                  :Directory della root
-  -T | --timezone <timezone>             :Timezone (default 'Europe/Rome'.
+  -T | --timezone <timezone>             :Timezone (default 'Europe/Rome').
   -u | --user                            :Nome utente.
 "
 }
