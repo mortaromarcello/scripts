@@ -99,6 +99,7 @@ function fase2() {
 	bind $1
 	update $1
 	upgrade $1
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS autoremove --purge"
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
