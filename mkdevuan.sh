@@ -2,6 +2,7 @@
 
 ########################################################################
 FRONTEND=noninteractive
+VERBOSE=
 ROOT_DIR=devuan
 STAGE=1
 CLEAN=0
@@ -14,28 +15,38 @@ DE=mate
 ARCH=amd64
 DIST=jessie
 #INCLUDES="devuan-keyring linux-image-$ARCH grub-pc locales console-setup ssh"
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux-free firmware-linux-free"
 #APT_OPTS="--assume-yes --force-yes"
 APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-INSTALL_DISTRO_DEPS="git gksu parted"
+INSTALL_DISTRO_DEPS="git sudo parted"
 PACKAGES="task-$DE-desktop wicd geany geany-plugins smplayer putty"
 USERNAME=user
 PASSWORD=user
 SHELL=/bin/bash
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
+
 ########################################################################
 function bind() {
 	for dir in dev dev/pts proc sys run; do
-		mount -v --bind /$dir $1/$dir
+		mount $VERBOSE --bind /$dir $1/$dir
 	done
 }
 
 function unbind() {
 	for dir in run sys proc dev/pts dev; do
-		umount -v $1/$dir
+		umount $VERBOSE $1/$dir
 	done
+}
+
+function update() {
+	chroot $1 /bin/bash -c "echo -e $APT_REPS > /etc/apt/sources.list"
+	chroot $1 apt update
+}
+
+function upgrade() {
+	chroot $1 apt $APT_OPTS upgrade
 }
 
 function add_user() {
@@ -60,8 +71,18 @@ Devuan
 ANSWERS
 }
 
+function set_distro_env() {
+	if [ $DIST = "jessie" ]; then
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
+	elif [ $DIST = "ascii" ]; then
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
+	elif [ $DIST = "ceres" ]; then
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
+	fi
+}
+
 function fase1() {
-	[ $CLEAN = 1 ] && rm -vR $ROOT_DIR
+	[ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
 	mkdir -p $1
 	debootstrap --verbose --arch=$ARCH $DIST $1 $MIRROR
 	if [ $? -gt 0 ]; then
@@ -72,6 +93,8 @@ function fase1() {
 
 function fase2() {
 	bind $1
+	update $1
+	upgrade $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
@@ -81,7 +104,7 @@ function fase2() {
 	if [ ! -f $ARCHIVE/refractasnapshot-base_9.3.3_all.deb ]; then
 		wget -P $ARCHIVE http://downloads.sourceforge.net/project/refracta/testing/refractasnapshot-base_9.3.3_all.deb
 	fi
-	cp -va $ARCHIVE/refractasnapshot-base_9.3.3_all.deb $1/root/
+	cp $VERBOSE -a $ARCHIVE/refractasnapshot-base_9.3.3_all.deb $1/root/
 	add_user $1
 	set_locale $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $REFRACTA_DEPS $INSTALL_DISTRO_DEPS"
@@ -121,34 +144,39 @@ function hook_install_distro() {
 	GIT_DIR="scripts"
 	chroot $1 mkdir -p $TMP
 	chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
-	chroot $1 cp -va $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
-	chroot $1 chmod -v +x /usr/local/bin/install_distro.sh
-	chroot $1 rm -R -f -v ${TMP}
+	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
+	chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
+	chroot $1 rm -R -f $VERBOSE ${TMP}
 }
 ########################################################################
 
 ########################################################################
 function check_script() {
 	if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
-		$DIST=jessie
+		DIST=jessie
 	fi
 	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
-		$ARCH=amd64
+		ARCH=amd64
 	fi
 	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ]; then
-		$DE="mate"
+		DE="mate"
 	fi
-	! [[ $STAGE == ?([0-4]) ]] &&  $STAGE=1
 	if [ $(id -u) != 0 ]; then
 		echo -e "\nUser $USER not is root."
-		help
+		#help
 		exit
 	fi
+	set_distro_env
 	echo "distribution $DIST"
 	echo "architecture $ARCH"
 	echo "desktop $DE"
 	echo "stage $STAGE"
 	echo "root directory $ROOT_DIR"
+	echo "locale $LOCALE"
+	echo "lang $LANG"
+	echo "keyboard $KEYBOARD"
+	echo "timezone $TIMEZONE"
+	echo -e "deb repository $APT_REPS"
 	echo "Script verificato. OK."
 }
 
@@ -232,6 +260,10 @@ do
 		-u | --user)
 			shift
 			USERNAME=${1}
+			;;
+		-v | --verbose)
+			shift
+			VERBOSE=-v
 			;;
 		*)
 			shift
