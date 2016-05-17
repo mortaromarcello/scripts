@@ -47,7 +47,7 @@ function update() {
 }
 
 function upgrade() {
-	chroot $1 apt $APT_OPTS upgrade
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS upgrade"
 }
 
 function add_user() {
