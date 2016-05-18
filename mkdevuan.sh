@@ -553,7 +553,6 @@ function unbind() {
 
 function update() {
 	echo -e $APT_REPS > $1/etc/apt/sources.list
-	#echo -e $APT_CONF_OPTS >> $1/etc/apt/apt.conf.d/70debconf
 	chroot $1 apt update
 }
 
