@@ -42,12 +42,16 @@ function unbind() {
 
 function update() {
 	echo -e $APT_REPS > $1/etc/apt/sources.list
-	echo -e $APT_CONF_OPTS >> $1/etc/apt/apt.conf.d/70debconf
+	#echo -e $APT_CONF_OPTS >> $1/etc/apt/apt.conf.d/70debconf
 	chroot $1 apt update
 }
 
 function upgrade() {
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+	if [ $DIST = "ascii" ] || [ $DIST = "ceres" ]; then
+		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get -t ascii $APT_OPTS dist-upgrade"
+	else
+		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+	fi
 }
 
 function add_user() {
@@ -75,13 +79,10 @@ ANSWERS
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
-		APT_CONF_OPTS="APT::Default-Release \"jessie\";"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
-		APT_CONF_OPTS="APT::Default-Release \"testing\";"
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
-		APT_CONF_OPTS="APT::Default-Release \"testing\";"
 	fi
 }
 
@@ -136,6 +137,7 @@ function fase3() {
 function fase4() {
 	bind $1
 	chroot $1 apt-get clean
+	chroot $1 apt update
 	hook_install_distro $1
 	create_snapshot $1
 	unbind $1
