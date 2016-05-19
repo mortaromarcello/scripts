@@ -7,6 +7,7 @@ VERBOSE=
 ROOT_DIR=devuan
 STAGE=1
 CLEAN=0
+CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
@@ -19,7 +20,7 @@ INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git sudo parted"
-PACKAGES="task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
+PACKAGES="testdisk recoverdm myrescue gnu-fdisk gpart diskscan exfat-fuse task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
 USERNAME=user
 PASSWORD=user
 SHELL=/bin/bash
@@ -252,41 +253,41 @@ fhztC5HRPgALCcDWmgoHPwPAbbuPTR0AFh2AlelfALhN9U2jfTEoJG7qALDgACzZmP4FgL90nx83
 dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 "
 
-LIVE_CFG="label live\n \
-menu label \${DISTRO} (default)\n \
-\tkernel /live/vmlinuz\n \
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n \
-\n \
-label nox\n \
-\tmenu label \${DISTRO} (text-mode)\n \
-\tkernel /live/vmlinuz\n \
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n \
-\n \
-label nomodeset\n \
-\tmenu label \${DISTRO} (no modeset)\n \
-\tkernel /live/vmlinuz nomodeset\n \
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n \
-\n \
-label toram\n \
-\tmenu label \${DISTRO} (load to RAM)\n \
-\tkernel /live/vmlinuz\n \
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n \
-\n \
-label noprobe\n \
-\tmenu label \${DISTRO} (no probe)\n \
-\tkernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n \
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n \
-\n \
-label memtest\n \
-\tmenu label Memory test\n \
-\tkernel /live/memtest\n \
-\n \
-label chain.c32 hd0,0\n \
-\tmenu label Boot hard disk\n \
-\tchain.c32 hd0,0\n \
-\n \
-label harddisk\n \
-\tmenu label Boot hard disk (old way)\n \
+LIVE_CFG="label live\n\
+menu label \${DISTRO} (default)\n\
+\tkernel /live/vmlinuz\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\n\
+label nox\n\
+\tmenu label \${DISTRO} (text-mode)\n\
+\tkernel /live/vmlinuz\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\n\
+label nomodeset\n\
+\tmenu label \${DISTRO} (no modeset)\n\
+\tkernel /live/vmlinuz nomodeset\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\n\
+label toram\n\
+\tmenu label \${DISTRO} (load to RAM)\n\
+\tkernel /live/vmlinuz\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\n\
+label noprobe\n\
+\tmenu label \${DISTRO} (no probe)\n\
+\tkernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\n\
+label memtest\n\
+\tmenu label Memory test\n\
+\tkernel /live/memtest\n\
+\n\
+label chain.c32 hd0,0\n\
+\tmenu label Boot hard disk\n\
+\tchain.c32 hd0,0\n\
+\n\
+label harddisk\n\
+\tmenu label Boot hard disk (old way)\n\
 \tlocalboot 0x80\n
 "
 ########################################################################
@@ -346,8 +347,10 @@ function set_distro_env() {
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
+		INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
+		INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	fi
 }
 
@@ -400,6 +403,7 @@ function fase2() {
 		exit
 	fi
 	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
+	hook_install_distro $1
 	unbind $1
 }
 
@@ -414,6 +418,7 @@ function fase3() {
 		unbind $1
 		exit
 	fi
+	hook_synaptics $1
 	unbind $1
 }
 
@@ -430,7 +435,6 @@ function fase4() {
 		exit
 	fi
 	chroot $1 apt-get clean
-	hook_install_distro $1
 	isolinux $1
 	create_snapshot $1
 	unbind $1
@@ -439,7 +443,8 @@ function fase4() {
 ########################################################################
 #                         HOOKS                                        #
 ########################################################################
-#                   hook_install_distro                                     #
+#                   hook_install_distro                                #
+########################################################################
 function hook_install_distro() {
 	TMP="/tmp/scripts"
 	GIT_DIR="scripts"
@@ -447,9 +452,90 @@ function hook_install_distro() {
 	chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
 	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
 	chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
+	if [ $DIST = "ascii" ] || [ $DIST = "ceres" ]; then
+		chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
+		chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
+	fi
 	chroot $1 rm -R -f $VERBOSE ${TMP}
 }
+
 ########################################################################
+#                        hook_synaptics
+########################################################################
+function hook_synaptics() {
+	SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
+# to all touchpads. See xorg.conf.d(5) for more information on\n\
+# InputClass.\n\
+# DO NOT EDIT THIS FILE, your distribution will likely overwrite\n\
+# it when updating. Copy (and rename) this file into\n\
+# /etc/X11/xorg.conf.d first.\n\
+# Additional options may be added in the form of\n\
+#   Option \"OptionName\" \"value\"\n\
+#\n\
+\n\
+Section \"InputClass\"\n\
+        Identifier      \"Touchpad\"                      # required\n\
+        MatchIsTouchpad \"yes\"                           # required\n\
+        Driver          \"synaptics\"                     # required\n\
+        Option          \"MinSpeed\"              \"0.5\"\n\
+        Option          \"MaxSpeed\"              \"1.0\"\n\
+        Option          \"AccelFactor\"           \"0.075\"\n\
+        Option          \"TapButton1\"            \"1\"\n\
+        Option          \"TapButton2\"            \"2\"     # multitouch\n\
+        Option          \"TapButton3\"            \"3\"     # multitouch\n\
+        Option          \"VertTwoFingerScroll\"   \"1\"     # multitouch\n\
+        Option          \"HorizTwoFingerScroll\"  \"1\"     # multitouch\n\
+        Option          \"VertEdgeScroll\"        \"1\"\n\
+        Option          \"CoastingSpeed\"         \"8\"\n\
+        Option          \"CornerCoasting\"        \"1\"\n\
+        Option          \"CircularScrolling\"     \"1\"\n\
+        Option          \"CircScrollTrigger\"     \"7\"\n\
+        Option          \"EdgeMotionUseAlways\"   \"1\"\n\
+        Option          \"LBCornerButton\"        \"8\"     # browser \"back\" btn\n\
+        Option          \"RBCornerButton\"        \"9\"     # browser \"forward\" btn\n\
+EndSection\n\
+#\n\
+Section \"InputClass\"\n\
+        Identifier \"touchpad catchall\"\n\
+        Driver \"synaptics\"\n\
+        MatchIsTouchpad \"on\"\n\
+# This option is recommend on all Linux systems using evdev, but cannot be\n\
+# enabled by default. See the following link for details:\n\
+# http://who-t.blogspot.com/2010/11/how-to-ignore-configuration-errors.html\n\
+#       MatchDevicePath \"/dev/input/event*\"\n\
+EndSection\n\
+\n\
+Section \"InputClass\"\n\
+        Identifier \"touchpad ignore duplicates\"\n\
+        MatchIsTouchpad \"on\"\n\
+        MatchOS \"Linux\"\n\
+        MatchDevicePath \"/dev/input/mouse*\"\n\
+        Option \"Ignore\" \"on\"\n\
+EndSection\n\
+\n\
+# This option enables the bottom right corner to be a right button on clickpads\n\
+# and the right and middle top areas to be right / middle buttons on clickpads\n\
+# with a top button area.\n\
+# This option is only interpreted by clickpads.\n\
+Section \"InputClass\"\n\
+        Identifier \"Default clickpad buttons\"\n\
+        MatchDriver \"synaptics\"\n\
+        Option \"SoftButtonAreas\" \"50% 0 82% 0 0 0 0 0\"\n\
+        Option \"SecondarySoftButtonAreas\" \"58% 0 0 15% 42% 58% 0 15%\"\n\
+EndSection\n\
+\n\
+# This option disables software buttons on Apple touchpads.\n\
+# This option is only interpreted by clickpads.\n\
+Section \"InputClass\"\n\
+        Identifier \"Disable clickpad buttons on Apple touchpads\"\n\
+        MatchProduct \"Apple|bcm5974\"\n\
+        MatchDriver \"synaptics\"\n\
+        Option \"SoftButtonAreas\" \"0 0 0 0 0 0 0 0\"\n\
+EndSection\n\
+"
+	mkdir -p $1/etc/X11/xorg.conf.d
+	echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
+}
 
 ########################################################################
 function check_script() {
@@ -519,6 +605,10 @@ do
 		-c | --clean)
 			shift
 			CLEAN=1
+			;;
+		-cs | --clean-snapshoot)
+			shift
+			CLEAN_SNAPSHOT=1
 			;;
 		-d | --distribution)
 			shift
@@ -624,6 +714,10 @@ case $STAGE in
 		fase3 $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
+	update)
+		[ $CLEAN_SNAPSHOT = 1 ]&& rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
+		fase4 $ROOT_DIR
+		;;
 	*)
-	;;
+		;;
 esac
