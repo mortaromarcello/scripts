@@ -20,7 +20,7 @@ INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git sudo parted"
-PACKAGES="testdisk recoverdm myrescue gnu-fdisk gpart diskscan exfat-fuse task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
+PACKAGES="ntp testdisk recoverdm myrescue gnu-fdisk gpart diskscan exfat-fuse task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
 USERNAME=user
 PASSWORD=user
 SHELL=/bin/bash
@@ -256,27 +256,27 @@ dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 LIVE_CFG="label live\n\
 menu label \${DISTRO} (default)\n\
 \tkernel /live/vmlinuz\n\
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence\n\
 \n\
 label nox\n\
 \tmenu label \${DISTRO} (text-mode)\n\
 \tkernel /live/vmlinuz\n\
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence\n\
 \n\
 label nomodeset\n\
 \tmenu label \${DISTRO} (no modeset)\n\
 \tkernel /live/vmlinuz nomodeset\n\
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence\n\
 \n\
 label toram\n\
 \tmenu label \${DISTRO} (load to RAM)\n\
 \tkernel /live/vmlinuz\n\
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence\n\
 \n\
 label noprobe\n\
 \tmenu label \${DISTRO} (no probe)\n\
 \tkernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
-\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD}\n\
+\tappend initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence\n\
 \n\
 label memtest\n\
 \tmenu label Memory test\n\
