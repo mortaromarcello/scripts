@@ -216,7 +216,7 @@ function copy_root() {
 
 function remove_users() {
   for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
-    if [ $user != "lost+found" ]; then
+    if [ $user != "lost+found" ] && [ $user != $USER ]; then
       chroot ${INST_ROOT_DIRECTORY} deluser --remove-all-files $user
     fi
   done
