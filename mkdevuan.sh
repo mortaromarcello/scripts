@@ -21,9 +21,10 @@ APT_OPTS="--assume-yes"
 REFRACTA_DEPS="rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 INSTALL_DISTRO_DEPS="git sudo parted"
 PACKAGES="ntp testdisk recoverdm myrescue gnu-fdisk gpart diskscan exfat-fuse task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
-USERNAME=user
-PASSWORD=user
+USERNAME=devuan
+PASSWORD=devuan
 SHELL=/bin/bash
+HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
 
@@ -404,6 +405,7 @@ function fase2() {
 	fi
 	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
 	hook_install_distro $1
+	hook_hostname $1
 	unbind $1
 }
 
@@ -535,6 +537,23 @@ EndSection\n\
 "
 	mkdir -p $1/etc/X11/xorg.conf.d
 	echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
+}
+########################################################################
+#                   hook_hostname
+########################################################################
+function hook_hostname() {
+	cat > $1/etc/hostname <<EOF
+${HOSTNAME}
+EOF
+	cat > $1/etc/hosts <<EOF
+127.0.0.1       localhost
+127.0.1.1       ${HOSTNAME}
+::1             localhost ip6-localhost ip6-loopback
+fe00::0         ip6-localnet
+ff00::0         ip6-mcastprefix
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+EOF
 }
 
 ########################################################################
