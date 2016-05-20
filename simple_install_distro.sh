@@ -331,7 +331,8 @@ ${HOSTNAME}
 EOF
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:cat > ${INST_ROOT_DIRECTORY}/etc/hosts" &>> ${FILE_DEBUG} || \
   cat > ${INST_ROOT_DIRECTORY}/etc/hosts <<EOF
-127.0.0.1       localhost ${HOSTNAME}
+127.0.0.1       localhost
+127.0.1.1       ${HOSTNAME}
 ::1             localhost ip6-localhost ip6-loopback
 fe00::0         ip6-localnet
 ff00::0         ip6-mcastprefix
