@@ -4,6 +4,7 @@
 #
 
 SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+SYSLINUX_INST="/boot/syslinux"
 MBR_DIR="/usr/lib/syslinux/mbr"
 
 if [ $UID != 0 ]; then
@@ -12,12 +13,18 @@ if [ $UID != 0 ]; then
 fi
 
 if [ -z $1 ] & [ -z $2 ]; then
-	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/\n\n \
-/dev/sd(x): disco dove installare syslinux;\n \
-/path/to/mount/: directory dove verrà montata la prima partizione fat32;\n \
+	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/ <path syslinux>\n\n\
+/dev/sd(x): disco dove installare syslinux;\n\
+/path/to/mount/: directory dove verrà montata la prima partizione fat32;\n\
+<path syslinux>:directory di syslinux\n\
 Attenzione: il disco deve contenere la prima partizione come fat32!"
 	exit
 fi
+if [ -n $3 ]; then
+	SYSLINUX_INST=$3
+fi
+
+umount -v $2
 
 #-----------------------------------------------------------------------
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
@@ -44,30 +51,31 @@ if [ -e /usr/bin/syslinux ]; then
 		echo "Errore montando ${1}1 in ${2}"
 		exit
 	fi
-	if [ ! -d ${2}/boot/syslinux ]; then
-		echo "Creo la directory ${2}/boot/syslinux (premere Invio o Crtl-c per uscire)"
+	if [ ! -d ${2}${SYSLINUX_INST} ]; then
+		echo "Creo la directory ${2}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
 		read
-		mkdir -p ${2}/boot/syslinux
+		mkdir -p ${2}${SYSLINUX_INST}
 	fi
 	echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
 	read
 	cat ${MBR_DIR}/mbr.bin > ${1}
 	echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
 	read
-	syslinux --directory /boot/syslinux/ --install ${1}1
-	for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 memdisk menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
-		cp -v ${SYSLINUX_DIR}/$i ${2}/boot/syslinux/
+	syslinux --directory ${SYSLINUX_INST} --install ${1}1
+	for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
+		cp -v ${SYSLINUX_DIR}/$i ${2}${SYSLINUX_INST}
 	done
+	cp -v /usr/lib/syslinux/memdisk ${2}${SYSLINUX_INST}
 	if [ ! -d ${2}/menus/syslinux ]; then
 		echo "Creo la directory ${2}/menus/syslinux (premere Invio o Crtl-c per uscire)"
 		read
 		mkdir -p ${2}/menus/syslinux
 	fi
-	cat >${2}/boot/syslinux/syslinux.cfg <<EOF
+	cat >${2}${SYSLINUX_INST}/syslinux.cfg <<EOF
 DEFAULT main
 
 LABEL main
-COM32 /boot/syslinux/menu.c32
+COM32 ${SYSLINUX_INST}/menu.c32
 APPEND /menus/syslinux/main.cfg
 EOF
 	cat >${2}/menus/syslinux/defaults.cfg <<EOF
@@ -95,7 +103,7 @@ MENU COLOR HELP 32;40
 EOF
 	cat >${2}/menus/syslinux/main.cfg <<EOF
 MENU INCLUDE /menus/syslinux/defaults.cfg
-UI /boot/syslinux/menu.c32
+UI ${SYSLINUX_INST}/menu.c32
 
 DEFAULT label
 
@@ -109,7 +117,7 @@ MENU LABEL Reboot
 TEXT HELP
  Reboot the PC.
 ENDTEXT
-COM32 /boot/syslinux/reboot.c32
+COM32 ${SYSLINUX_INST}/reboot.c32
 EOF
 	umount $2
 	echo "Fatto!"
