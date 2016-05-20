@@ -335,6 +335,11 @@ function set_locale() {
 	sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
 }
 
+function set_refractasnapshot() {
+	LINE=$(cat $1/etc/refractasnapshot.conf|grep "#username=")
+	sed -i "s/${LINE}/username=\"${USERNAME}\"/" $1/etc/refractasnapshot.conf
+}
+
 function create_snapshot() {
 	chroot $1 refractasnapshot << ANSWERS
 
@@ -404,6 +409,7 @@ function fase2() {
 		exit
 	fi
 	chroot $1 dpkg -i /root/refractasnapshot-base_9.3.3_all.deb
+	set_refractasnapshot $1
 	hook_install_distro $1
 	hook_hostname $1
 	unbind $1
