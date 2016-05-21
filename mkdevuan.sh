@@ -740,7 +740,7 @@ case $STAGE in
 		fase4 $ROOT_DIR
 		;;
 	update)
-		[ $CLEAN_SNAPSHOT = 1 ]&& rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
+		[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
 		fase4 $ROOT_DIR
 		;;
 	*)
