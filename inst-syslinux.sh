@@ -30,11 +30,16 @@ umount -v $2
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
-	umount ${1}{1,2}
+	umount -v ${1}{1,2}
 	echo "Sovrascrivo la tabella delle partizioni."
 	parted -s ${1} mktable msdos
-	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4" 
-	echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
+	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4"
+	sfdisk ${1} << EOF
+	,4096M,c
+	;
+EOF
+	
+	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
 	read -p "Formatto la prima partizione."
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	mkdosfs ${1}1
