@@ -61,9 +61,9 @@ EOF
 	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
 	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	mkdosfs ${DEVICE_USB}1
+	mkdosfs -F 32 ${DEVICE_USB}1
 	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	if [ ${TYPE_PART} = "exfat" ]; then
+	if [ ${TYPE_PART} = "exfat" ] || [ ${TYPE_PART} = "vfat" ]; then
 		mkfs -t ${TYPE_PART} -n persistence ${DEVICE_USB}2
 	else
 		mkfs -t ${TYPE_PART} ${DEVICE_USB}2
