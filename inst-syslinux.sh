@@ -4,9 +4,10 @@
 #
 
 SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
-SYSLINUX_INST="/boot/syslinux" #$3
+SYSLINUX_INST="/boot/syslinux"
 MBR_DIR="/usr/lib/syslinux/mbr"
 SIZE_PRIMARY_PART=4096M
+TYPE_PART=ext4
 DEVICE_USB=
 PATH_TO_MOUNT=
 
@@ -29,6 +30,7 @@ Crea una live Devuan
   -p | --path-to-mount                   :path della directory di montaggio.
   -s | --path-to-install-syslinux <dir>  :path di installazione di syslinux.
   -n | --size-primary-part <size>        :dimensione partizione primaria in MB
+  -t | --type-partition <type>           :tipo partizione (ext4 default).
 "
 }
 
@@ -42,6 +44,7 @@ function check_script() {
 	echo "path to mount $PATH_TO_MOUNT"
 	echo "syslinux install path $SYSLINUX_INST"
 	echo "size primary partition $SIZE_PRIMARY_PART"
+	echo "tipo partizione $TYPE_PART"
 	echo "Script verificato. OK."
 }
 
@@ -51,7 +54,7 @@ function create_partitions() {
 	parted -s ${DEVICE_USB} mktable msdos
 	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
 	sfdisk ${DEVICE_USB} << EOF
-	,${SIZE_PRIMARY_PART},c
+	,${SIZE_PRIMARY_PART},c,*
 	;
 EOF
 	
@@ -60,14 +63,14 @@ EOF
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	mkdosfs ${DEVICE_USB}1
 	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	mkfs -t ext4 ${DEVICE_USB}2
+	mkfs -t ${TYPE_PART} ${DEVICE_USB}2
 	e2label {DEVICE_USB}2 persistence
 	tune2fs -i 0 ${DEVICE_USB}2
 }
 
 function install_syslinux() {
 	if [ -e /usr/bin/syslinux ]; then
-		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT} </dev/null
+		mount -v ${DEVICE_USB}1 ${PATH_TO_MOUNT} </dev/null
 		if [ -z ${?} ]; then
 			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
 			exit
@@ -77,10 +80,10 @@ function install_syslinux() {
 			read
 			mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
 		fi
-		echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
+		echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
 		read
 		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
-		echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
+		echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
 		read
 		syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
 		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
@@ -172,6 +175,10 @@ do
 		-n | --size-primary-part)
 			shift
 			SIZE_PRIMARY_PART=${1}M
+			;;
+		-t | --type-partition)
+			shift
+			TYPE_PART=${1}
 			;;
 		*)
 			shift
