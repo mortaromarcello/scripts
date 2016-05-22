@@ -63,9 +63,15 @@ EOF
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	mkdosfs ${DEVICE_USB}1
 	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	mkfs -t ${TYPE_PART} ${DEVICE_USB}2
-	e2label {DEVICE_USB}2 persistence
-	tune2fs -i 0 ${DEVICE_USB}2
+	if [ ${TYPE_PART} = "exfat" ]; then
+		mkfs -t ${TYPE_PART} -n persistence ${DEVICE_USB}2
+	else
+		mkfs -t ${TYPE_PART} ${DEVICE_USB}2
+	fi
+	if [ ${TYPE_PART} = "ext2" ] || [ ${TYPE_PART} = "ext2" ] || [ ${TYPE_PART} = "ext2" ]; then
+		e2label {DEVICE_USB}2 persistence
+		tune2fs -i 0 ${DEVICE_USB}2
+	fi
 }
 
 function install_syslinux() {
