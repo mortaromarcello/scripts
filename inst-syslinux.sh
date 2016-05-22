@@ -4,86 +4,102 @@
 #
 
 SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
-SYSLINUX_INST="/boot/syslinux"
+SYSLINUX_INST="/boot/syslinux" #$3
 MBR_DIR="/usr/lib/syslinux/mbr"
+SIZE_PRIMARY_PART=4096M
+DEVICE_USB=
+PATH_TO_MOUNT=
 
-if [ $UID != 0 ]; then
-	echo "Devi essere root per eseguire questo script."
-	exit
-fi
+########################################################################
+#                      functions
+########################################################################
+function check_root() {
+	if [ $UID != 0 ]; then
+		echo "Devi essere root per eseguire questo script."
+		exit
+	fi
+}
 
-if [ -z $1 ] & [ -z $2 ]; then
-	echo -e "Uso: ${0} /dev/sd(x) /path/to/mount/ <path syslinux>\n\n\
-/dev/sd(x): disco dove installare syslinux;\n\
-/path/to/mount/: directory dove verrà montata la prima partizione fat32;\n\
-<path syslinux>:directory di syslinux\n\
-Attenzione: il disco deve contenere la prima partizione come fat32!"
-	exit
-fi
-if [ -n $3 ]; then
-	SYSLINUX_INST=$3
-fi
+function help() {
+	echo -e "
+${0} <opzioni>
+Crea una live Devuan
+  -d | --device-usb <device>             :device usb.
+  -h | --help                            :Stampa questa messaggio.
+  -p | --path-to-mount                   :path della directory di montaggio.
+  -s | --path-to-install-syslinux <dir>  :path di installazione di syslinux.
+  -n | --size-primary-part <size>        :dimensione partizione primaria in MB
+"
+}
 
-umount -v $2
+function check_script() {
+	check_root
+	if [ -z $DEVICE_USB ] && [ -z $PATH_TO_MOUNT ]; then
+		help
+		exit
+	fi
+	echo "device usb $DEVICE_USB"
+	echo "path to mount $PATH_TO_MOUNT"
+	echo "syslinux install path $SYSLINUX_INST"
+	echo "size primary partition $SIZE_PRIMARY_PART"
+	echo "Script verificato. OK."
+}
 
-#-----------------------------------------------------------------------
-echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
-read sn
-if [ ${sn} = "s" ]; then
-	umount -v ${1}{1,2}
+
+function create_partitions() {
 	echo "Sovrascrivo la tabella delle partizioni."
-	parted -s ${1} mktable msdos
-	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4"
-	sfdisk ${1} << EOF
-	,4096M,c
+	parted -s ${DEVICE_USB} mktable msdos
+	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
+	sfdisk ${DEVICE_USB} << EOF
+	,${SIZE_PRIMARY_PART},c
 	;
 EOF
 	
 	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
-	read -p "Formatto la prima partizione."
+	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	mkdosfs ${1}1
-	read -p "Formatto la seconda partizione."
-	mkfs -t ext4 ${1}2
-	e2label {1}2 persistence
-	tune2fs -i 0 ${1}2
-fi
-#-----------------------------------------------------------------------
+	mkdosfs ${DEVICE_USB}1
+	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
+	mkfs -t ext4 ${DEVICE_USB}2
+	e2label {DEVICE_USB}2 persistence
+	tune2fs -i 0 ${DEVICE_USB}2
+}
 
-if [ -e /usr/bin/syslinux ]; then
-	mount ${1}1 ${2} </dev/null
-	if [ -z ${?} ]; then
-		echo "Errore montando ${1}1 in ${2}"
-		exit
-	fi
-	if [ ! -d ${2}${SYSLINUX_INST} ]; then
-		echo "Creo la directory ${2}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
+function install_syslinux() {
+	if [ -e /usr/bin/syslinux ]; then
+		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT} </dev/null
+		if [ -z ${?} ]; then
+			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
+			exit
+		fi
+		if [ ! -d ${PATH_TO_MOUNT}${SYSLINUX_INST} ]; then
+			echo "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
+			read
+			mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		fi
+		echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
 		read
-		mkdir -p ${2}${SYSLINUX_INST}
-	fi
-	echo "Copio mbr in ${1} (premere Invio o Crtl-c per uscire)"
-	read
-	cat ${MBR_DIR}/mbr.bin > ${1}
-	echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
-	read
-	syslinux --directory ${SYSLINUX_INST} --install ${1}1
-	for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
-		cp -v ${SYSLINUX_DIR}/$i ${2}${SYSLINUX_INST}
-	done
-	cp -v /usr/lib/syslinux/memdisk ${2}${SYSLINUX_INST}
-	if [ ! -d ${2}/menus/syslinux ]; then
-		echo "Creo la directory ${2}/menus/syslinux (premere Invio o Crtl-c per uscire)"
+		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
+		echo "Installo syslinux in ${1}1 (premere Invio o Crtl-c per uscire)"
 		read
-		mkdir -p ${2}/menus/syslinux
-	fi
-	cat >${2}${SYSLINUX_INST}/syslinux.cfg <<EOF
+		syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
+		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
+			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		done
+		cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		if [ ! -d ${PATH_TO_MOUNT}/menus/syslinux ]; then
+			echo "Creo la directory ${PATH_TO_MOUNT}/menus/syslinux (premere Invio o Crtl-c per uscire)"
+			read
+			mkdir -p ${PATH_TO_MOUNT}/menus/syslinux
+		fi
+		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/syslinux.cfg <<EOF
 DEFAULT main
 
 LABEL main
 COM32 ${SYSLINUX_INST}/menu.c32
 APPEND /menus/syslinux/main.cfg
 EOF
-	cat >${2}/menus/syslinux/defaults.cfg <<EOF
+		cat >${PATH_TO_MOUNT}/menus/syslinux/defaults.cfg <<EOF
 MENU TITLE Title
 
 MENU MARGIN 0
@@ -106,7 +122,7 @@ MENU COLOR TABMSG 37;40
 MENU COLOR DISABLED 37;40
 MENU COLOR HELP 32;40
 EOF
-	cat >${2}/menus/syslinux/main.cfg <<EOF
+		cat >${PATH_TO_MOUNT}/menus/syslinux/main.cfg <<EOF
 MENU INCLUDE /menus/syslinux/defaults.cfg
 UI ${SYSLINUX_INST}/menu.c32
 
@@ -124,8 +140,50 @@ TEXT HELP
 ENDTEXT
 COM32 ${SYSLINUX_INST}/reboot.c32
 EOF
-	umount $2
-	echo "Fatto!"
-else
-	echo "syslinux non è installato sul tuo sistema. Esco."
+		umount $PATH_TO_MOUNT
+		echo "Fatto!"
+	else
+		echo "syslinux non è installato sul tuo sistema. Esco."
+	fi
+}
+
+#-----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+until [ -z ${1} ]
+do
+	case ${1} in
+		-d | --device-usb)
+			shift
+			DEVICE_USB=${1}
+			;;
+		-h | --help)
+			shift
+			help
+			exit
+			;;
+		-p | --path-to-mount)
+			shift
+			PATH_TO_MOUNT=${1}
+			;;
+		-s | --path-to-install-syslinux)
+			shift
+			SYSLINUX_INST=${1}
+			;;
+		-n | --size-primary-part)
+			shift
+			SIZE_PRIMARY_PART=${1}M
+			;;
+		*)
+			shift
+			;;
+	esac
+done
+
+check_script
+umount -v ${PATH_TO_MOUNT} ${DEVICE_USB}1
+echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
+read sn
+if [ ${sn} = "s" ]; then
+	create_partitions
 fi
+install_syslinux
