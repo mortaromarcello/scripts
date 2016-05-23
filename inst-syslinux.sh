@@ -7,7 +7,9 @@ SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
 SYSLINUX_INST="/boot/syslinux"
 MBR_DIR="/usr/lib/syslinux/mbr"
 SIZE_PRIMARY_PART=4096M
-TYPE_PART=ext4
+SIZE_SECONDARY_PART=
+TYPE_SECONDARY_PART=L
+TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
 PATH_TO_MOUNT=
 
@@ -30,6 +32,7 @@ Crea una live Devuan
   -p | --path-to-mount                   :path della directory di montaggio.
   -s | --path-to-install-syslinux <dir>  :path di installazione di syslinux.
   -n | --size-primary-part <size>        :dimensione partizione primaria in MB
+  -o | --size-secondary-part <size>      :dimensione partizione secondaria in MB
   -t | --type-partition <type>           :tipo partizione (ext4 default).
 "
 }
@@ -40,11 +43,18 @@ function check_script() {
 		help
 		exit
 	fi
+	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
+		TYPE_SECONDARY_PART=7
+	elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+		TYPE_SECONDARY_PART=c
+	fi
 	echo "device usb $DEVICE_USB"
 	echo "path to mount $PATH_TO_MOUNT"
 	echo "syslinux install path $SYSLINUX_INST"
 	echo "size primary partition $SIZE_PRIMARY_PART"
-	echo "tipo partizione $TYPE_PART"
+	echo "size secondary filesystem $SIZE_SECONDARY_PART"
+	echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
+	echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
 	echo "Script verificato. OK."
 }
 
@@ -54,21 +64,21 @@ function create_partitions() {
 	parted -s ${DEVICE_USB} mktable msdos
 	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
 	sfdisk ${DEVICE_USB} << EOF
-	,${SIZE_PRIMARY_PART},c,*
-	;
+,${SIZE_PRIMARY_PART},c,*
+,${SIZE_SECONDARY_PART},${TYPE_SECONDARY_PART}
 EOF
-	
+	sync && sync
 	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
 	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	mkdosfs -F 32 ${DEVICE_USB}1
 	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	if [ ${TYPE_PART} = "exfat" ] || [ ${TYPE_PART} = "vfat" ]; then
-		mkfs -t ${TYPE_PART} -n persistence ${DEVICE_USB}2
+	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+		mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
 	else
-		mkfs -t ${TYPE_PART} ${DEVICE_USB}2
+		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
 	fi
-	if [ ${TYPE_PART} = "ext2" ] || [ ${TYPE_PART} = "ext2" ] || [ ${TYPE_PART} = "ext2" ]; then
+	if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
 		e2label {DEVICE_USB}2 persistence
 		tune2fs -i 0 ${DEVICE_USB}2
 	fi
@@ -149,6 +159,7 @@ TEXT HELP
 ENDTEXT
 COM32 ${SYSLINUX_INST}/reboot.c32
 EOF
+		sync && sync
 		umount $PATH_TO_MOUNT
 		echo "Fatto!"
 	else
@@ -182,9 +193,13 @@ do
 			shift
 			SIZE_PRIMARY_PART=${1}M
 			;;
-		-t | --type-partition)
+		-o | --size-secondary-part)
 			shift
-			TYPE_PART=${1}
+			SIZE_SECONDARY_PART=${1}M
+			;;
+		-t | --type-secondary-filesystem)
+			shift
+			TYPE_SECONDARY_FS=${1}
 			;;
 		*)
 			shift
@@ -193,7 +208,7 @@ do
 done
 
 check_script
-umount -v ${PATH_TO_MOUNT} ${DEVICE_USB}1
+umount -v ${PATH_TO_MOUNT} ${DEVICE_USB}1 ${DEVICE_USB}2
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
