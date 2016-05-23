@@ -4,7 +4,7 @@
 LOG="$(pwd)/mkdevuan.log"
 FRONTEND=noninteractive
 VERBOSE=
-ROOT_DIR=devuan
+ROOT_DIR=devuan-$DIST-$ARCH
 STAGE=1
 CLEAN=0
 CLEAN_SNAPSHOT=0
