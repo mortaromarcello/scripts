@@ -2,9 +2,11 @@
 
 ########################################################################
 LOG="$(pwd)/mkdevuan.log"
+PATH_SCRIPTS=$(dirname $0)
 FRONTEND=noninteractive
 VERBOSE=
-ROOT_DIR=devuan-$DIST-$ARCH
+#ROOT_DIR=devuan-$DIST-$ARCH
+ROOT_DIR=devuan
 STAGE=1
 CLEAN=0
 CLEAN_SNAPSHOT=0
@@ -341,11 +343,14 @@ function set_refractasnapshot() {
 }
 
 function create_snapshot() {
-	chroot $1 refractasnapshot << ANSWERS
-
-Devuan
-
-ANSWERS
+	cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
+	chmod -v +x $1/tmp/snapshot.sh
+	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -u $USERNAME"
+	#chroot $1 refractasnapshot << ANSWERS
+#
+#Devuan
+#
+#ANSWERS
 }
 
 function set_distro_env() {
