@@ -1,79 +1,8 @@
 #!/usr/bin/env bash
 
 DISTRO="$(uname -o)"
-
-########################################################################
-#                   files isolinux
-########################################################################
-EXITHELP_CFG="label menu\n\
-	kernel /isolinux/vesamenu.c32\n\
-	config isolinux.cfg\n"
-ISOLINUX_CFG="include menu.cfg\n\
-default /isolinux/vesamenu.c32\n\
-prompt 0\n\
-timeout 200\n"
-LIVE_CFG="label live\n\
-menu label \${DISTRO} (default)\n\
-	kernel /live/vmlinuz\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=it_IT.UTF-8 UTF-8 keyboard-layouts=it persistence\n\
-\n\
-label nox\n\
-	menu label \${DISTRO} (text-mode)\n\
-	kernel /live/vmlinuz\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=it_IT.UTF-8 UTF-8 keyboard-layouts=it persistence\n\
-\n\
-label nomodeset\n\
-	menu label \${DISTRO} (no modeset)\n\
-	kernel /live/vmlinuz nomodeset\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=it_IT.UTF-8 UTF-8 keyboard-layouts=it persistence\n\
-\n\
-label toram\n\
-	menu label \${DISTRO} (load to RAM)\n\
-	kernel /live/vmlinuz\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=it_IT.UTF-8 UTF-8 keyboard-layouts=it persistence\n\
-\n\
-label noprobe\n\
-	menu label \${DISTRO} (no probe)\n\
-	kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=it_IT.UTF-8 UTF-8 keyboard-layouts=it persistence\n\
-\n\
-label memtest\n\
-	menu label Memory test\n\
-	kernel /live/memtest\n\
-\n\
-label chain.c32 hd0,0\n\
-	menu label Boot hard disk\n\
-	chain.c32 hd0,0\n\
-\n\
-label harddisk\n\
-	menu label Boot hard disk (old way)\n\
-	localboot 0x80\n\
-\n
-"
-MENU_CFG="menu hshift 6\n\
-menu width 64\n\
-\n\
-menu title Live Media\n\
-include stdmenu.cfg\n\
-include live.cfg\n\
-label help\n\
-	menu label Help\n\
-	config prompt.cfg\n"
-STDMENU_CFG="menu background /isolinux/splash.png\n\
-menu color title	* #FFFFFFFF *\n\
-menu color border	* #00000000 #00000000 none\n\
-menu color sel		* #ffffffff #76a1d0ff *\n\
-menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *\n\
-menu color tabmsg	* #f9f885 #00000000 *\n\
-menu color cmdline 0 #f9f885 #00000000\n\
-menu color help		37;40 #ffdddd00 #00000000 none\n\
-menu vshift 8\n\
-menu rows 12\n\
-#menu helpmsgrow 15\n\
-#menu cmdlinerow 25\n\
-#menu timeoutrow 26\n\
-#menu tabmsgrow 14\n\
-menu tabmsg Press ENTER to boot or TAB to edit a menu entry\n"
+KEYBOARD="it"
+LOCALE="it_IT.UTF-8 UTF-8"
 SPLASH="iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10dzkAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
 WXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4AUSEC4NgfB3pwAAIABJREFUeNrt3eti4kqaZuE3TgLX
 /c6PuYa5322kiC9ifkjYYGOnsREIaT3d2VWdtSsP2MAiju7//p//1wQAuIOm/tCr1qrdfifvg4a+
@@ -297,164 +226,9 @@ FBRikPeeBwTAPQOwKWfW/gHAXXB2H4AlBGC1qsqtHwAwb/d5/zbaFzzTvAAeHIBmlaNfAGCW6nPy
 fhztC5HRPgALCcDWmgoHPwPAbbuPTR0AFh2AlelfALhN9U2jfTEoJG7qALDgACzZmP4FgL90nx83
 dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 "
+
 ########################################################################
-exclude_list="- /dev/*\n\
-- /cdrom/*\n\
-- /media/*\n\
-- /swapfile\n\
-- /mnt/*\n\
-- /sys/*\n\
-- /proc/*\n\
-- /tmp/*\n\
-- /live\n\
-- /persistence.conf\n\
-- /boot/grub/grub.cfg\n\
-- /boot/grub/menu.lst\n\
-- /boot/grub/device.map\n\
-- /boot/*.bak\n\
-- /boot/*.old-dkms\n\
-- /etc/udev/rules.d/70-persistent-cd.rules\n\
-- /etc/udev/rules.d/70-persistent-net.rules\n\
-- /etc/fstab\n\
-- /etc/fstab.d/*\n\
-- /etc/mtab\n\
-- /etc/blkid.tab\n\
-- /etc/blkid.tab.old\n\
-- /etc/apt/sources.list~\n\
-- /etc/crypttab\n\
-- /etc/initramfs-tools/conf.d/resume     # see remove-cryptroot and nocrypt.sh\n\
-- /etc/initramfs-tools/conf.d/cryptroot  # see remove-cryptroot and nocrypt.sh\n\
-- /home/snapshot\n\
-\n\
-# Added for newer version of live-config/live-boot in wheezy \n\
-# These are only relevant here if you create a snapshot while\n\
-# you're running a live-CD or live-usb.\n\
-- /lib/live/overlay\n\
-- /lib/live/image\n\
-- /lib/live/rootfs\n\
-- /lib/live/mount\n\
-- /run/*\n\
-\n\
-\n\
-## Entries below are optional. They are included either for privacy\n\
-## or to reduce the size of the snapshot. If you have any large\n\
-## files or directories, you should exclude them from being copied\n\
-## by adding them to this list.\n\
-##\n\
-## Entries beginning with /home/*/ will affect all users.\n\
-\n\
-\n\
-# Uncomment this to exclude everything in /var/log/\n\
-#- /var/log/*\n\
 
-# As of version 9.2.0, current log files are truncated,\n\
-# and archived log files are excluded.\n\
-#\n\
-# The next three lines exclude everything in /var/log\n\
-# except /var/log/clamav/ (or anything else beginning with "c") and\n\
-# /var/log/gdm (or anything beginning with "g").\n\
-# If clamav log files are excluded, freshclam will give errors at boot.\n\
-#- /var/log/[a-b,A-Z]*\n\
-#- /var/log/[d-f]*\n\
-#- /var/log/[h-z]*\n\
-#- /var/log/*gz\n\
-
-- /var/cache/apt/archives/*.deb\n\
-- /var/cache/apt/pkgcache.bin\n\
-- /var/cache/apt/srcpkgcache.bin\n\
-- /var/cache/apt/apt-file/*\n\
-- /var/cache/debconf/*~old\n\
-- /var/lib/apt/lists/*\n\
-- /var/lib/apt/*~\n\
-- /var/lib/apt/cdroms.list\n\
-- /var/lib/aptitude/*.old\n\
-- /var/lib/dhcp/*\n\
-- /var/lib/dpkg/*~old\n\
-- /var/spool/mail/*\n\
-- /var/mail/*\n\
-- /var/backups/*.gz\n\
-#- /var/backups/*.bak\n\
-- /var/lib/dbus/machine-id\n\
-- /var/lib/live/config/*\n\
-\n\
-- /usr/share/icons/*/icon-theme.cache\n\
-\n\
-- /root/.aptitude\n\
-- /root/.bash_history\n\
-- /root/.disk-manager.conf\n\
-- /root/.fstab.log\n\
-- /root/.lesshst\n\
-- /root/*/.log\n\
-- /root/.local/share/*\n\
-- /root/.nano_history\n\
-- /root/.synaptic\n\
-- /root/.VirtualBox\n\
-- /root/.ICEauthority\n\
-- /root/.Xauthority\n\
-\n\
-\n\
-- /root/.ssh\n\
-\n\
-- /home/*/.Trash*\n\
-- /home/*/.local/share/Trash/*\n\
-- /home/*/.mozilla/*/Cache/*\n\
-- /home/*/.mozilla/*/urlclassifier3.sqlite\n\
-- /home/*/.mozilla/*/places.sqlite\n\
-- /home/*/.mozilla/*/cookies.sqlite\n\
-- /home/*/.mozilla/*/signons.sqlite\n\
-- /home/*/.mozilla/*/formhistory.sqlite\n\
-- /home/*/.mozilla/*/downloads.sqlite\n\
-- /home/*/.adobe\n\
-- /home/*/.aptitude\n\
-- /home/*/.bash_history\n\
-- /home/*/.cache\n\
-- /home/*/.dbus\n\
-- /home/*/.gksu*\n\
-- /home/*/.gvfs\n\
-- /home/*/.lesshst\n\
-- /home/*/.log\n\
-- /home/*/.macromedia\n\
-- /home/*/.nano_history\n\
-- /home/*/.pulse*\n\
-- /home/*/.recently-used\n\
-- /home/*/.recently-used.xbel\n\
-- /home/*/.local/share/recently-used.xbel\n\
-- /home/*/.thumbnails/large/*\n\
-- /home/*/.thumbnails/normal/*\n\
-- /home/*/.thumbnails/fail/*\n\
-- /home/*/.vbox*\n\
-- /home/*/.VirtualBox\n\
-- /home/*/VirtualBox\ VMs\n\
-#- /home/*/.wine\n\
-- /home/*/.xsession-errors*\n\
-- /home/*/.ICEauthority\n\
-- /home/*/.Xauthority\n\
-\n\
-# You might want to comment these out if you're making a snapshot for\n\
-# your own personal use, not to be shared with others.\n\
-- /home/*/.gnupg\n\
-- /home/*/.ssh\n\
-- /home/*/.xchat2\n\
-\n\
-# Exclude ssh_host_keys. New ones will be generated upon live boot.\n\
-# This fixes a security hole in all versions before 9.0.9-3.\n\
-# If you really want to clone your existing ssh host keys\n\
-# in your snapshot, comment out these two lines.\n\
-- /etc/ssh/ssh_host_*_key*\n\
-- /etc/ssh/ssh_host_key*\n\
-\n\
-# Examples of things to exclude in order to keep the image small:\n\
-#- /home/fred/Downloads/*\n\
-#- /home/*/Music/*\n\
-#- /home/user/Pictures/*\n\
-#- /home/*/Videos/*\n\
-\n\
-\n\
-# To exclude all hidden files and directories in your home, uncomment\n\
-# the next line. You will lose custom desktop configs if you do.\n\
-#- /home/*/.[a-z,A-Z,0-9]*\n\
-\n\
-"
 ########################################################################
 #
 ########################################################################
@@ -486,16 +260,454 @@ function snapshot_configuration() {
 	rsync_option2=" --delete-excluded"
 	rsync_option3=""
 	text_editor="/usr/bin/nano"
-	echo -e $exclude_list > $snapshot_excludes
 	mkdir -p $iso_dir/isolinux
 	mkdir -p $iso_dir/live
 	echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
-	echo -e $EXITHELP_CFG > $iso_dir/isolinux/exithelp.cfg
-	echo -e $ISOLINUX_CFG > $iso_dir/isolinux/isolinux.cfg
-	echo -e $LIVE_CFG > $iso_dir/isolinux/live.cfg
-	echo -e $MENU_CFG > $iso_dir/isolinux/menu.cfg
-	echo -e $STDMENU_CFG > $iso_dir/isolinux/stdmenu.cfg
 }
+
+cat > /tmp/snapshot_exclude.list <<EOF
+- /dev/*
+- /cdrom/*
+- /media/*
+- /swapfile
+- /mnt/*
+- /sys/*
+- /proc/*
+- /tmp/*
+- /live
+- /persistence.conf
+- /boot/grub/grub.cfg
+- /boot/grub/menu.lst
+- /boot/grub/device.map
+- /boot/*.bak
+- /boot/*.old-dkms
+- /etc/udev/rules.d/70-persistent-cd.rules
+- /etc/udev/rules.d/70-persistent-net.rules
+- /etc/fstab
+- /etc/fstab.d/*
+- /etc/mtab
+- /etc/blkid.tab
+- /etc/blkid.tab.old
+- /etc/apt/sources.list~
+- /etc/crypttab
+- /etc/initramfs-tools/conf.d/resume     # see remove-cryptroot and nocrypt.sh
+- /etc/initramfs-tools/conf.d/cryptroot  # see remove-cryptroot and nocrypt.sh
+- /home/snapshot
+
+# Added for newer version of live-config/live-boot in wheezy
+# These are only relevant here if you create a snapshot while
+# you're running a live-CD or live-usb.
+- /lib/live/overlay
+- /lib/live/image
+- /lib/live/rootfs
+- /lib/live/mount
+- /run/*
+
+
+## Entries below are optional. They are included either for privacy
+## or to reduce the size of the snapshot. If you have any large
+## files or directories, you should exclude them from being copied
+## by adding them to this list.
+##
+## Entries beginning with /home/*/ will affect all users.
+
+
+# Uncomment this to exclude everything in /var/log/
+#- /var/log/*
+
+# As of version 9.2.0, current log files are truncated,
+# and archived log files are excluded.
+#
+# The next three lines exclude everything in /var/log
+# except /var/log/clamav/ (or anything else beginning with "c") and
+# /var/log/gdm (or anything beginning with "g").
+# If clamav log files are excluded, freshclam will give errors at boot.
+#- /var/log/[a-b,A-Z]*
+#- /var/log/[d-f]*
+#- /var/log/[h-z]*
+#- /var/log/*gz
+
+- /var/cache/apt/archives/*.deb
+- /var/cache/apt/pkgcache.bin
+- /var/cache/apt/srcpkgcache.bin
+- /var/cache/apt/apt-file/*
+- /var/cache/debconf/*~old
+- /var/lib/apt/lists/*
+- /var/lib/apt/*~
+- /var/lib/apt/cdroms.list
+- /var/lib/aptitude/*.old
+- /var/lib/dhcp/*
+- /var/lib/dpkg/*~old
+- /var/spool/mail/*
+- /var/mail/*
+- /var/backups/*.gz
+#- /var/backups/*.bak
+- /var/lib/dbus/machine-id
+- /var/lib/live/config/*
+
+- /usr/share/icons/*/icon-theme.cache
+
+- /root/.aptitude
+- /root/.bash_history
+- /root/.disk-manager.conf
+- /root/.fstab.log
+- /root/.lesshst
+- /root/*/.log
+- /root/.local/share/*
+- /root/.nano_history
+- /root/.synaptic
+- /root/.VirtualBox
+- /root/.ICEauthority
+- /root/.Xauthority
+
+
+- /root/.ssh
+
+- /home/*/.Trash*
+- /home/*/.local/share/Trash/*
+- /home/*/.mozilla/*/Cache/*
+- /home/*/.mozilla/*/urlclassifier3.sqlite
+- /home/*/.mozilla/*/places.sqlite
+- /home/*/.mozilla/*/cookies.sqlite
+- /home/*/.mozilla/*/signons.sqlite
+- /home/*/.mozilla/*/formhistory.sqlite
+- /home/*/.mozilla/*/downloads.sqlite
+- /home/*/.adobe
+- /home/*/.aptitude
+- /home/*/.bash_history
+- /home/*/.cache
+- /home/*/.dbus
+- /home/*/.gksu*
+- /home/*/.gvfs
+- /home/*/.lesshst
+- /home/*/.log
+- /home/*/.macromedia
+- /home/*/.nano_history
+- /home/*/.pulse*
+- /home/*/.recently-used
+- /home/*/.recently-used.xbel
+- /home/*/.local/share/recently-used.xbel
+- /home/*/.thumbnails/large/*
+- /home/*/.thumbnails/normal/*
+- /home/*/.thumbnails/fail/*
+- /home/*/.vbox*
+- /home/*/.VirtualBox
+- /home/*/VirtualBox\ VMs
+#- /home/*/.wine
+- /home/*/.xsession-errors*
+- /home/*/.ICEauthority
+- /home/*/.Xauthority
+
+# You might want to comment these out if you're making a snapshot for
+# your own personal use, not to be shared with others.
+- /home/*/.gnupg
+- /home/*/.ssh
+- /home/*/.xchat2
+
+# Exclude ssh_host_keys. New ones will be generated upon live boot.
+# This fixes a security hole in all versions before 9.0.9-3.
+# If you really want to clone your existing ssh host keys
+# in your snapshot, comment out these two lines.
+- /etc/ssh/ssh_host_*_key*
+- /etc/ssh/ssh_host_key*
+
+# Examples of things to exclude in order to keep the image small:
+#- /home/fred/Downloads/*
+#- /home/*/Music/*
+#- /home/user/Pictures/*
+#- /home/*/Videos/*
+
+
+# To exclude all hidden files and directories in your home, uncomment
+# the next line. You will lose custom desktop configs if you do.
+#- /home/*/.[a-z,A-Z,0-9]*
+EOF
+
+########################################################################
+# files isolinux
+########################################################################
+cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
+label menu
+	kernel /isolinux/vesamenu.c32
+	config isolinux.cfg
+EOF
+
+cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
+include menu.cfg
+default /isolinux/vesamenu.c32
+prompt 0
+timeout 200
+EOF
+
+cat > /tmp/iso/isolinux/live.cfg<<EOF
+label live
+menu label \${DISTRO} (default)
+	kernel /live/vmlinuz
+	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+
+label nox
+	menu label \${DISTRO} (text-mode)
+	kernel /live/vmlinuz
+	append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+
+label nomodeset
+	menu label \${DISTRO} (no modeset)
+	kernel /live/vmlinuz nomodeset
+	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+
+label toram
+	menu label \${DISTRO} (load to RAM)
+	kernel /live/vmlinuz
+	append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+
+label noprobe
+	menu label \${DISTRO} (no probe)
+	kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
+	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+
+label memtest
+	menu label Memory test
+	kernel /live/memtest
+
+label chain.c32 hd0,0
+	menu label Boot hard disk
+	chain.c32 hd0,0
+
+label harddisk
+	menu label Boot hard disk (old way)
+	localboot 0x80
+EOF
+
+cat > /tmp/iso/isolinux/menu.cfg<<EOF
+menu hshift 6
+menu width 64
+
+menu title Live Media
+include stdmenu.cfg
+include live.cfg
+label help
+	menu label Help
+	config prompt.cfg
+EOF
+
+cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
+menu background /isolinux/splash.png
+menu color title	* #FFFFFFFF *
+menu color border	* #00000000 #00000000 none
+menu color sel		* #ffffffff #76a1d0ff *
+menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg	* #f9f885 #00000000 *
+menu color cmdline 0 #f9f885 #00000000
+menu color help		37;40 #ffdddd00 #00000000 none
+menu vshift 8
+menu rows 12
+#menu helpmsgrow 15
+#menu cmdlinerow 25
+#menu timeoutrow 26
+#menu tabmsgrow 14
+menu tabmsg Press ENTER to boot or TAB to edit a menu entry
+EOF
+
+cat > /tmp/iso/isolinux/f1.txt<<EOF
+                  0fLive Media07                                07
+
+
+
+<09F107>   This page, the help index.
+<09F207>   unused
+<09F307>   Boot methods for special ways of using this CD-ROM
+<09F407>   Additional boot options
+<09F507>   Change default language
+<09F607>   unused
+<09F707>   unused
+<09F807>   Where to get more help
+<09F907>   unused
+<09F1007>	Copyrights and Warranties (Debian)
+You may:
+- press F2 through F9 to read about the topic
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+EOF
+
+cat > /tmp/iso/isolinux/f2.txt<<EOF
+                  0fTITLE07                                07
+
+
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+
+EOF
+
+cat > /tmp/iso/isolinux/f3.txt<<EOF
+                  0fBOOT METHODS07                                07
+
+0fMethods list here must correspond to entries in your boot menu. 07                                                                  09F307
+
+0flive07
+  Start the live system -- this is the default CD-ROM method.
+0fnox07
+  Boot to runlevel 3 (command-line-only in Refracta and some others)
+0fnomodeset07
+  This is useful for some sytems with nvidia graphics cards.
+0ftoram07
+  Copy whole read-only media to RAM before mounting root filesystem.
+0fnoprobe07
+  Failsafe boot method. (noapic noapm nodma nomce nolapic nosmp vga=normal)
+0fmemtest07
+  Start memtest to scan your RAM for errors.
+
+To use one of these boot methods, type it at the prompt, optionally
+followed by any boot parameters. For example:
+  boot: live persistence acpi=off
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+
+EOF
+
+cat > /tmp/iso/isolinux/f4.txt<<EOF
+                  0fLive-Boot Options07                                07
+
+___ Additional boot options ___
+
+You can use the following boot parameters at the 0fboot:07 prompt, 
+in combination with the boot method (see <09F307>).
+
+0fpersistence07    Use persistent (read/write) partition or file
+0fswapon07         Use local swap partitions
+0fnofastboot07     Enable filesystem check
+0fnomodeset07      Disable kernel mode setting
+0ftoram07          Copy whole read-only media to RAM		
+0fnoapic nolapic07 Disable buggy APIC interrupt routing   
+0fsingle07         Single-user mode (runlevel 1)
+0facpi=noirq07 or 0facpi=off07      (partly) disable ACPI                  
+
+See 'man live-boot' or the kernel's kernel-parameters.txt file 
+for more options and information.
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+
+EOF
+
+cat > /tmp/iso/isolinux/f5.txt<<EOF
+                  0fLanguage and Keyboard07                                07
+
+You can specify the default language at the boot prompt below in combination 
+with the boot method (see <09F307>) and any other options (see <09F407>). 
+Examples:
+  Use default boot method (live); set locale and keyboard layout for Germany:
+0fboot: live config=locales,keyboard-configuration locales=de_DE.UTF-8 keyboard-layouts=de07
+  Do same with refracta-lang if it is installed(experimental):
+0fboot: config=refracta-lang,tzdata lang=de_DE 07
+
+Or, at the boot menu screen, press TAB and append the boot line with the
+locale options. (e.g. 0fconfig=locales locales=de_DE.UTF-807 or
+0fconfig=locales,keyboard-configuration locales=de_DE.UTF-8 keyboard-layouts=de07)
+
+  Some common locales:
+France          fr_FR.UTF-8
+Spain           es_ES.UTF-8
+Russia          ru_RU.UTF-8
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+EOF
+
+cat > /tmp/iso/isolinux/f6.txt<<EOF
+                  0fTITLE07                                07
+
+
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+EOF
+
+cat > /tmp/iso/isolinux/f7.txt<<EOF
+                  0fTITLE07                                07
+
+
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+EOF
+
+cat > /tmp/iso/isolinux/f8.txt<<EOF
+                  0fRefracta!07                                07
+
+Where to get more help:
+
+http://www.ibiblio.org/refracta/
+http://refracta.freeforums.org/
+http://sourceforge.net/projects/refracta/
+http://www.debian.org/
+http://wiki.debian.org/
+http://www.debian.org/doc/user-manuals
+
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+EOF
+
+cat > /tmp/iso/isolinux/f9.txt<<EOF
+0fTITLE07                                                    09F1007
+
+
+
+
+You may:
+- press F1 to return to the help index
+- type 0fmenu07 and press ENTER to go back to the boot screen
+- press ENTER to boot
+
+EOF
+
+cat > /tmp/iso/isolinux/f10.txt<<EOF
+0fCOPYRIGHTS AND WARRANTIES07                                                    09F1007
+
+Debian GNU/Linux is Copyright (C) 1993-2011 Software in the Public Interest,
+and others.
+
+The Debian GNU/Linux system is freely redistributable. After installation,
+the exact distribution terms for each package are described in the
+corresponding file /usr/share/doc/0bpackagename07/copyright.
+
+Debian GNU/Linux comes with 0fABSOLUTELY NO WARRANTY07, to the extent
+permitted by applicable law.
+
+---
+
+
+More information about the Debian Live project can be found at
+<http://live.debian.net/>.
+
+
+
+
+
+Press F1control and F then 1 for the help index, or ENTER to 
+EOF
+
 ########################################################################
 #
 ########################################################################
@@ -536,7 +748,9 @@ Do not change or remove the lines that begin with \"mount\"
 	fi
 }
 
+########################################################################
 # Function to check for old snapshots and filesystem copy
+########################################################################
 function check_copies() {
 	# Check how many snapshots already exist and their total size
 	if [[ -d $snapshot_dir ]]; then
@@ -569,7 +783,9 @@ function check_copies() {
 	fi
 }
 
+########################################################################
 # Create snapshot_dir and work_dir if necessary.
+########################################################################
 function check_directories() {
 	# Don't use /media/* for $snapshot_dir or $work_dir unless it is a mounted filesystem
 	snapdir_is_remote=$(echo ${snapshot_dir} | awk -F / '{ print "/" $2 "/" $3 }' | grep /media/)
@@ -606,12 +822,16 @@ function check_directories() {
 	fi
 }
 
+########################################################################
 # Check disk space on mounted /, /home, /media, /mnt, /tmp
+########################################################################
 function check_space() {
 	disk_space=$(df -h -x tmpfs -x devtmpfs -x iso9660 | awk '{ print "  " $2 "\t" $3 "\t" $4 "\t" $5 "  \t" $6 "\t\t\t" $1 }')
 }
 
-# Show current settings and disk space 
+########################################################################
+# Show current settings and disk space
+########################################################################
 function report_space() {
 	echo "
  You will need plenty of free space. It is recommended that free space 
@@ -640,6 +860,9 @@ function report_space() {
     sleep 5
 }
 
+########################################################################
+#
+########################################################################
 function copy_isolinux() {
 	if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]] ; then
 		isolinuxbin="/usr/lib/ISOLINUX/isolinux.bin"
@@ -664,13 +887,18 @@ function copy_isolinux() {
 	rsync -a "$vesamenu" "$iso_dir"/isolinux/
 }
 
+########################################################################
+#
+########################################################################
 function copy_kernel() {
 	rsync -a "$iso_dir"/ "$work_dir"/iso/
 	cp "$kernel_image" "$work_dir"/iso/live/
 	cp "$initrd_image" "$work_dir"/iso/live/
 }
 
+########################################################################
 # Copy the filesystem
+########################################################################
 function copy_filesystem() {
 	if [[ $limit_cpu = "yes" ]] ; then
 		[[ $(type -p cpulimit) ]] || \
@@ -695,6 +923,9 @@ function copy_filesystem() {
 	fi 
 }
 
+########################################################################
+#
+########################################################################
 function snapshot() {
 
 	snapshot_configuration
@@ -989,11 +1220,23 @@ iface lo inet loopback
 
 	echo "All finished! "
 }
+
+########################################################################
+#
+########################################################################
 until [ -z "${1}" ]; do
 	case ${1} in
 		-d | --distro)
 			shift
 			DISTRO=${1}
+			;;
+		-k | --keyboard)
+			shift
+			KEYBOARD=${1}
+			;;
+		-l | --locale)
+			shift
+			LOCALE=${1}
 			;;
 		-u | --username)
 			shift
@@ -1004,4 +1247,5 @@ until [ -z "${1}" ]; do
 			;;
 	esac
 done
+
 snapshot
