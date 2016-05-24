@@ -247,6 +247,7 @@ function snapshot_configuration() {
 	edit_boot_menu="no"
 	iso_dir="/tmp/iso"
 	boot_menu="live.cfg"
+	nocopy="no"
 	text_editor="/usr/bin/nano"
 	pmount_fixed="yes"
 	update_mlocate="yes"

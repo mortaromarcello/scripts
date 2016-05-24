@@ -32,7 +32,7 @@ MIRROR=http://auto.mirror.devuan.org/merged
 # bind()
 ########################################################################
 function bind() {
-	dirs="dev proc sys run"
+	dirs="dev dev/pts proc sys run"
 	for dir in $dirs; do
 		mount $VERBOSE --bind /$dir $1/$dir
 	done
@@ -42,9 +42,9 @@ function bind() {
 #
 ########################################################################
 function unbind() {
-	dirs="run sys proc dev"
+	dirs="run sys proc dev/pts dev"
 	for dir in $dirs; do
-		umount $VERBOSE $1/$dir
+		umount -l $VERBOSE $1/$dir
 	done
 }
 
@@ -191,8 +191,8 @@ function fase3() {
 ########################################################################
 function fase4() {
 	bind $1
-	chroot $1 apt update
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS upgrade"
+	update $1
+	upgrade $1
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
 		echo -e "===============ERRORE==============">>$LOG
@@ -202,7 +202,6 @@ function fase4() {
 		exit
 	fi
 	chroot $1 apt-get clean
-	#set_isolinux $1
 	create_snapshot $1
 	unbind $1
 }
@@ -499,27 +498,31 @@ case $STAGE in
 		fase4 $ROOT_DIR
 		;;
 	ascii)
-		
+		DIST="jessie"
 		check_script
 		fase1 $ROOT_DIR
 		fase2 $ROOT_DIR
 		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
 		DIST="ascii"
 		check_script
+		update
+		upgrade
 		fase4 $ROOT_DIR
 		;;
 	ceres)
+		DIST="jessie"
 		check_script
 		fase1 $ROOT_DIR
 		fase2 $ROOT_DIR
 		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
 		DIST="ascii"
 		check_script
-		fase4 $ROOT_DIR
+		update
+		upgrade
 		DIST="ceres"
 		check_script
+		update
+		upgrade
 		fase4 $ROOT_DIR
 		;;
 	update)
