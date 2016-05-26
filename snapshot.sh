@@ -895,6 +895,9 @@ function copy_kernel() {
 	rsync -a "$iso_dir"/ "$work_dir"/iso/
 	cp "$kernel_image" "$work_dir"/iso/live/
 	cp "$initrd_image" "$work_dir"/iso/live/
+	if [ -f /usr/lib/syslinux/memdisk ]; then
+		cp -v /usr/lib/syslinux/memdisk "$work_dir"/iso/live/
+	fi
 }
 
 ########################################################################

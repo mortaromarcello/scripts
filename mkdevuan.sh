@@ -67,11 +67,13 @@ function update() {
 #
 ########################################################################
 function upgrade() {
+	bind $1
 	if [ $DIST = "ascii" ] || [ $DIST = "ceres" ]; then
 		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get -t ascii $APT_OPTS dist-upgrade"
 	else
 		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
 	fi
+	unbind $1
 }
 
 ########################################################################
@@ -190,7 +192,6 @@ function fase3() {
 #
 ########################################################################
 function fase4() {
-	bind $1
 	update $1
 	upgrade $1
 	if [ $? -gt 0 ]; then
@@ -198,12 +199,11 @@ function fase4() {
 		echo -e "===============ERRORE==============">>$LOG
 		log
 		echo -e "===================================">>$LOG
-		unbind $1
 		exit
 	fi
-	chroot $1 apt-get clean
+	chroot $1 apt-get $APT_OPTS clean
+	chroot $1 apt-get $APT_OPTS autoremove --purge
 	create_snapshot $1
-	unbind $1
 }
 
 ########################################################################
@@ -521,14 +521,19 @@ case $STAGE in
 		upgrade
 		DIST="ceres"
 		check_script
-		update
-		upgrade
+		update $ROOT_DIR
+		upgrade $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
-	update)
+	iso-update)
 		check_script
 		[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
 		fase4 $ROOT_DIR
+		;;
+	upgrade)
+		check_script
+		update $ROOT_DIR
+		upgrade $ROOT_DIR
 		;;
 	*)
 		;;
