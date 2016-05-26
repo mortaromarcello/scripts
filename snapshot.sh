@@ -264,9 +264,8 @@ function snapshot_configuration() {
 	mkdir -p $iso_dir/isolinux
 	mkdir -p $iso_dir/live
 	echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
-}
 
-cat > /tmp/snapshot_exclude.list <<EOF
+	cat > /tmp/snapshot_exclude.list <<EOF
 - /dev/*
 - /cdrom/*
 - /media/*
@@ -424,23 +423,23 @@ cat > /tmp/snapshot_exclude.list <<EOF
 #- /home/*/.[a-z,A-Z,0-9]*
 EOF
 
-########################################################################
-# files isolinux
-########################################################################
-cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
+	########################################################################
+	# files isolinux
+	########################################################################
+	cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
 label menu
 	kernel /isolinux/vesamenu.c32
 	config isolinux.cfg
 EOF
 
-cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
+	cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
 include menu.cfg
 default /isolinux/vesamenu.c32
 prompt 0
 timeout 200
 EOF
 
-cat > /tmp/iso/isolinux/live.cfg<<EOF
+	cat > /tmp/iso/isolinux/live.cfg<<EOF
 label live
 menu label \${DISTRO} (default)
 	kernel /live/vmlinuz
@@ -479,7 +478,7 @@ label harddisk
 	localboot 0x80
 EOF
 
-cat > /tmp/iso/isolinux/menu.cfg<<EOF
+	cat > /tmp/iso/isolinux/menu.cfg<<EOF
 menu hshift 6
 menu width 64
 
@@ -491,7 +490,7 @@ label help
 	config prompt.cfg
 EOF
 
-cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
+	cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
 menu background /isolinux/splash.png
 menu color title	* #FFFFFFFF *
 menu color border	* #00000000 #00000000 none
@@ -509,7 +508,7 @@ menu rows 12
 menu tabmsg Press ENTER to boot or TAB to edit a menu entry
 EOF
 
-cat > /tmp/iso/isolinux/f1.txt<<EOF
+	cat > /tmp/iso/isolinux/f1.txt<<EOF
                   0fLive Media07                                07
 
 
@@ -530,7 +529,7 @@ You may:
 - press ENTER to boot
 EOF
 
-cat > /tmp/iso/isolinux/f2.txt<<EOF
+	cat > /tmp/iso/isolinux/f2.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -543,7 +542,7 @@ You may:
 
 EOF
 
-cat > /tmp/iso/isolinux/f3.txt<<EOF
+	cat > /tmp/iso/isolinux/f3.txt<<EOF
                   0fBOOT METHODS07                                07
 
 0fMethods list here must correspond to entries in your boot menu. 07                                                                  09F307
@@ -572,7 +571,7 @@ You may:
 
 EOF
 
-cat > /tmp/iso/isolinux/f4.txt<<EOF
+	cat > /tmp/iso/isolinux/f4.txt<<EOF
                   0fLive-Boot Options07                                07
 
 ___ Additional boot options ___
@@ -600,7 +599,7 @@ You may:
 
 EOF
 
-cat > /tmp/iso/isolinux/f5.txt<<EOF
+	cat > /tmp/iso/isolinux/f5.txt<<EOF
                   0fLanguage and Keyboard07                                07
 
 You can specify the default language at the boot prompt below in combination 
@@ -626,7 +625,7 @@ You may:
 - press ENTER to boot
 EOF
 
-cat > /tmp/iso/isolinux/f6.txt<<EOF
+	cat > /tmp/iso/isolinux/f6.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -638,7 +637,7 @@ You may:
 - press ENTER to boot
 EOF
 
-cat > /tmp/iso/isolinux/f7.txt<<EOF
+	cat > /tmp/iso/isolinux/f7.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -650,7 +649,7 @@ You may:
 - press ENTER to boot
 EOF
 
-cat > /tmp/iso/isolinux/f8.txt<<EOF
+	cat > /tmp/iso/isolinux/f8.txt<<EOF
                   0fRefracta!07                                07
 
 Where to get more help:
@@ -670,7 +669,7 @@ You may:
 - press ENTER to boot
 EOF
 
-cat > /tmp/iso/isolinux/f9.txt<<EOF
+	cat > /tmp/iso/isolinux/f9.txt<<EOF
 0fTITLE07                                                    09F1007
 
 
@@ -683,7 +682,7 @@ You may:
 
 EOF
 
-cat > /tmp/iso/isolinux/f10.txt<<EOF
+	cat > /tmp/iso/isolinux/f10.txt<<EOF
 0fCOPYRIGHTS AND WARRANTIES07                                                    09F1007
 
 Debian GNU/Linux is Copyright (C) 1993-2011 Software in the Public Interest,
@@ -708,6 +707,7 @@ More information about the Debian Live project can be found at
 
 Press F1control and F then 1 for the help index, or ENTER to 
 EOF
+}
 
 ########################################################################
 #
