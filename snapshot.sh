@@ -261,6 +261,7 @@ function snapshot_configuration() {
 	rsync_option2=" --delete-excluded"
 	rsync_option3=""
 	text_editor="/usr/bin/nano"
+	mksq_opt="-info"
 	mkdir -p $iso_dir/isolinux
 	mkdir -p $iso_dir/live
 	echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
