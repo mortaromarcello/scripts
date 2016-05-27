@@ -12,6 +12,7 @@ KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
 LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
+LANGUAGE="italian"
 ARCHIVE=$(pwd)
 DE=mate
 ARCH=amd64
@@ -20,7 +21,7 @@ ROOT_DIR=devuan
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart diskscan exfat-fuse task-$DE-desktop wicd geany geany-plugins smplayer putty blueman"
+PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart diskscan exfat-fuse task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty blueman"
 USERNAME=devuan
 PASSWORD=devuan
 SHELL=/bin/bash
@@ -68,11 +69,7 @@ function update() {
 ########################################################################
 function upgrade() {
 	bind $1
-	if [ $DIST = "ascii" ] || [ $DIST = "ceres" ]; then
-		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get -t ascii $APT_OPTS dist-upgrade"
-	else
-		chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
-	fi
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
 	unbind $1
 }
 
@@ -175,6 +172,7 @@ function fase2() {
 ########################################################################
 function fase3() {
 	bind $1
+	chroot $1 dpkg --configure -a --force-confdef,confnew
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
@@ -203,6 +201,7 @@ function fase4() {
 	fi
 	chroot $1 apt-get $APT_OPTS clean
 	chroot $1 apt-get $APT_OPTS autoremove --purge
+	chroot $1 dpkg --purge -a
 	create_snapshot $1
 }
 
@@ -348,6 +347,7 @@ function check_script() {
 	echo "root directory $ROOT_DIR"
 	echo "locale $LOCALE"
 	echo "lang $LANG"
+	echo "language $LANGUAGE"
 	echo "keyboard $KEYBOARD"
 	echo "timezone $TIMEZONE"
 	echo -e "deb repository $APT_REPS"
@@ -367,9 +367,9 @@ Crea una live Devuan
   -h | --help                            :Stampa questa messaggio.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
   -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
-  -L | --language                        :Lingua (default 'it_IT.UTF-8').
+  -L | --lang                            :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
-  -s | --stage <stage>                  :Numero fase:
+  -s | --stage <stage>                   :Numero fase:
                                          1) crea la base del sistema
                                          2) installa refractasnapshot,
                                             setta lo user e la lingua
@@ -424,9 +424,13 @@ do
 			shift
 			LOCALE=${1}
 			;;
-		-L | --language)
+		-L | --lang)
 			shift
 			LANG=${1}
+			;;
+		-la | --language)
+			shift
+			LANGUAGE=${1}
 			;;
 		-n | --hostname)
 			shift
@@ -505,8 +509,8 @@ case $STAGE in
 		fase3 $ROOT_DIR
 		DIST="ascii"
 		check_script
-		update
-		upgrade
+		update $ROOT_DIR
+		upgrade $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
 	ceres)
@@ -517,8 +521,8 @@ case $STAGE in
 		fase3 $ROOT_DIR
 		DIST="ascii"
 		check_script
-		update
-		upgrade
+		update $ROOT_DIR
+		upgrade $ROOT_DIR
 		DIST="ceres"
 		check_script
 		update $ROOT_DIR

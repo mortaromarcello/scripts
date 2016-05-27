@@ -877,24 +877,24 @@ function copy_isolinux() {
 	### Might need to add chain.c32 to this list of copied files:
 	if [[ -f /usr/lib/syslinux/modules/bios/vesamenu.c32 ]] ; then
 		vesamenu="/usr/lib/syslinux/modules/bios/vesamenu.c32"
-		rsync -a /usr/lib/syslinux/modules/bios/chain.c32 "$iso_dir"/isolinux/
-		rsync -a /usr/lib/syslinux/modules/bios/ldlinux.c32 "$iso_dir"/isolinux/
-		rsync -a /usr/lib/syslinux/modules/bios/libcom32.c32 "$iso_dir"/isolinux/
-		rsync -a /usr/lib/syslinux/modules/bios/libutil.c32 "$iso_dir"/isolinux/
+		rsync -va /usr/lib/syslinux/modules/bios/chain.c32 "$iso_dir"/isolinux/
+		rsync -va /usr/lib/syslinux/modules/bios/ldlinux.c32 "$iso_dir"/isolinux/
+		rsync -va /usr/lib/syslinux/modules/bios/libcom32.c32 "$iso_dir"/isolinux/
+		rsync -va /usr/lib/syslinux/modules/bios/libutil.c32 "$iso_dir"/isolinux/
 	else
 		vesamenu="/usr/lib/syslinux/vesamenu.c32"
 	fi
-	rsync -a "$isolinuxbin" "$iso_dir"/isolinux/
-	rsync -a "$vesamenu" "$iso_dir"/isolinux/
+	rsync -va "$isolinuxbin" "$iso_dir"/isolinux/
+	rsync -va "$vesamenu" "$iso_dir"/isolinux/
 }
 
 ########################################################################
 #
 ########################################################################
 function copy_kernel() {
-	rsync -a "$iso_dir"/ "$work_dir"/iso/
-	cp "$kernel_image" "$work_dir"/iso/live/
-	cp "$initrd_image" "$work_dir"/iso/live/
+	rsync -va "$iso_dir"/ "$work_dir"/iso/
+	cp -v "$kernel_image" "$work_dir"/iso/live/
+	cp -v "$initrd_image" "$work_dir"/iso/live/
 	if [ -f /usr/lib/syslinux/memdisk ]; then
 		cp -v /usr/lib/syslinux/memdisk "$work_dir"/iso/live/
 	fi
@@ -997,7 +997,7 @@ $initrd_message
 	# (i.e. the one linked from /initrd.img)
 	if [[ $initrd_crypt = "yes" ]] ; then
 		if ! [[ -f /initrd.img_pre-snapshot ]] ; then
-			cp /initrd.img /initrd.img_pre-snapshot
+			cp -v /initrd.img /initrd.img_pre-snapshot
 		fi
 		if [[ -f /usr/sbin/update-initramfs.orig.initramfs-tools ]] ; then
 			CRYPTSETUP=y usr/sbin/update-initramfs.orig.initramfs-tools -u
@@ -1117,7 +1117,7 @@ $initrd_message
 
 	# Add the Release Notes to the iso
 	if [[ -f /usr/share/doc/_Release_Notes/Release_Notes ]] ; then
-		rsync -a /usr/share/doc/_Release_Notes/Release_Notes "$work_dir"/iso/
+		rsync -va /usr/share/doc/_Release_Notes/Release_Notes "$work_dir"/iso/
 	fi
 
 	# Create the boot menu unless iso_dir or boot_menu is not default.
