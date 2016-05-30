@@ -79,7 +79,7 @@ EOF
 		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
 	fi
 	if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
-		e2label {DEVICE_USB}2 persistence
+		e2label ${DEVICE_USB}2 persistence
 		tune2fs -i 0 ${DEVICE_USB}2
 	fi
 }

@@ -21,13 +21,24 @@ ROOT_DIR=devuan
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart diskscan exfat-fuse task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty blueman"
+PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse xdg-utils avahi-daemon libnss-mdns anacron eject iw alsa-utils xorg xserver-xorg-video-all desktop-base bluetooth powertop wireless-tools wpasupplicant acpi xserver-xorg-input-all slim $DE-desktop gimp synaptic iceweasel wicd libreoffice libreoffice-gtk task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty"
 USERNAME=devuan
 PASSWORD=devuan
 SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
+########################################################################
+# ctrl_c
+########################################################################
+trap ctrl_c SIGINT
+ctrl_c() {
+	echo "*** CTRL-C pressed***"
+	if [ -b $ROOT_DIR/dev ]; then
+		unbind $ROOT_DIR
+	fi
+	exit -1
+}
 
 ########################################################################
 # bind()
@@ -68,9 +79,7 @@ function update() {
 #
 ########################################################################
 function upgrade() {
-	bind $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
-	unbind $1
 }
 
 ########################################################################
@@ -509,11 +518,12 @@ case $STAGE in
 		check_script
 		fase1 $ROOT_DIR
 		fase2 $ROOT_DIR
-		fase3 $ROOT_DIR
+		#fase3 $ROOT_DIR
 		DIST="ascii"
 		check_script
 		update $ROOT_DIR
 		upgrade $ROOT_DIR
+		fase3 $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
 	ceres)
@@ -521,7 +531,7 @@ case $STAGE in
 		check_script
 		fase1 $ROOT_DIR
 		fase2 $ROOT_DIR
-		fase3 $ROOT_DIR
+		#fase3 $ROOT_DIR
 		DIST="ascii"
 		check_script
 		update $ROOT_DIR
@@ -530,6 +540,7 @@ case $STAGE in
 		check_script
 		update $ROOT_DIR
 		upgrade $ROOT_DIR
+		fase3 $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
 	iso-update)
@@ -539,8 +550,10 @@ case $STAGE in
 		;;
 	upgrade)
 		check_script
+		bind $ROOT_DIR
 		update $ROOT_DIR
 		upgrade $ROOT_DIR
+		unbind $ROOT_DIR
 		;;
 	*)
 		;;
