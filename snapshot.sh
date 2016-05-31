@@ -255,8 +255,8 @@ function snapshot_configuration() {
 	ssh_pass="yes"
 	patch_init_nosystemd="yes"
 	username="devuan"
-	limit_cpu="no"
-	limit="50"
+	#limit_cpu="no"
+	#limit="50"
 	rsync_option1="--delete-before"
 	rsync_option2=" --delete-excluded"
 	rsync_option3=""
@@ -905,27 +905,8 @@ function copy_kernel() {
 # Copy the filesystem
 ########################################################################
 function copy_filesystem() {
-	if [[ $limit_cpu = "yes" ]] ; then
-		[[ $(type -p cpulimit) ]] || \
-		while true ; do
-			echo -n "
- The cpulimit program is not installed. Your CPU will not be limited.
- Would you like to continue anyway? (y/N) 
- "
-			read ans
-			case $ans in
-				[Yy]*) break ;;
-				*) exit 0 ;;
-			esac
-		done
-		cpulimit -e rsync -l "$limit" &
-		pid="$!"
-	fi
 	rsync -av / myfs/ ${rsync_option1} ${rsync_option2} ${rsync_option3} \
 	--exclude="$work_dir" --exclude="$snapshot_dir" --exclude-from="$snapshot_excludes"
-	if [[ -n "$pid" ]] ; then
-		kill "$pid"
-	fi 
 }
 
 ########################################################################
@@ -1160,26 +1141,7 @@ iface lo inet loopback
 
 	# Squash the filesystem copy
 	echo "Squashing the filesystem..."
-	if [[ $limit_cpu = "yes" ]] ; then
-		[[ $(type -p cpulimit) ]] || \
-		while true ; do
-			echo -n "
- The cpulimit program is not installed. Your CPU will not be limited.
- Would you like to continue anyway? (y/N) 
- "
-			read ans
-			case $ans in
-				[Yy]*) break ;;
-				*) exit 0 ;;
-			esac
-		done
-		cpulimit -e mksquashfs -l "$limit" &
-		pid="$!"
-	fi
 	mksquashfs "$work_dir"/myfs/ "$work_dir"/iso/live/filesystem.squashfs ${mksq_opt}
-	if [[ -n "$pid" ]] ; then
-		kill "$pid"
-	fi 
 
 	# This code is redundant, because $work_dir gets removed later, but
 	# it might help by making more space on the hard drive for the iso.

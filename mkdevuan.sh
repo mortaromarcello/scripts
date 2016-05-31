@@ -22,7 +22,7 @@ ROOT_DIR=devuan
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
+PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
 
 USERNAME=devuan
 PASSWORD=devuan
