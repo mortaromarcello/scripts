@@ -86,7 +86,7 @@ EOF
 
 function install_syslinux() {
 	if [ -e /usr/bin/syslinux ]; then
-		mount -v ${DEVICE_USB}1 ${PATH_TO_MOUNT} </dev/null
+		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
 		if [ -z ${?} ]; then
 			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
 			exit
