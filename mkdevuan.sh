@@ -14,7 +14,6 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-#DE=mate
 DE=xfce
 ARCH=amd64
 DIST=jessie
@@ -30,6 +29,21 @@ SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
+
+########################################################################
+# compile_debootstrap
+########################################################################
+function compile_debootstrap() {
+	 [[ -d debootstrap ]] && rm -R debootstrap
+	git clone https://git.devuan.org/hellekin/debootstrap.git
+	cd debootstrap
+	make devices.tar.gz
+	DEBOOTSTRAP_DIR=`pwd`
+	export DEBOOTSTRAP_DIR
+	DEBOOTSTRAP_BIN=$DEBOOTSTRAP_DIR/debootstrap
+	cd $ARCHIVE
+}
+
 ########################################################################
 # ctrl_c
 ########################################################################
@@ -48,7 +62,9 @@ ctrl_c() {
 function bind() {
 	dirs="dev dev/pts proc sys run"
 	for dir in $dirs; do
-		mount $VERBOSE --bind /$dir $1/$dir
+		if ! mount | grep $1/$dir; then
+			mount $VERBOSE --bind /$dir $1/$dir
+		fi
 	done
 }
 
@@ -58,7 +74,9 @@ function bind() {
 function unbind() {
 	dirs="run sys proc dev/pts dev"
 	for dir in $dirs; do
-		umount -l $VERBOSE $1/$dir
+		if mount | grep $1/$dir; then
+			umount -l $VERBOSE $1/$dir
+		fi
 	done
 }
 
@@ -124,8 +142,35 @@ function set_distro_env() {
 		INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
-		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	fi
+	compile_debootstrap
+}
+
+function jessie() {
+	DIST="jessie"
+	check_script
+	fase1 $ROOT_DIR
+	fase2 $ROOT_DIR
+	fase3 $ROOT_DIR
+	fase4 $ROOT_DIR
+}
+
+function ascii() {
+	DIST="ascii"
+	check_script
+	fase1 $ROOT_DIR
+	fase2 $ROOT_DIR
+	fase3 $ROOT_DIR
+	fase4 $ROOT_DIR
+}
+
+function ceres() {
+	DIST="ceres"
+	check_script
+	fase1 $ROOT_DIR
+	fase2 $ROOT_DIR
+	fase3 $ROOT_DIR
+	fase4 $ROOT_DIR
 }
 
 ########################################################################
@@ -135,7 +180,7 @@ function fase1() {
 	log
 	[ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
 	mkdir -p $1
-	debootstrap --verbose --arch=$ARCH $DIST $1 $MIRROR
+	$DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
 		echo -e "===============ERRORE==============">>$LOG
@@ -385,8 +430,7 @@ Crea una live Devuan
   -n | --hostname                        :Nome hostname (default 'devuan').
   -s | --stage <stage>                   :Numero fase:
                                          1) crea la base del sistema
-                                         2) installa refractasnapshot,
-                                            setta lo user e la lingua
+                                         2) setta lo user, hostname e la lingua e i pacchetti indispensabili
                                          3) installa pacchetti aggiuntivi e il
                                             desktop
                                          4) installa lo script d'installazione
@@ -501,49 +545,14 @@ case $STAGE in
 		fase2 $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
-	de)
-		check_script
-		fase1 $ROOT_DIR
-		fase2 $ROOT_DIR
-		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
-		;;
 	jessie)
-		check_script
-		fase1 $ROOT_DIR
-		fase2 $ROOT_DIR
-		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
+		jessie
 		;;
 	ascii)
-		DIST="jessie"
-		check_script
-		fase1 $ROOT_DIR
-		fase2 $ROOT_DIR
-		#fase3 $ROOT_DIR
-		DIST="ascii"
-		check_script
-		update $ROOT_DIR
-		upgrade $ROOT_DIR
-		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
+		ascii
 		;;
 	ceres)
-		DIST="jessie"
-		check_script
-		fase1 $ROOT_DIR
-		fase2 $ROOT_DIR
-		#fase3 $ROOT_DIR
-		DIST="ascii"
-		check_script
-		update $ROOT_DIR
-		upgrade $ROOT_DIR
-		DIST="ceres"
-		check_script
-		update $ROOT_DIR
-		upgrade $ROOT_DIR
-		fase3 $ROOT_DIR
-		fase4 $ROOT_DIR
+		ceres
 		;;
 	iso-update)
 		check_script
