@@ -18,7 +18,7 @@ DE=xfce
 ARCH=amd64
 DIST=jessie
 ROOT_DIR=devuan
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux firmware-b43-installer atmel-firmware firmware-atheros firmware-libertas firmware-realtek firmware-ipw2x00 wireless-tools"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
@@ -34,12 +34,12 @@ MIRROR=http://auto.mirror.devuan.org/merged
 # compile_debootstrap
 ########################################################################
 function compile_debootstrap() {
-	 [[ -d debootstrap ]] && rm -R debootstrap
-	git clone https://git.devuan.org/hellekin/debootstrap.git
-	cd debootstrap
-	make devices.tar.gz
-	DEBOOTSTRAP_DIR=`pwd`
+	DEBOOTSTRAP_DIR=$ARCHIVE/debootstrap
 	export DEBOOTSTRAP_DIR
+	[[ -d $DEBOOTSTRAP_DIR ]] && rm -R $DEBOOTSTRAP_DIR
+	git clone https://git.devuan.org/hellekin/debootstrap.git $DEBOOTSTRAP_DIR
+	cd $DEBOOTSTRAP_DIR
+	make devices.tar.gz
 	DEBOOTSTRAP_BIN=$DEBOOTSTRAP_DIR/debootstrap
 	cd $ARCHIVE
 }
