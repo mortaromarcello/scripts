@@ -18,7 +18,7 @@ DE=xfce
 ARCH=amd64
 DIST=jessie
 ROOT_DIR=devuan
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux firmware-b43-installer atmel-firmware firmware-atheros firmware-libertas firmware-realtek firmware-ipw2x00 wireless-tools"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
@@ -29,7 +29,15 @@ SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
-
+########################################################################
+#
+########################################################################
+function linux_firmware() {
+	FIRMWARE_DIR=$ARCHIVE/linux-firmware
+	[[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
+	git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+	cp -var $FIRMWARE_DIR/* $1/lib/firmware/
+}
 ########################################################################
 # compile_debootstrap
 ########################################################################
@@ -208,6 +216,7 @@ function fase2() {
 		unbind $1
 		exit
 	fi
+	linux_firmware $1
 	add_user $1
 	set_locale $1
 	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INSTALL_DISTRO_DEPS"

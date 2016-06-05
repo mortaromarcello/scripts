@@ -87,7 +87,7 @@ EOF
 function install_syslinux() {
 	if [ -e /usr/bin/syslinux ]; then
 		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
-		if [ -z ${?} ]; then
+		if ! mount | grep ${PATH_TO_MOUNT}; then
 			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
 			exit
 		fi
@@ -159,12 +159,20 @@ TEXT HELP
 ENDTEXT
 COM32 ${SYSLINUX_INST}/reboot.c32
 EOF
+		if [ $GRUB_UEFI = 1 ]; then
+			create_grub-uefi
+		fi
 		sync && sync
-		umount $PATH_TO_MOUNT
+		umount -v $PATH_TO_MOUNT
 		echo "Fatto!"
 	else
 		echo "syslinux non è installato sul tuo sistema. Esco."
 	fi
+}
+
+function create_grub-uefi() {
+	git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
+	cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
 }
 
 #-----------------------------------------------------------------------
@@ -175,6 +183,10 @@ do
 		-d | --device-usb)
 			shift
 			DEVICE_USB=${1}
+			;;
+		-g | --grub-uefi)
+			shift
+			GRUB_UEFI=1
 			;;
 		-h | --help)
 			shift
@@ -208,7 +220,9 @@ do
 done
 
 check_script
-umount -v ${PATH_TO_MOUNT} ${DEVICE_USB}1 ${DEVICE_USB}2
+umount -v ${PATH_TO_MOUNT}
+umount -v ${DEVICE_USB}1
+umount -v ${DEVICE_USB}2
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
