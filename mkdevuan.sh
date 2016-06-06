@@ -269,6 +269,7 @@ function fase4() {
 	chroot $1 apt-get $APT_OPTS clean
 	chroot $1 apt-get $APT_OPTS autoremove --purge
 	chroot $1 dpkg --purge -a
+	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
 	create_snapshot $1
 	unbind $1
 }
@@ -565,7 +566,6 @@ case $STAGE in
 		;;
 	iso-update)
 		check_script
-		[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
 		fase4 $ROOT_DIR
 		;;
 	upgrade)
