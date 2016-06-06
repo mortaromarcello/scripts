@@ -256,6 +256,7 @@ function fase3() {
 ########################################################################
 function fase4() {
 	update $1
+	bind $1
 	upgrade $1
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
@@ -268,7 +269,6 @@ function fase4() {
 	chroot $1 apt-get $APT_OPTS clean
 	chroot $1 apt-get $APT_OPTS autoremove --purge
 	chroot $1 dpkg --purge -a
-	bind $1
 	create_snapshot $1
 	unbind $1
 }
