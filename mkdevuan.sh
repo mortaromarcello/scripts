@@ -21,7 +21,7 @@ ROOT_DIR=devuan
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-PACKAGES="vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
+PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
 
 USERNAME=devuan
 PASSWORD=devuan
@@ -29,6 +29,135 @@ SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
+########################################################################
+# crea usb live
+########################################################################
+SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+SYSLINUX_INST="/boot/syslinux"
+MBR_DIR="/usr/lib/syslinux/mbr"
+SIZE_PRIMARY_PART=4096M
+SIZE_SECONDARY_PART=
+TYPE_SECONDARY_PART=L
+TYPE_SECONDARY_FS=ext4
+DEVICE_USB=
+PATH_TO_MOUNT="/mnt"
+
+function create_grub-uefi() {
+	git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
+	cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
+}
+
+function create_partitions() {
+	echo "Sovrascrivo la tabella delle partizioni."
+	parted -s ${DEVICE_USB} mktable msdos
+	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
+	sfdisk ${DEVICE_USB} << EOF
+,${SIZE_PRIMARY_PART},c,*
+,${SIZE_SECONDARY_PART},${TYPE_SECONDARY_PART}
+EOF
+	sync && sync
+	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
+	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
+	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
+	mkdosfs -F 32 ${DEVICE_USB}1
+	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
+	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+		mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
+	else
+		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
+	fi
+	if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
+		e2label ${DEVICE_USB}2 persistence
+		tune2fs -i 0 ${DEVICE_USB}2
+	fi
+}
+
+function install_syslinux() {
+	if [ -e /usr/bin/syslinux ]; then
+		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
+		if ! mount | grep ${PATH_TO_MOUNT}; then
+			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
+			exit
+		fi
+		if [ ! -d ${PATH_TO_MOUNT}${SYSLINUX_INST} ]; then
+			echo "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
+			read
+			mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		fi
+		echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
+		read
+		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
+		echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
+		read
+		syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
+		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
+			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		done
+		cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${SYSLINUX_INST}
+		if [ ! -d ${PATH_TO_MOUNT}/menus/syslinux ]; then
+			echo "Creo la directory ${PATH_TO_MOUNT}/menus/syslinux (premere Invio o Crtl-c per uscire)"
+			read
+			mkdir -p ${PATH_TO_MOUNT}/menus/syslinux
+		fi
+		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/syslinux.cfg <<EOF
+DEFAULT main
+
+LABEL main
+COM32 ${SYSLINUX_INST}/menu.c32
+APPEND /menus/syslinux/main.cfg
+EOF
+		cat >${PATH_TO_MOUNT}/menus/syslinux/defaults.cfg <<EOF
+MENU TITLE Title
+
+MENU MARGIN 0
+MENU ROWS -9
+MENU TABMSG
+MENU TABMSGROW -3
+MENU CMDLINEROW -3
+MENU HELPMSGROW -4
+MENU HELPMSGENDROW -1
+
+MENU COLOR SCREEN 37;40
+MENU COLOR BORDER 34;40
+MENU COLOR TITLE 1;33;40
+MENU COLOR SCROLLBAR 34;46
+MENU COLOR SEL 30;47
+MENU COLOR UNSEL 36;40
+MENU COLOR CMDMARK 37;40
+MENU COLOR CMDLINE 37;40
+MENU COLOR TABMSG 37;40
+MENU COLOR DISABLED 37;40
+MENU COLOR HELP 32;40
+EOF
+		cat >${PATH_TO_MOUNT}/menus/syslinux/main.cfg <<EOF
+MENU INCLUDE /menus/syslinux/defaults.cfg
+UI ${SYSLINUX_INST}/menu.c32
+
+DEFAULT label
+
+LABEL label
+MENU LABEL label
+
+MENU SEPARATOR
+
+LABEL -
+MENU LABEL Reboot
+TEXT HELP
+ Reboot the PC.
+ENDTEXT
+COM32 ${SYSLINUX_INST}/reboot.c32
+EOF
+		if [ $GRUB_UEFI = 1 ]; then
+			create_grub-uefi
+		fi
+		sync && sync
+		umount -v $PATH_TO_MOUNT
+		echo "Fatto!"
+	else
+		echo "syslinux non è installato sul tuo sistema. Esco."
+	fi
+}
+
 ########################################################################
 #
 ########################################################################
@@ -38,6 +167,25 @@ function linux_firmware() {
 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
 	cp -var $FIRMWARE_DIR/* $1/lib/firmware/
 }
+
+function create_pendrive_live() {
+	if mount | grep ${PATH_TO_MOUNT}; then
+		umount -v ${PATH_TO_MOUNT}
+	fi
+	if mount | grep ${DEVICE_USB}1; then
+		umount -v ${DEVICE_USB}1
+	fi
+	if mount | grep ${DEVICE_USB}2; then
+		umount -v ${DEVICE_USB}2
+	fi
+	echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
+	read sn
+	if [ ${sn} = "s" ]; then
+		create_partitions
+	fi
+	install_syslinux
+}
+
 ########################################################################
 # compile_debootstrap
 ########################################################################
@@ -58,9 +206,7 @@ function compile_debootstrap() {
 trap ctrl_c SIGINT
 ctrl_c() {
 	echo "*** CTRL-C pressed***"
-	if [ -b $ROOT_DIR/dev ]; then
-		unbind $ROOT_DIR
-	fi
+	unbind $ROOT_DIR
 	exit -1
 }
 
@@ -409,6 +555,23 @@ function check_script() {
 		exit
 	fi
 	set_distro_env
+########################################################################
+	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
+		TYPE_SECONDARY_PART=7
+	elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+		TYPE_SECONDARY_PART=c
+	fi
+	
+	if [ -n $DEVICE_USB ]; then
+		echo "device usb $DEVICE_USB"
+		echo "path to mount $PATH_TO_MOUNT"
+		echo "syslinux install path $SYSLINUX_INST"
+		echo "size primary partition $SIZE_PRIMARY_PART"
+		echo "size secondary filesystem $SIZE_SECONDARY_PART"
+		echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
+		echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
+	fi
+########################################################################
 	echo "distribution $DIST"
 	echo "architecture $ARCH"
 	echo "desktop $DE"
@@ -574,6 +737,34 @@ case $STAGE in
 		update $ROOT_DIR
 		upgrade $ROOT_DIR
 		unbind $ROOT_DIR
+		;;
+	-du | --device-usb)
+		shift
+		DEVICE_USB=${1}
+		;;
+	-gu | --grub-uefi)
+		shift
+		GRUB_UEFI=1
+			;;
+	-pm | --path-to-mount)
+		shift
+		PATH_TO_MOUNT=${1}
+		;;
+	-pi | --path-to-install-syslinux)
+		shift
+		SYSLINUX_INST=${1}
+		;;
+	-sp | --size-primary-part)
+			shift
+		SIZE_PRIMARY_PART=${1}M
+		;;
+	-ss | --size-secondary-part)
+		shift
+		SIZE_SECONDARY_PART=${1}M
+		;;
+	-ts | --type-secondary-filesystem)
+		shift
+		TYPE_SECONDARY_FS=${1}
 		;;
 	*)
 		;;

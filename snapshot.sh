@@ -1142,6 +1142,7 @@ iface lo inet loopback
 	# Squash the filesystem copy
 	echo "Squashing the filesystem..."
 	mksquashfs "$work_dir"/myfs/ "$work_dir"/iso/live/filesystem.squashfs ${mksq_opt}
+	cp -va "$work_dir"/iso/live/filesystem.squashfs "$snapshot_dir"/filesystem.squashfs-$(date +%Y%m%d_%H%M)
 
 	# This code is redundant, because $work_dir gets removed later, but
 	# it might help by making more space on the hard drive for the iso.
