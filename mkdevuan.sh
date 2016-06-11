@@ -547,7 +547,7 @@ function check_script() {
 	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
 		ARCH=amd64
 	fi
-	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ]; then
+	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE !="kde" ]; then
 		DE="mate"
 	fi
 	if [ $(id -u) != 0 ]; then
@@ -619,6 +619,7 @@ Crea una live Devuan
 ########################################################################
 #
 ########################################################################
+[[ -z $1 ]] && help && exit
 until [ -z "${1}" ]
 do
 	case ${1} in
