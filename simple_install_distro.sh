@@ -163,7 +163,7 @@ function copy_root() {
 function remove_users() {
 	for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
 		if [ "$user" != "lost+found" ] && [ "$user" != "$USER" ]; then
-			chroot ${INST_ROOT_DIRECTORY} deluser --remove-all-files "$user"
+			chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
 		fi
 	done
 }
@@ -196,7 +196,8 @@ function add_user() {
 		done
 	fi
 	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' "${USER_PASSWORD}")
-	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p "$CRYPT_PASSWORD" "$USER"
+	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s
+	${SHELL_USER} -u 1000 -o -m -p "$CRYPT_PASSWORD" "$USER"
 	if [ $? -eq 0 ]; then
 		echo "User has been added to system!" 
 	else
