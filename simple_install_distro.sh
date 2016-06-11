@@ -127,11 +127,7 @@ function create_root_and_mount_partition() {
 	if [ -z "${YES_NO}" ] || [ ! "${YES_NO}" = "si" ]; then
 		exit
 	fi
-	if [ "${YES_NO}" = "si" ]; then
-		mkfs -t -F ${TYPE_FS} ${ROOT_PARTITION}
-	else
-		mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
-	fi
+	mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
 	UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
 	mkdir -p ${INST_ROOT_DIRECTORY}
 	mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
@@ -151,11 +147,7 @@ function create_home_and_mount_partition() {
 			if [ "${YES_NO}" = "no" ] || [ -z "${YES_NO}" ]; then
 				exit
 			fi
-			if [ "$YES_NO" = "si" ]; then
-				mkfs -t -F ${TYPE_FS} ${HOME_PARTITION}
-			else
-				mkfs -t ${TYPE_FS} ${HOME_PARTITION}
-			fi
+			mkfs -t ${TYPE_FS} ${HOME_PARTITION}
 		fi
 		UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
 		mkdir -p ${INST_ROOT_DIRECTORY}/home
@@ -184,6 +176,7 @@ function add_user() {
 			[ -z "${USER}" ] && echo "Installazione abortita!" && exit -1
 		fi
 	fi
+	remove_users
 	if [ -z ${CRYPT_PASSWORD} ]; then
 		while true; do
 			read -s -p "Digita la password: " USER_PASSWORD
@@ -204,8 +197,7 @@ function add_user() {
 	fi
 	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")'
 	"${USER_PASSWORD}")
-	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s
-	${SHELL_USER} -m -p "$CRYPT_PASSWORD $USER"
+	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p "$CRYPT_PASSWORD" "$USER"
 	if [ $? -eq 0 ]; then
 		echo "User has been added to system!" 
 	else
@@ -233,14 +225,13 @@ function change_root_password() {
 		fi
 		read -s -p "conferma la password: " ROOT_PASSWORD2
 		echo
-		if [ $ROOT_PASSWORD2 == $ROOT_PASSWORD ]; then
+		if [ "$ROOT_PASSWORD2" == "$ROOT_PASSWORD" ]; then
 			break
 		else
 			echo "Le password non coincidono. Riprova"
 		fi
 	done
-	CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")'
-	"${ROOT_PASSWORD}")
+	CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' "${ROOT_PASSWORD}")
 	fi
 	chroot ${INST_ROOT_DIRECTORY} bash -c "echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e"
 }
@@ -303,11 +294,11 @@ EOF
 function set_autologin() {
 	if [ ${AUTOLOGIN} = "true" ]; then
 		DM=$(cat ${INST_ROOT_DIRECTORY}/etc/X11/default-display-manager)
-		if [ ${DM} = "/usr/sbin/lightdm" ]; then
+		if [ "${DM}" = "/usr/sbin/lightdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
 			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
 		fi
-		if [ ${DM} = "/usr/bin/slim" ]; then
+		if [ "${DM}" = "/usr/bin/slim" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
 			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
@@ -349,7 +340,6 @@ function run_inst {
 	create_root_and_mount_partition
 	create_home_and_mount_partition
 	copy_root
-	remove_users
 	add_user
 	change_root_password
 	add_sudo_user
