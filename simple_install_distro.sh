@@ -195,8 +195,7 @@ function add_user() {
 			fi
 		done
 	fi
-	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")'
-	"${USER_PASSWORD}")
+	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' "${USER_PASSWORD}")
 	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p "$CRYPT_PASSWORD" "$USER"
 	if [ $? -eq 0 ]; then
 		echo "User has been added to system!" 
