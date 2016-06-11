@@ -293,7 +293,7 @@ function set_distro_env() {
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
-		INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
+		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
 	fi
@@ -432,10 +432,10 @@ function hook_install_distro() {
 	chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
 	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
 	chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
-	if [ $DIST = "ascii" ]; then
-		chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
-		chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
-	fi
+	#if [ $DIST = "ascii" ]; then
+	#	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
+	#	chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
+	#fi
 	chroot $1 rm -R -f $VERBOSE ${TMP}
 }
 

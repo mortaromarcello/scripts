@@ -223,30 +223,40 @@ function remove_users() {
 }
 
 function add_user() {
-  if [ -z ${USER} ]; then
-	read -p "Digita la username: " USER
 	if [ -z ${USER} ]; then
-	  read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USER
-	  [ -z ${USER} ] && echo "Installazione abortita!" && exit -1
+		read -p "Digita la username: " USER
+		if [ -z ${USER} ]; then
+			read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USER
+			[ -z ${USER} ] && echo "Installazione abortita!" && exit -1
+		fi
 	fi
-  fi
-  if [ -z ${CRYPT_PASSWORD} ]; then
-	read -s -p "Digita la password: " USER_PASSWORD
-	echo
-	if [ -z ${USER_PASSWORD} ]; then
-	  read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " USER_PASSWORD
-	  echo
-	  [ -z ${USER_PASSWORD} ] && echo "Installazione abortita!" && exit -1
+	if [ -z ${CRYPT_PASSWORD} ]; then
+		while true; do
+			read -s -p "Digita la password: " USER_PASSWORD
+			echo
+			if [ -z ${USER_PASSWORD} ]; then
+				read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " USER_PASSWORD
+				echo
+				[ -z ${USER_PASSWORD} ] && echo "Installazione abortita!" && exit -1
+			fi
+			read -s -p "conferma la password: " USER_PASSWORD2
+			echo
+			if [ $USER_PASSWORD2 == $USER_PASSWORD ]; then
+				break
+			else
+				echo "Le password non coincidono. Riprova"
+			fi
+		done
 	fi
 	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
-  fi
-  [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
-  chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
-  if [ $? -eq 0 ]; then echo "User has been added to system!" 
-  else
-	echo "Failed to add a user!";
-	exit
-  fi
+	[ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER" &>> ${FILE_DEBUG} || \
+	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -m -p $CRYPT_PASSWORD $USER
+	if [ $? -eq 0 ]; then
+		echo "User has been added to system!" 
+	else
+		echo "Failed to add a user!";
+		exit
+	fi
 }
 
 function add_sudo_user() {
@@ -344,11 +354,11 @@ EOF
 function set_autologin() {
 	if [ ${AUTOLOGIN} = "true" ]; then
 		DM=$(cat ${INST_ROOT_DIRECTORY}/etc/X11/default-display-manager)
-		if [ ${DM} = /usr/sbin/lightdm ]; then
+		if [ ${DM} = "/usr/sbin/lightdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
 			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
 		fi
-		if [ ${DM} = /usr/bin/slim ]; then
+		if [ ${DM} = "/usr/bin/slim" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
 			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "default_user")
