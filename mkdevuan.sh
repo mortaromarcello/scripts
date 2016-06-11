@@ -23,9 +23,9 @@ APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
 ISO_DEBUG=1
-if $ISO_DEBUG == 1; then
-PACKAGES="$PACKAGES shellcheck bashdb"
-
+if [ $ISO_DEBUG == 1 ]; then
+	PACKAGES="$PACKAGES shellcheck bashdb"
+fi
 
 USERNAME=devuan
 PASSWORD=devuan
