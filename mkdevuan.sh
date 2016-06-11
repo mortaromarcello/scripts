@@ -426,9 +426,9 @@ function fase4() {
 #
 ########################################################################
 function update_hooks() {
-	hook_install_distro
-	hook_hostname
-	hook_synaptics
+	hook_install_distro $1
+	hook_hostname $1
+	hook_synaptics $1
 	
 }
 ########################################################################
@@ -739,7 +739,7 @@ case $STAGE in
 		;;
 	iso-update)
 		check_script
-		update_hooks
+		update_hooks $ROOT_DIR
 		fase4 $ROOT_DIR
 		;;
 	upgrade)
