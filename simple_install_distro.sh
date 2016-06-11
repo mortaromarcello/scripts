@@ -7,7 +7,7 @@
 #-----------------------------------------------------------------------
 
 #
-DIRS_TO_COPY="bin boot dev etc lib opt root run sbin srv usr var"
+#DIRS_TO_COPY="bin boot dev etc lib opt root run sbin srv usr var"
 DEBUG="false"
 FILE_DEBUG="./debug.txt"
 DISTRO="distro"
@@ -115,13 +115,13 @@ function check_root() {
 function check_script() {
   MESSAGE1="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
   if [ ${YES_NO} = "si" ] && [ -z ${USER} ]; then
-	echo ${MESSAGE1}; exit
+	echo "${MESSAGE1}"; exit
   fi
   if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_PASSWORD} ]; then
-	echo ${MESSAGE1}; exit
+	echo "${MESSAGE1}"; exit
   fi
   if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_ROOT_PASSWORD} ]; then
-	  echo ${MESSAGE1}; exit 
+	  echo "${MESSAGE1}"; exit 
   fi
   echo "Script verificato. OK."
 }
@@ -151,7 +151,7 @@ put_info() {
 	echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
   fi
   echo "Gruppi                            :" ${ADD_GROUPS}
-  echo "Locale                            :" ${LOCALE}
+  echo "Locale                            :" "${LOCALE}"
   echo "Tastiera                          :" ${KEYBOARD}
   echo "Lingua                            :" ${LANG}
   echo "Timezone                          :" ${TIMEZONE}
@@ -216,8 +216,8 @@ function copy_root() {
 
 function remove_users() {
   for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
-    if [ $user != "lost+found" ] && [ $user != $USER ]; then
-      chroot ${INST_ROOT_DIRECTORY} deluser --remove-all-files $user
+    if [ "$user" != "lost+found" ] && [ "$user" != "$USER" ]; then
+      chroot ${INST_ROOT_DIRECTORY} deluser --remove-all-files "$user"
     fi
   done
 }
@@ -270,13 +270,22 @@ EOF
 
 function change_root_password() {
   if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
-	read -s -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
-	echo
-	if [ -z ${ROOT_PASSWORD} ]; then
-	  read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " ROOT_PASSWORD
-	  echo
-	  [ -z ${ROOT_PASSWORD} ] && echo "Installazione abortita!" && exit -1
-	fi
+	while true; do
+		read -s -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
+		echo
+		if [ -z ${ROOT_PASSWORD} ]; then
+			read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " ROOT_PASSWORD
+			echo
+			[ -z ${ROOT_PASSWORD} ] && echo "Installazione abortita!" && exit -1
+		fi
+		read -s -p "conferma la password: " ROOT_PASSWORD2
+		echo
+		if [ $ROOT_PASSWORD2 == $ROOT_PASSWORD ]; then
+			break
+		else
+			echo "Le password non coincidono. Riprova"
+		fi
+	done
 	CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${ROOT_PASSWORD})
   fi
   [ ${DEBUG} = "true" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} bash -c \"echo root:${CRYPT_ROOT_PASSWORD} | chpasswd -e\"" &>> ${FILE_DEBUG} || \
@@ -361,7 +370,7 @@ function set_autologin() {
 		if [ ${DM} = "/usr/bin/slim" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
 			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "default_user")
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
 			sed -i "s/${LINE}/default_user          ${USER}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 		fi
 	fi

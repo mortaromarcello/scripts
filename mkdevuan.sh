@@ -22,6 +22,10 @@ INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wir
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
+ISO_DEBUG=1
+if $ISO_DEBUG == 1; then
+PACKAGES="$PACKAGES shellcheck bashdb"
+
 
 USERNAME=devuan
 PASSWORD=devuan
@@ -415,7 +419,7 @@ function fase4() {
 	chroot $1 apt-get $APT_OPTS clean
 	chroot $1 apt-get $APT_OPTS autoremove --purge
 	chroot $1 dpkg --purge -a
-	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-*
+	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
 	create_snapshot $1
 	unbind $1
 }
