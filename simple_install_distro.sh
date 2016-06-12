@@ -303,6 +303,12 @@ function set_autologin() {
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
 			sed -i "s/${LINE}/default_user          ${USER}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 		fi
+		if [ "${DM}" = "/usr/bin/kdm" ]; then
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginEnable=")
+			sed -i "s/${LINE}/AutoLoginEnable=true/" ${INST_ROOT_DIRECTORY}/etc/kdm4/kdm/kdmrc
+			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginUser=")
+			sed -i "s/${LINE}/AutoLoginUser=${USER}/" ${INST_ROOT_DIRECTORY}/etc/kdm4/kdm/kdmrc
+		fi
 	fi
 }
 

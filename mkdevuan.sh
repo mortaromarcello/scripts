@@ -21,7 +21,6 @@ ROOT_DIR=devuan
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
-PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
 ISO_DEBUG=1
 if [ $ISO_DEBUG == 1 ]; then
 	PACKAGES="$PACKAGES shellcheck bashdb"
@@ -560,13 +559,14 @@ function check_script() {
 	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
 		ARCH=amd64
 	fi
-	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE !="kde" ]; then
-		DE="mate"
+	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ]; then
+		DE="xfce"
 	fi
 	if [ $(id -u) != 0 ]; then
 		echo -e "\nUser $USER not is root."
 		exit
 	fi
+	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth blueman"
 	set_distro_env
 ########################################################################
 	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
