@@ -2,39 +2,37 @@
 #
 # semplice script di installazione
 #
-#-----------------------------------------------------------------------
-#
-#-----------------------------------------------------------------------
+########################################################################
 
-DISTRO="distro"
-INST_DRIVE="/dev/sda"
-ROOT_PARTITION="/dev/sda1"
-UUID_ROOT_PARTITION=
-HOME_PARTITION=
-UUID_HOME_PARTITION=
-FORMAT_HOME="no"
-SWAP_PARTITION=
-UUID_SWAP_PARTITION=
-INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
-TYPE_FS="ext4"
-USER=
-CRYPT_PASSWORD=
-CRYPT_ROOT_PASSWORD=
-YES_NO="no"
-LOCALE="it_IT.UTF-8 UTF-8"
-LANG="it_IT.UTF-8"
-KEYBOARD="it"
-HOSTNAME="devuan"
-if [ "$(cat /etc/group|grep android)" ]; then
-	ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,android"
-else
-	ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev"
-fi
-TIMEZONE="Europe/Rome"
-SHELL_USER="/bin/bash"
-AUTOLOGIN="true"
-
-#-----------------------------------------------------------------------
+function init() {
+	DISTRO="distro"
+	INST_DRIVE="/dev/sda"
+	ROOT_PARTITION="/dev/sda1"
+	UUID_ROOT_PARTITION=
+	HOME_PARTITION=
+	UUID_HOME_PARTITION=
+	FORMAT_HOME="no"
+	SWAP_PARTITION=
+	UUID_SWAP_PARTITION=
+	INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
+	TYPE_FS="ext4"
+	USER=
+	CRYPT_PASSWORD=
+	CRYPT_ROOT_PASSWORD=
+	YES_NO="no"
+	LOCALE="it_IT.UTF-8 UTF-8"
+	LANG="it_IT.UTF-8"
+	KEYBOARD="it"
+	HOSTNAME="devuan"
+	if [ "$(cat /etc/group|grep android)" ]; then
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,android"
+	else
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev"
+	fi
+	TIMEZONE="Europe/Rome"
+	SHELL_USER="/bin/bash"
+	AUTOLOGIN="true"
+}
 
 function help() {
 	echo -e "
@@ -305,9 +303,9 @@ function set_autologin() {
 		fi
 		if [ "${DM}" = "/usr/bin/kdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginEnable=")
-			sed -i "s/${LINE}/AutoLoginEnable=true/" ${INST_ROOT_DIRECTORY}/etc/kdm4/kdm/kdmrc
+			sed -i "s/${LINE}/AutoLoginEnable=true/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginUser=")
-			sed -i "s/${LINE}/AutoLoginUser=${USER}/" ${INST_ROOT_DIRECTORY}/etc/kdm4/kdm/kdmrc
+			sed -i "s/${LINE}/AutoLoginUser=${USER}/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
 		fi
 	fi
 }
@@ -323,17 +321,20 @@ function install_grub() {
 	chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
 	chroot ${INST_ROOT_DIRECTORY} update-grub
 	for dir in dev/pts dev proc sys; do
-		umount -v ${INST_ROOT_DIRECTORY}/${dir}
+		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
 }
 
 function end() {
 	sync
-	if [ -z ${HOME_PARTITION} ]; then
-		umount ${HOME_PARTITION}
+	if mount | grep ${HOME_PARTITION}; then
+		umount -lv ${HOME_PARTITION}
 	fi
-	if [ -z ${ROOT_PARTITION} ]; then
-		umount ${ROOT_PARTITION}
+	if mount | grep  ${ROOT_PARTITION} ]; then
+		umount -lv ${ROOT_PARTITION}
+	fi
+	if mount | grep ${INST_ROOT_DIRECTORY}; then
+		umount -lv ${INST_ROOT_DIRECTORY}
 	fi
 	echo "Installazione terminata."
 }
@@ -357,7 +358,8 @@ function run_inst {
 	end
 }
 
-#------------------------------------------------------------------------
+########################################################################
+init
 
 until [ -z "${1}" ]
 do
