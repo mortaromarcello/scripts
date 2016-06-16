@@ -330,7 +330,7 @@ function end() {
 	if mount | grep ${HOME_PARTITION}; then
 		umount -lv ${HOME_PARTITION}
 	fi
-	if mount | grep  ${ROOT_PARTITION} ]; then
+	if mount | grep  ${ROOT_PARTITION}; then
 		umount -lv ${ROOT_PARTITION}
 	fi
 	if mount | grep ${INST_ROOT_DIRECTORY}; then
