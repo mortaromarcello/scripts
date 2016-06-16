@@ -25,9 +25,9 @@ function init() {
 	KEYBOARD="it"
 	HOSTNAME="devuan"
 	if [ "$(cat /etc/group|grep android)" ]; then
-		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,android"
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,bluetooth,android"
 	else
-		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev"
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,netdev,bluetooth"
 	fi
 	TIMEZONE="Europe/Rome"
 	SHELL_USER="/bin/bash"
