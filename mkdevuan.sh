@@ -33,6 +33,7 @@ SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
+NETBOOK=0
 SPLASH="iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10dzkAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
 WXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4AUSEC4NgfB3pwAAIABJREFUeNrt3eti4kqaZuE3TgLX
 /c6PuYa5322kiC9ifkjYYGOnsREIaT3d2VWdtSsP2MAiju7//p//1wQAuIOm/tCr1qrdfifvg4a+
@@ -1021,10 +1022,23 @@ function check_script() {
 		echo -e "\nUser $USER not is root."
 		exit
 	fi
+	case $DE in
+		"mate")
+			;;
+		"xfce")
+			;;
+		"lxde")
+			;;
+		"kde")
+			if [ $NETBOOK = 1 ]; then
+				PACKAGES="plasma-netbook"
+			fi
+			;;
+	esac
 	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart 
 gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE 
 iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty 
-pulseaudio-module-bluetooth gtk3-engines-breeze"
+pulseaudio-module-bluetooth gtk3-engines-breeze $PACKAGES"
 	set_distro_env
 ########################################################################
 	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
@@ -1054,6 +1068,7 @@ pulseaudio-module-bluetooth gtk3-engines-breeze"
 	echo "keyboard $KEYBOARD"
 	echo "timezone $TIMEZONE"
 	echo -e "deb repository $APT_REPS"
+	echo "packages $PACKAGES"
 	echo "Script verificato. OK."
 }
 
@@ -1139,6 +1154,10 @@ do
 			shift
 			HOSTNAME=${1}
 			;;
+		-ne | --netbook)
+			shift
+			NETBOOK=1
+			;;
 		-r | --root-dir)
 			shift
 			ROOT_DIR=$1
@@ -1158,6 +1177,35 @@ do
 		-v | --verbose)
 			shift
 			VERBOSE=-v
+			;;
+# device-usb
+		-du | --device-usb)
+			shift
+			DEVICE_USB=${1}
+			;;
+		-gu | --grub-uefi)
+			shift
+			GRUB_UEFI=1
+			;;
+		-pm | --path-to-mount)
+			shift
+			PATH_TO_MOUNT=${1}
+			;;
+		-pi | --path-to-install-syslinux)
+			shift
+			SYSLINUX_INST=${1}
+			;;
+		-sp | --size-primary-part)
+			shift
+			SIZE_PRIMARY_PART=${1}M
+			;;
+		-ss | --size-secondary-part)
+			shift
+			SIZE_SECONDARY_PART=${1}M
+			;;
+		-ts | --type-secondary-filesystem)
+			shift
+			TYPE_SECONDARY_FS=${1}
 			;;
 		*)
 			shift
@@ -1210,34 +1258,6 @@ case $STAGE in
 		update $ROOT_DIR
 		upgrade $ROOT_DIR
 		unbind $ROOT_DIR
-		;;
-	-du | --device-usb)
-		shift
-		DEVICE_USB=${1}
-		;;
-	-gu | --grub-uefi)
-		shift
-		GRUB_UEFI=1
-			;;
-	-pm | --path-to-mount)
-		shift
-		PATH_TO_MOUNT=${1}
-		;;
-	-pi | --path-to-install-syslinux)
-		shift
-		SYSLINUX_INST=${1}
-		;;
-	-sp | --size-primary-part)
-			shift
-		SIZE_PRIMARY_PART=${1}M
-		;;
-	-ss | --size-secondary-part)
-		shift
-		SIZE_SECONDARY_PART=${1}M
-		;;
-	-ts | --type-secondary-filesystem)
-		shift
-		TYPE_SECONDARY_FS=${1}
 		;;
 	*)
 		;;
