@@ -1021,7 +1021,10 @@ function check_script() {
 		echo -e "\nUser $USER not is root."
 		exit
 	fi
-	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth"
+	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart 
+gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE 
+iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty 
+pulseaudio-module-bluetooth gtk3-engines-breeze"
 	set_distro_env
 ########################################################################
 	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
