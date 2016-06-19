@@ -24,7 +24,10 @@ APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
 if [ $ISO_DEBUG == 1 ]; then
-	PACKAGES="$PACKAGES shellcheck bashdb"
+	if [ $DIST != "jessie" ]; then
+		PACKAGES="$PACKAGES bashdb"
+	fi
+	PACKAGES="$PACKAGES shellcheck" 
 fi
 
 USERNAME=devuan
@@ -33,7 +36,6 @@ SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
 MIRROR=http://auto.mirror.devuan.org/merged
-NETBOOK=0
 SPLASH="iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10dzkAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
 WXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4AUSEC4NgfB3pwAAIABJREFUeNrt3eti4kqaZuE3TgLX
 /c6PuYa5322kiC9ifkjYYGOnsREIaT3d2VWdtSsP2MAiju7//p//1wQAuIOm/tCr1qrdfifvg4a+
@@ -290,7 +292,8 @@ EOF
 	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
 	mkdosfs -F 32 ${DEVICE_USB}1
 	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; 
+then
 		mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
 	else
 		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
@@ -443,7 +446,8 @@ EOF
 		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f3.txt<<EOF
                   0fBOOT METHODS07                                07
 
-0fMethods list here must correspond to entries in your boot menu. 07                                                                  09F307
+0fMethods list here must correspond to entries in your boot menu. 07        
+                                                          09F307
 
 0flive07
   Start the live system -- this is the default CD-ROM method.
@@ -627,6 +631,7 @@ function linux_firmware() {
 	cp -var $FIRMWARE_DIR/* $1/lib/firmware/
 }
 
+
 function create_pendrive_live() {
 	if mount | grep ${PATH_TO_MOUNT}; then
 		umount -v ${PATH_TO_MOUNT}
@@ -637,7 +642,8 @@ function create_pendrive_live() {
 	if mount | grep ${DEVICE_USB}2; then
 		umount -v ${DEVICE_USB}2
 	fi
-	echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
+	echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei 
+d'accordo (s/n)?"
 	read sn
 	if [ ${sn} = "s" ]; then
 		create_partitions
@@ -697,7 +703,9 @@ function unbind() {
 #
 ########################################################################
 function log() {
-	echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
+	echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
+$ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone 
+$TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
 }
 
 ########################################################################
@@ -712,7 +720,8 @@ function update() {
 #
 ########################################################################
 function upgrade() {
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS 
+dist-upgrade"
 }
 
 ########################################################################
@@ -741,7 +750,8 @@ function set_locale() {
 function create_snapshot() {
 	cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
 	chmod -v +x $1/tmp/snapshot.sh
-	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE 
+-u $USERNAME"
 }
 
 ########################################################################
@@ -749,12 +759,18 @@ function create_snapshot() {
 ########################################################################
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\n"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
+non-free\ndeb http://auto.mirror.devuan.org/merged stable-backports main"
 	elif [ $DIST = "ascii" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
+non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib 
+non-free\n"
 		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	elif [ $DIST = "ceres" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
+non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib 
+non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib 
+non-free\n"
 	fi
 	compile_debootstrap
 }
@@ -874,7 +890,8 @@ function fase4() {
 	chroot $1 apt-get $APT_OPTS clean
 	chroot $1 apt-get $APT_OPTS autoremove --purge
 	chroot $1 dpkg --purge -a
-	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
+	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* 
+$VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
 	create_snapshot $1
 	unbind $1
 }
@@ -911,7 +928,8 @@ function hook_install_distro() {
 #                        hook_synaptics
 ########################################################################
 function hook_synaptics() {
-	SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
+	SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad 
+driver\n\
 # to all touchpads. See xorg.conf.d(5) for more information on\n\
 # InputClass.\n\
 # DO NOT EDIT THIS FILE, your distribution will likely overwrite\n\
@@ -939,8 +957,10 @@ Section \"InputClass\"\n\
         Option          \"CircularScrolling\"     \"1\"\n\
         Option          \"CircScrollTrigger\"     \"7\"\n\
         Option          \"EdgeMotionUseAlways\"   \"1\"\n\
-        Option          \"LBCornerButton\"        \"8\"     # browser \"back\" btn\n\
-        Option          \"RBCornerButton\"        \"9\"     # browser \"forward\" btn\n\
+        Option          \"LBCornerButton\"        \"8\"     # browser \"back\" 
+btn\n\
+        Option          \"RBCornerButton\"        \"9\"     # browser 
+\"forward\" btn\n\
 EndSection\n\
 #\n\
 Section \"InputClass\"\n\
@@ -961,8 +981,10 @@ Section \"InputClass\"\n\
         Option \"Ignore\" \"on\"\n\
 EndSection\n\
 \n\
-# This option enables the bottom right corner to be a right button on clickpads\n\
-# and the right and middle top areas to be right / middle buttons on clickpads\n\
+# This option enables the bottom right corner to be a right button on 
+clickpads\n\
+# and the right and middle top areas to be right / middle buttons on 
+clickpads\n\
 # with a top button area.\n\
 # This option is only interpreted by clickpads.\n\
 Section \"InputClass\"\n\
@@ -1022,6 +1044,15 @@ function check_script() {
 		echo -e "\nUser $USER not is root."
 		exit
 	fi
+	case $DIST in
+		"jessie")
+			;;
+		"ascii" | "ceres")
+			PACKAGES="gtk3-engines-breeze $PACKAGES"
+			;;
+		*)
+			;;
+	esac
 	case $DE in
 		"mate")
 			;;
@@ -1030,15 +1061,9 @@ function check_script() {
 		"lxde")
 			;;
 		"kde")
-			if [ $NETBOOK = 1 ]; then
-				PACKAGES="plasma-netbook"
-			fi
 			;;
 	esac
-	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart 
-gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE 
-iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty 
-pulseaudio-module-bluetooth gtk3-engines-breeze $PACKAGES"
+	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
 	set_distro_env
 ########################################################################
 	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
@@ -1081,15 +1106,18 @@ ${0} <opzioni>
 Crea una live Devuan
   -a | --arch <architecture>             :tipo di architettura.
   -d | --distribuition <dist>            :tipo di distribuzione.
-  -D | --desktop <desktop>               :tipo di desktop mate(default), xfce o lxde.
+  -D | --desktop <desktop>               :tipo di desktop mate(default), xfce o 
+lxde.
   -h | --help                            :Stampa questa messaggio.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
-  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
+  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 
+UTF-8').
   -L | --lang                            :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
   -s | --stage <stage>                   :Numero fase:
                                          1) crea la base del sistema
-                                         2) setta lo user, hostname e la lingua e i pacchetti indispensabili
+                                         2) setta lo user, hostname e la lingua 
+e i pacchetti indispensabili
                                          3) installa pacchetti aggiuntivi e il
                                             desktop
                                          4) installa lo script d'installazione
@@ -1153,10 +1181,6 @@ do
 		-n | --hostname)
 			shift
 			HOSTNAME=${1}
-			;;
-		-ne | --netbook)
-			shift
-			NETBOOK=1
 			;;
 		-r | --root-dir)
 			shift
