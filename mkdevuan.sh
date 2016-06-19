@@ -720,8 +720,7 @@ function update() {
 #
 ########################################################################
 function upgrade() {
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS 
-dist-upgrade"
+	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
 }
 
 ########################################################################
@@ -759,18 +758,12 @@ function create_snapshot() {
 ########################################################################
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
-non-free\ndeb http://auto.mirror.devuan.org/merged stable-backports main"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged stable-backports main"
 	elif [ $DIST = "ascii" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
-non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib 
-non-free\n"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
 		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
 	elif [ $DIST = "ceres" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib 
-non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib 
-non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib 
-non-free\n"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
 	fi
 	compile_debootstrap
 }
