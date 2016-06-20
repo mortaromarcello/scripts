@@ -757,7 +757,7 @@ function create_snapshot() {
 ########################################################################
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged jessie-backports main"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged jessie-backports main contrib non-free"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
 		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
