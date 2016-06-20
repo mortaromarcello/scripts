@@ -757,7 +757,7 @@ function create_snapshot() {
 ########################################################################
 function set_distro_env() {
 	if [ $DIST = "jessie" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged stable-backports main"
+		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged jessie-backports main"
 	elif [ $DIST = "ascii" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
 		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
@@ -1032,6 +1032,9 @@ function check_script() {
 	fi
 	case $DIST in
 		"jessie")
+			if [ $DE = "kde" ]; then
+				PACKAGES="kde-l10n-$KEYBOARD bluedevil $PACKAGES"
+			fi
 			;;
 		"ascii" | "ceres")
 			PACKAGES="gtk3-engines-breeze $PACKAGES"
