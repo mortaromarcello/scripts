@@ -8,6 +8,8 @@ FRONTEND=noninteractive
 VERBOSE=
 STAGE=1
 CLEAN=0
+COMPILE_BOOTSTRAP=0
+DEBOOTSTRAP_BIN=
 CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -764,7 +766,11 @@ function set_distro_env() {
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
 	fi
-	compile_debootstrap
+	if [ $COMPILE_BOOTSTRAP = 1 ]; then
+		compile_debootstrap
+	else
+		apt-get install debootstrap
+	fi
 }
 
 function jessie() {
@@ -1133,6 +1139,10 @@ do
 		-c | --clean)
 			shift
 			CLEAN=1
+			;;
+		-cb | --compile-bootstrap)
+			shift
+			COMPILE_BOOTSTRAP=1
 			;;
 		-cs | --clean-snapshoot)
 			shift
