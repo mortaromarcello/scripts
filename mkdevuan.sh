@@ -751,8 +751,7 @@ function set_locale() {
 function create_snapshot() {
 	cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
 	chmod -v +x $1/tmp/snapshot.sh
-	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE 
--u $USERNAME"
+	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
 }
 
 ########################################################################
