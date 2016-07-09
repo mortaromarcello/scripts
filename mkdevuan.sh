@@ -8,6 +8,9 @@ FRONTEND=noninteractive
 VERBOSE=
 STAGE=1
 CLEAN=0
+COMPILE_BOOTSTRAP=0
+DEBOOTSTRAP_BIN=/usr/sbin/debootstrap
+DEBOOTSTRAP_INCLUDE="libjson-c2"
 CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -748,8 +751,7 @@ function set_locale() {
 function create_snapshot() {
 	cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
 	chmod -v +x $1/tmp/snapshot.sh
-	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE 
--u $USERNAME"
+	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
 }
 
 ########################################################################
@@ -764,7 +766,11 @@ function set_distro_env() {
 	elif [ $DIST = "ceres" ]; then
 		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
 	fi
-	compile_debootstrap
+	if [ $COMPILE_BOOTSTRAP = 1 ]; then
+		compile_debootstrap
+	else
+		apt-get install debootstrap
+	fi
 }
 
 function jessie() {
@@ -801,7 +807,8 @@ function fase1() {
 	log
 	[ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
 	mkdir -p $1
-	$DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
+	#$DEBOOTSTRAP_BIN --include=$DEBOOTSTRAP_INCLUDE --verbose --arch=$ARCH $DIST $1 $MIRROR
+	$DEBOOTSTRAP_BIN --include=$DEBOOTSTRAP_INCLUDE --verbose --arch=$ARCH jessie $1 $MIRROR
 	if [ $? -gt 0 ]; then
 		echo "Big problem!!!"
 		echo -e "===============ERRORE==============">>$LOG
@@ -1133,6 +1140,10 @@ do
 		-c | --clean)
 			shift
 			CLEAN=1
+			;;
+		-cb | --compile-bootstrap)
+			shift
+			COMPILE_BOOTSTRAP=1
 			;;
 		-cs | --clean-snapshoot)
 			shift
