@@ -16,7 +16,7 @@ function init() {
 	UUID_SWAP_PARTITION=
 	INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
 	TYPE_FS="ext4"
-	USER=
+	USERNAME=
 	CRYPT_PASSWORD=
 	CRYPT_ROOT_PASSWORD=
 	YES_NO="no"
@@ -32,6 +32,8 @@ function init() {
 	TIMEZONE="Europe/Rome"
 	SHELL_USER="/bin/bash"
 	AUTOLOGIN="true"
+	EXCLUDE_PATTERNS="{\"/etc/fstab\",\"/dev/*\",\"/proc/*\",\"/sys/*\",\"/tmp/*\",\"/run/*\",\"/mnt/*\",\"/media/*\",\"/lost+found\",\"/home/*\"}"
+	COPY_ROOT_FILESYSTEM=0
 }
 
 function help() {
@@ -70,7 +72,7 @@ function check_root() {
 
 function check_script() {
 	MESSAGE1="Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root."
-	if [ ${YES_NO} = "si" ] && [ -z ${USER} ]; then
+	if [ ${YES_NO} = "si" ] && [ -z ${USERNAME} ]; then
 		echo "${MESSAGE1}"; exit
 	fi
 	if [ ${YES_NO} = "si" ] && [ -z ${CRYPT_PASSWORD} ]; then
@@ -95,8 +97,8 @@ put_info() {
 		#echo "UUID                              :" ${UUID_SWAP_PARTITION}
 	fi
 	echo "Directory di installazione        :" ${INST_ROOT_DIRECTORY}
-	if [ ! -z ${USER} ]; then
-		echo "Username                          :" ${USER}
+	if [ ! -z ${USERNAME} ]; then
+		echo "Username                          :" ${USERNAME}
 	fi
 	if [ ! -z ${CRYPT_PASSWORD} ]; then
 		echo "Password criptata                 :" ${CRYPT_PASSWORD}
@@ -154,24 +156,28 @@ function create_home_and_mount_partition() {
 }
 
 function copy_root() {
-	SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-	cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}
+	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
+		rsync -aAXv --exclude=${EXCLUDE_PATTERNS} ${INST_ROOT_DIRECTORY}
+	else
+		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
+		cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
+	fi
 }
 
 function remove_users() {
 	for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
-		if [ "$user" != "lost+found" ] && [ "$user" != "$USER" ]; then
+		if [ "$user" != "lost+found" ] && [ "$user" != "$USERNAME" ]; then
 			chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
 		fi
 	done
 }
 
 function add_user() {
-	if [ -z ${USER} ]; then
-		read -p "Digita la username: " USER
-		if [ -z "${USER}" ]; then
-			read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USER
-			[ -z "${USER}" ] && echo "Installazione abortita!" && exit -1
+	if [ -z ${USERNAME} ]; then
+		read -p "Digita la username: " USERNAME
+		if [ -z "${USERNAME}" ]; then
+			read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USERNAME
+			[ -z "${USERNAME}" ] && echo "Installazione abortita!" && exit -1
 		fi
 	fi
 	remove_users
@@ -194,7 +200,7 @@ function add_user() {
 		done
 	fi
 	CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' "${USER_PASSWORD}")
-	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -u 1000 -o -m -p "$CRYPT_PASSWORD" "$USER"
+	chroot ${INST_ROOT_DIRECTORY} useradd -G ${ADD_GROUPS} -s ${SHELL_USER} -u 1000 -o -m -p "$CRYPT_PASSWORD" "$USERNAME"
 	if [ $? -eq 0 ]; then
 		echo "User has been added to system!" 
 	else
@@ -204,9 +210,9 @@ function add_user() {
 }
 
 function add_sudo_user() {
-	chroot ${INST_ROOT_DIRECTORY} gpasswd -a "${USER}" sudo
+	chroot ${INST_ROOT_DIRECTORY} gpasswd -a "${USERNAME}" sudo
 	cat > ${INST_ROOT_DIRECTORY}/etc/sudoers.d/nopasswd <<EOF
-${USER} ALL=(ALL) NOPASSWD: ALL
+${USERNAME} ALL=(ALL) NOPASSWD: ALL
 EOF
 }
 
@@ -293,25 +299,25 @@ function set_autologin() {
 		DM=$(cat ${INST_ROOT_DIRECTORY}/etc/X11/default-display-manager)
 		if [ "${DM}" = "/usr/sbin/lightdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
-			sed -i "s/${LINE}/autologin-user=\"${USER}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+			sed -i "s/${LINE}/autologin-user=\"${USERNAME}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
 		fi
 		if [ "${DM}" = "/usr/bin/slim" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
 			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
-			sed -i "s/${LINE}/default_user          ${USER}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
+			sed -i "s/${LINE}/default_user          ${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
 		fi
 		if [ "${DM}" = "/usr/bin/kdm" ]; then
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginEnable=")
 			sed -i "s/${LINE}/AutoLoginEnable=true/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
 			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginUser=")
-			sed -i "s/${LINE}/AutoLoginUser=${USER}/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
+			sed -i "s/${LINE}/AutoLoginUser=${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
 		fi
 	fi
 }
 
 function update_minidlna() {
-	sed -i "s/live-user/${USER}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
+	sed -i "s/live-user/${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
 }
 
 function install_grub() {
@@ -371,6 +377,10 @@ do
 		-c | --crypt-password)
 			shift
 			CRYPT_PASSWORD=${1}
+			;;
+		-cr | --copy-root-filesystem)
+			shift
+			COPY_ROOT_FILESYSTEM=1
 			;;
 		-C | --crypt-root-password)
 			shift
@@ -439,7 +449,7 @@ do
 			;;
 		-u | --user)
 			shift
-			USER=${1}
+			USERNAME=${1}
 			;;
 		-y | --yes)
 			shift
