@@ -1102,24 +1102,26 @@ ${0} <opzioni>
 Crea una live Devuan
   -a | --arch <architecture>             :tipo di architettura.
   -d | --distribuition <dist>            :tipo di distribuzione.
-  -D | --desktop <desktop>               :tipo di desktop mate(default), xfce o 
-lxde.
+  -D | --desktop <desktop>               :tipo di desktop mate, xfce (default), lxde o kde.
   -h | --help                            :Stampa questa messaggio.
   -k | --keyboard                        :Tipo di tastiera (default 'it').
-  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 
-UTF-8').
+  -l | --locale                          :Tipo di locale (default 'it_IT.UTF-8 UTF-8').
   -L | --lang                            :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
   -s | --stage <stage>                   :Numero fase:
                                          1) crea la base del sistema
                                          2) setta lo user, hostname e la lingua 
-e i pacchetti indispensabili
+                                            e i pacchetti indispensabili
                                          3) installa pacchetti aggiuntivi e il
                                             desktop
                                          4) installa lo script d'installazione
                                             e crea la iso.
                                          min) fase 1 + fase 2 + fase 4
-                                         de) fase 1 + fase 2 + fase 3 + fase 4
+                                         iso-upgrade) aggiorna la iso
+                                         jessie)
+                                         ascii)
+                                         ceres) crea le rispettive iso delle
+                                                distribuzioni.
   -r | --root-dir <dir>                  :Directory della root
   -T | --timezone <timezone>             :Timezone (default 'Europe/Rome').
   -u | --user                            :Nome utente.
@@ -1239,7 +1241,9 @@ done
 
 case $STAGE in
 	"")
-		;&
+		#;&
+		help
+		;;
 	1)
 		check_script
 		fase1 $ROOT_DIR
