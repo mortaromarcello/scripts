@@ -1030,7 +1030,7 @@ function check_script() {
 	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
 		ARCH=amd64
 	fi
-	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ]; then
+	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ]; then
 		DE="xfce"
 	fi
 	if [ $(id -u) != 0 ]; then
@@ -1057,6 +1057,8 @@ function check_script() {
 		"lxde")
 			;;
 		"kde")
+			;;
+		"cinnamon")
 			;;
 	esac
 	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"

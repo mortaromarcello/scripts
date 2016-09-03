@@ -157,7 +157,7 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
 	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
-		rsync -aAXv --exclude=${EXCLUDE_PATTERNS} ${INST_ROOT_DIRECTORY}
+		rsync -aAXv --exclude=${EXCLUDE_PATTERNS} / ${INST_ROOT_DIRECTORY}
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
 		cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
