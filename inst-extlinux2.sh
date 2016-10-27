@@ -12,6 +12,7 @@ TYPE_SECONDARY_PART=L
 TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
 PATH_TO_MOUNT=
+GRUB_UEFI=0
 
 ########################################################################
 #                      functions
@@ -98,9 +99,9 @@ function install_extlinux() {
 		echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
 		read
 		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
-		echo "Installo extlinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
+		echo "Installo extlinux in ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
 		read
-		extlinux --install ${PATH_TO_MOUNT}/${EXTLINUX_INST}
+		extlinux --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
 		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
 			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${EXTLINUX_INST}
 		done
@@ -158,7 +159,7 @@ TEXT HELP
 ENDTEXT
 COM32 ${EXTLINUX_INST}/reboot.c32
 EOF
-		if [ $GRUB_UEFI = 1 ]; then
+		if [ ${GRUB_UEFI} = 1 ]; then
 			create_grub-uefi
 		fi
 		sync && sync
