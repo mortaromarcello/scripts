@@ -15,3 +15,5 @@ EXCLUDE_PATTERNS="{\"/etc/fstab\",\"/dev/*\",\"/proc/*\",\"/sys/*\",\"/tmp/*\",\
 function copy_root() {
 	rsync -aAXv --exclude=${EXCLUDE_PATTERNS} / ${INST_ROOT_DIRECTORY}
 }
+
+copy_root
