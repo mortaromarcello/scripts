@@ -3,9 +3,10 @@
 # per distro debian. Il pacchetto extlinux deve essere già installato nel sistema.
 #
 
-SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+SYSLINUX_DIR="/usr/lib/syslinux"
 EXTLINUX_INST="/boot/extlinux"
-MBR_DIR="/usr/lib/syslinux/mbr"
+EXTLINUX="/usr/sbin/extlinux"
+MBR_DIR="/usr/lib/syslinux"
 SIZE_PRIMARY_PART=4096M
 SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
@@ -85,7 +86,7 @@ EOF
 }
 
 function install_extlinux() {
-	if [ -e /usr/bin/extlinux ]; then
+	if [ -e $EXTLINUX ]; then
 		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
 		if ! mount | grep ${PATH_TO_MOUNT}; then
 			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
@@ -101,7 +102,7 @@ function install_extlinux() {
 		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
 		echo "Installo extlinux in ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
 		read
-		extlinux --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
+		$EXTLINUX --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
 		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
 			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${EXTLINUX_INST}
 		done
@@ -111,7 +112,7 @@ function install_extlinux() {
 			read
 			mkdir -p ${PATH_TO_MOUNT}/menus/extlinux
 		fi
-		cat >${PATH_TO_MOUNT}${EXTLINUX_INST}/extlinux.cfg <<EOF
+		cat >${PATH_TO_MOUNT}${EXTLINUX_INST}/extlinux.conf <<EOF
 DEFAULT main
 
 LABEL main
