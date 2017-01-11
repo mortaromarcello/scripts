@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# per distro debian. Il pacchetto extlinux deve essere già installato nel sistema.
+# per distro pclinuxos. Il pacchetto extlinux deve essere già installato nel sistema.
 #
 
 SYSLINUX_DIR="/usr/lib/syslinux"
