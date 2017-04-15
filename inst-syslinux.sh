@@ -3,9 +3,9 @@
 # per distro debian. Il pacchetto syslinux deve essere già installato nel sistema.
 #
 
-SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+SYSLINUX_DIR="/usr/lib/syslinux"
 SYSLINUX_INST="/boot/syslinux"
-MBR_DIR="/usr/lib/syslinux/mbr"
+MBR_DIR="/usr/lib/syslinux"
 SIZE_PRIMARY_PART=4096M
 SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
