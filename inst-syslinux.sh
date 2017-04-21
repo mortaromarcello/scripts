@@ -159,9 +159,9 @@ TEXT HELP
 ENDTEXT
 COM32 ${SYSLINUX_INST}/reboot.c32
 EOF
-		if [ $GRUB_UEFI = 1 ]; then
-			create_grub-uefi
-		fi
+		#if [ "${GRUB_UEFI} = "1" ]; then
+		#	create_grub-uefi
+		#fi
 		sync && sync
 		umount -v $PATH_TO_MOUNT
 		echo "Fatto!"
