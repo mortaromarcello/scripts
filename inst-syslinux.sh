@@ -11,7 +11,7 @@ SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
 TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
-PATH_TO_MOUNT=
+PATH_TO_MOUNT="/mnt"
 
 ########################################################################
 #                      functions
@@ -29,8 +29,8 @@ ${0} <opzioni>
 Crea una live Devuan
   -d | --device-usb <device>             :device usb.
   -h | --help                            :Stampa questa messaggio.
-  -p | --path-to-mount                   :path della directory di montaggio.
-  -s | --path-to-install-syslinux <dir>  :path di installazione di syslinux.
+  -p | --path-to-mount                   :path della directory di montaggio. (/mnt default)
+  -s | --path-to-install-syslinux <dir>  :path di installazione di syslinux. (/boot/syslinux default)
   -n | --size-primary-part <size>        :dimensione partizione primaria in MB
   -o | --size-secondary-part <size>      :dimensione partizione secondaria in MB
   -t | --type-partition <type>           :tipo partizione (ext4 default).
