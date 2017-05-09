@@ -103,7 +103,7 @@ function install_extlinux() {
 		echo "Installo extlinux in ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
 		read
 		$EXTLINUX --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
-		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
+		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32 linux.c32 isolinux.bin; do
 			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${EXTLINUX_INST}
 		done
 		cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${EXTLINUX_INST}
