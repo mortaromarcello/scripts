@@ -12,7 +12,7 @@ SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
 TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
-PATH_TO_MOUNT=
+PATH_TO_MOUNT="/mnt"
 GRUB_UEFI=0
 
 ########################################################################
@@ -30,8 +30,8 @@ function help() {
 ${0} <opzioni>
   -d | --device-usb <device>             :device usb.
   -h | --help                            :Stampa questa messaggio.
-  -p | --path-to-mount                   :path della directory di montaggio.
-  -s | --path-to-install-extlinux <dir>  :path di installazione di extlinux.
+  -p | --path-to-mount                   :path della directory di montaggio. (/mnt default)
+  -s | --path-to-install-extlinux <dir>  :path di installazione di extlinux. (/boot/syslinux default)
   -n | --size-primary-part <size>        :dimensione partizione primaria in MB
   -o | --size-secondary-part <size>      :dimensione partizione secondaria in MB
   -t | --type-partition <type>           :tipo partizione (ext4 default).
@@ -40,7 +40,7 @@ ${0} <opzioni>
 
 function check_script() {
 	check_root
-	if [ -z $DEVICE_USB ] && [ -z $PATH_TO_MOUNT ]; then
+	if [ -z $DEVICE_USB ]; then
 		help
 		exit
 	fi

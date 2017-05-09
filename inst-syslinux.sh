@@ -39,7 +39,7 @@ Crea una live Devuan
 
 function check_script() {
 	check_root
-	if [ -z $DEVICE_USB ] && [ -z $PATH_TO_MOUNT ]; then
+	if [ -z $DEVICE_USB ]; then
 		help
 		exit
 	fi
