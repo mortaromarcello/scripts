@@ -35,6 +35,6 @@ def get_cpu_temp(fahrenheit=False):
 
 if __name__ == '__main__':
     while True:
-        call("/bin/setLed", "TEMP")
+        call(["/bin/setLed", "TEMP"])
         print get_cpu_temp()
         time.sleep(2)
