@@ -5,7 +5,7 @@ import os
 import signal
 import sys
 import time
-
+from subprocess import call
 
 def signal_handler(signal, frame):
     sys.exit(0)
@@ -35,5 +35,6 @@ def get_cpu_temp(fahrenheit=False):
 
 if __name__ == '__main__':
     while True:
+        call("/bin/setLed", "TEMP")
         print get_cpu_temp()
         time.sleep(2)
