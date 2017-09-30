@@ -105,7 +105,7 @@ function install_syslinux() {
     cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
     echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
     read
-    syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
+    $SYSLINUX --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
     for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
         cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${SYSLINUX_INST}
     done
