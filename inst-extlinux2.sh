@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 #
-# per distro pclinuxos. Il pacchetto extlinux deve essere già installato nel sistema.
+# per distro pclinuxos/debian. Il pacchetto extlinux deve essere già installato nel sistema.
 #
-
-SYSLINUX_DIR="/usr/lib/syslinux"
+if [ -e debian_version ]; then
+	SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+	MBR_DIR="/usr/lib/syslinux/mbr"
+	EXTLINUX="/usr/bin/extlinux"
+else
+	SYSLINUX_DIR="/usr/lib/syslinux"
+	MBR_DIR="/usr/lib/syslinux"
+	EXTLINUX="/usr/sbin/extlinux"
+fi
 EXTLINUX_INST="/boot/extlinux"
-EXTLINUX="/usr/sbin/extlinux"
-MBR_DIR="/usr/lib/syslinux"
 SIZE_PRIMARY_PART=4096M
 SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
