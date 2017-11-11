@@ -7,13 +7,16 @@
 function init() {
 	DISTRO="distro"
 	INST_DRIVE="/dev/sda"
-	ROOT_PARTITION="/dev/sda1"
+	GRUB_DRIVE="/dev/sda"
+	ROOT_PARTITION="${INST_DRIVE}1"
 	UUID_ROOT_PARTITION=
 	HOME_PARTITION=
 	UUID_HOME_PARTITION=
 	FORMAT_HOME="no"
 	SWAP_PARTITION=
 	UUID_SWAP_PARTITION=
+	SIZE_PRIMARY_PART=16G
+	
 	INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
 	TYPE_FS="ext4"
 	USERNAME=
@@ -106,7 +109,7 @@ put_info() {
 	if [ ! -z ${CRYPT_PASSWORD} ]; then
 		echo "Password criptata                 :" ${CRYPT_PASSWORD}
 	fi
-	echo "Drive di installazione di grub    :" ${INST_DRIVE}
+	echo "Drive di installazione di grub    :" ${GRUB_DRIVE}
 	if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
 		echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
 	fi
@@ -119,6 +122,11 @@ put_info() {
 }
 
 function create_root_and_mount_partition() {
+	if ! sudo partprobe -s -d /dev/sda &>/dev/null; then
+		echo "La tavola delle partizioni non esiste. Creo la tavola (msdos) e la partizione ROOT";
+		parted -s ${INST_DRIVE} -- mklabel msdos mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
+		sync && sync 
+	fi
 	IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
 	if [ ! -z "$IS_MOUNTED" ]; then
 		echo "La partizione è montata. Esco."
@@ -137,6 +145,15 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
+	if sudo fdisk -l /dev/sda 2>1 | grep "${HOME_PARTITION}"; then
+		read -rsp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" YES_NO
+		if [ "${YES_NO}" = "si" ]; then
+			parted -s ${INST_DRIVE} -- mkpart primary ext4 ${SIZE_PRIMARY_PART} -1s
+			sync && sync 
+		else
+			return
+		fi
+	fi
 	IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
 	if [ ! -z "$IS_MOUNTED" ]; then
 		echo "La partizione è montata. Esco."
@@ -328,7 +345,7 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${INST_DRIVE}
+	chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
 	chroot ${INST_ROOT_DIRECTORY} update-grub
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
