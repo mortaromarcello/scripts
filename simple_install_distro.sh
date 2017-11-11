@@ -33,9 +33,9 @@ function init() {
 	KDM=/usr/bin/kdm
 	LIGHTDM=/usr/bin/lightdm
 	if grep -q android /etc/group; then
-		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,lp,dialout,netdev,android"
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,lp,dialout,netdev,android"
 	else
-		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,lp,dialout,netdev"
+		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,lp,dialout,netdev"
 	fi
 	TIMEZONE="Europe/Rome"
 	SHELL_USER="/bin/bash"
