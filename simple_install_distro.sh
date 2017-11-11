@@ -353,6 +353,7 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
+	chroot ${INST_ROOT_DIRECTORY} apt install -y grub-pc
 	chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
 	chroot ${INST_ROOT_DIRECTORY} update-grub
 	for dir in dev/pts dev proc sys; do
