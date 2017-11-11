@@ -4,6 +4,8 @@
 #
 ########################################################################
 
+set -xv
+
 function init() {
 	DISTRO="distro"
 	INST_DRIVE="/dev/sda"
