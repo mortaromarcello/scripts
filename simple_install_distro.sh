@@ -40,7 +40,6 @@ function init() {
 	TIMEZONE="Europe/Rome"
 	SHELL_USER="/bin/bash"
 	AUTOLOGIN="true"
-	EXCLUDE_PATTERNS=( /etc/fstab /dev/* /proc/* /sys/* /tmp/* /run/* /mnt/* /media/* /lost+found /home/* )
 	COPY_ROOT_FILESYSTEM=0
 }
 
@@ -124,9 +123,14 @@ put_info() {
 }
 
 function create_root_and_mount_partition() {
-	if ! sudo partprobe -s -d /dev/sda &>/dev/null; then
-		echo "La tavola delle partizioni non esiste. Creo la tavola (msdos) e la partizione ROOT";
-		parted -s ${INST_DRIVE} -- mklabel msdos mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
+	if ! partprobe -s -d /dev/sda &>/dev/null; then
+		echo "La tavola delle partizioni non esiste. Creo la tavola (msdos).";
+		parted -s ${INST_DRIVE} mklabel msdos
+		sync && sync
+	fi
+	if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${ROOT_PARTITION})" = "" ]; then
+		echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
+		parted -s ${INST_DRIVE} -- mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
 		sync && sync 
 	fi
 	IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
@@ -135,9 +139,9 @@ function create_root_and_mount_partition() {
 		exit
 	fi
 	if [ "${YES_NO}" = "no" ]; then
-		read -rp "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
+		read -rp "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
 	fi
-	if [ -z "${YES_NO}" ] || [ ! "${YES_NO}" = "si" ]; then
+	if [ -z "${RESPONCE}" ] || [ ! "${RESPONCE}" = "si" ]; then
 		exit
 	fi
 	mkfs -L ROOT -t ${TYPE_FS} ${ROOT_PARTITION}
@@ -147,9 +151,10 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
-	if sudo fdisk -l /dev/sda 2>1 | grep "${HOME_PARTITION}"; then
-		read -rsp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" YES_NO
-		if [ "${YES_NO}" = "si" ]; then
+	if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${HOME_PARTITION})" = "" ]; then
+		read -rp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" RESPONCE
+		if [ "${RESPONCE}" = "si" ]; then
+			FORMAT_HOME=si
 			parted -s ${INST_DRIVE} -- mkpart primary ext4 ${SIZE_PRIMARY_PART} -1s
 			sync && sync 
 		else
@@ -164,9 +169,9 @@ function create_home_and_mount_partition() {
 	if [ ! -z ${HOME_PARTITION} ]; then
 		if [ ${FORMAT_HOME} = "si" ]; then
 			if [ "${YES_NO}" = "no" ]; then
-				read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
+				read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
 			fi
-			if [ "${YES_NO}" = "no" ] || [ -z "${YES_NO}" ]; then
+			if [ "${RESPONCE}" = "no" ] || [ -z "${RESPONCE}" ]; then
 				exit
 			fi
 			mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
@@ -179,10 +184,11 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
 	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
-		rsync -aAXv --exclude="${EXCLUDE_PATTERNS[*]}" / ${INST_ROOT_DIRECTORY}
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} / "${INST_ROOT_DIRECTORY}"
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-		cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
+		#cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
 	fi
 }
 
