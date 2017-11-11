@@ -24,7 +24,10 @@ function init() {
 	LANG="it_IT.UTF-8"
 	KEYBOARD="it"
 	HOSTNAME="devuan"
-	if [ "$(cat /etc/group|grep android)" ]; then
+	SLIM=/usr/bin/slim
+	KDM=/usr/bin/kdm
+	LIGHTDM=/usr/bin/lightdm
+	if grep -q android /etc/group; then
 		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,lp,dialout,netdev,bluetooth,android"
 	else
 		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,scanner,lp,dialout,netdev,bluetooth"
@@ -32,7 +35,7 @@ function init() {
 	TIMEZONE="Europe/Rome"
 	SHELL_USER="/bin/bash"
 	AUTOLOGIN="true"
-	EXCLUDE_PATTERNS="{\"/etc/fstab\",\"/dev/*\",\"/proc/*\",\"/sys/*\",\"/tmp/*\",\"/run/*\",\"/mnt/*\",\"/media/*\",\"/lost+found\",\"/home/*\"}"
+	EXCLUDE_PATTERNS=( /etc/fstab /dev/* /proc/* /sys/* /tmp/* /run/* /mnt/* /media/* /lost+found /home/* )
 	COPY_ROOT_FILESYSTEM=0
 }
 
@@ -122,12 +125,12 @@ function create_root_and_mount_partition() {
 		exit
 	fi
 	if [ "${YES_NO}" = "no" ]; then
-		read -p "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
+		read -rp "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
 	fi
 	if [ -z "${YES_NO}" ] || [ ! "${YES_NO}" = "si" ]; then
 		exit
 	fi
-	mkfs -t ${TYPE_FS} ${ROOT_PARTITION}
+	mkfs -L ROOT -t ${TYPE_FS} ${ROOT_PARTITION}
 	UUID_ROOT_PARTITION=$(blkid -o value -s UUID ${ROOT_PARTITION})
 	mkdir -p ${INST_ROOT_DIRECTORY}
 	mount ${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
@@ -142,12 +145,12 @@ function create_home_and_mount_partition() {
 	if [ ! -z ${HOME_PARTITION} ]; then
 		if [ ${FORMAT_HOME} = "si" ]; then
 			if [ "${YES_NO}" = "no" ]; then
-				read -p "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
+				read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " YES_NO
 			fi
 			if [ "${YES_NO}" = "no" ] || [ -z "${YES_NO}" ]; then
 				exit
 			fi
-			mkfs -t ${TYPE_FS} ${HOME_PARTITION}
+			mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
 		fi
 		UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
 		mkdir -p ${INST_ROOT_DIRECTORY}/home
@@ -157,7 +160,7 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
 	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
-		rsync -aAXv --exclude=${EXCLUDE_PATTERNS} / ${INST_ROOT_DIRECTORY}
+		rsync -aAXv --exclude="${EXCLUDE_PATTERNS[*]}" / ${INST_ROOT_DIRECTORY}
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
 		cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
@@ -165,7 +168,7 @@ function copy_root() {
 }
 
 function remove_users() {
-	for user in $(ls ${INST_ROOT_DIRECTORY}/home); do
+	for user in "${INST_ROOT_DIRECTORY}"/home/*; do
 		if [ "$user" != "lost+found" ] && [ "$user" != "$USERNAME" ]; then
 			chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
 		fi
@@ -174,23 +177,23 @@ function remove_users() {
 
 function add_user() {
 	if [ -z ${USERNAME} ]; then
-		read -p "Digita la username: " USERNAME
+		read -rp "Digita la username: " USERNAME
 		if [ -z "${USERNAME}" ]; then
-			read -p "Bisogna digitare un nome. Prova ancora o premi 'enter': " USERNAME
+			read -rp "Bisogna digitare un nome. Prova ancora o premi 'enter': " USERNAME
 			[ -z "${USERNAME}" ] && echo "Installazione abortita!" && exit -1
 		fi
 	fi
 	remove_users
 	if [ -z ${CRYPT_PASSWORD} ]; then
 		while true; do
-			read -s -p "Digita la password: " USER_PASSWORD
+			read -rsp "Digita la password: " USER_PASSWORD
 			echo
 			if [ -z "${USER_PASSWORD}" ]; then
-				read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " USER_PASSWORD
+				read -rsp "Password obbligatoria. Prova ancora o premi 'enter': " USER_PASSWORD
 				echo
 				[ -z "${USER_PASSWORD}" ] && echo "Installazione abortita!" && exit -1
 			fi
-			read -s -p "conferma la password: " USER_PASSWORD2
+			read -rsp "conferma la password: " USER_PASSWORD2
 			echo
 			if [ "$USER_PASSWORD2" == "$USER_PASSWORD" ]; then
 				break
@@ -219,14 +222,14 @@ EOF
 function change_root_password() {
 	if [ -z ${CRYPT_ROOT_PASSWORD} ]; then
 	while true; do
-		read -s -p "Digita la password per l'amministratore root: " ROOT_PASSWORD
+		read -rsp "Digita la password per l'amministratore root: " ROOT_PASSWORD
 		echo
 		if [ -z "${ROOT_PASSWORD}" ]; then
-			read -s -p "Password obbligatoria. Prova ancora o premi 'enter': " ROOT_PASSWORD
+			read -rsp "Password obbligatoria. Prova ancora o premi 'enter': " ROOT_PASSWORD
 			echo
 			[ -z "${ROOT_PASSWORD}" ] && echo "Installazione abortita!" && exit -1
 		fi
-		read -s -p "conferma la password: " ROOT_PASSWORD2
+		read -rsp "conferma la password: " ROOT_PASSWORD2
 		echo
 		if [ "$ROOT_PASSWORD2" == "$ROOT_PASSWORD" ]; then
 			break
@@ -265,11 +268,11 @@ EOF
 }
 
 function set_locale() {
-	LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/locale.gen|grep "${LOCALE}")
+	LINE=$(grep "${LOCALE}" ${INST_ROOT_DIRECTORY}/etc/locale.gen)
 	sed -i "s/${LINE}/${LOCALE}/" ${INST_ROOT_DIRECTORY}/etc/locale.gen
 	chroot ${INST_ROOT_DIRECTORY} locale-gen
 	chroot ${INST_ROOT_DIRECTORY} update-locale LANG=${LANG}
-	LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/default/keyboard|grep "XKBLAYOUT")
+	LINE=$(grep "XKBLAYOUT" ${INST_ROOT_DIRECTORY}/etc/default/keyboard)
 	sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" ${INST_ROOT_DIRECTORY}/etc/default/keyboard
 }
 
@@ -296,22 +299,23 @@ EOF
 
 function set_autologin() {
 	if [ ${AUTOLOGIN} = "true" ]; then
-		DM=$(cat ${INST_ROOT_DIRECTORY}/etc/X11/default-display-manager)
-		if [ "${DM}" = "/usr/sbin/lightdm" ]; then
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf|grep "#autologin-user=")
-			sed -i "s/${LINE}/autologin-user=\"${USERNAME}\"/" ${INST_ROOT_DIRECTORY}/etc/lightdm/lightdm.conf
+		DM=$(cat "${INST_ROOT_DIRECTORY}"/etc/X11/default-display-manager)
+		if [ "${DM}" = "" ]; then
+			return
 		fi
-		if [ "${DM}" = "/usr/bin/slim" ]; then
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "auto_login")
-			sed -i "s/${LINE}/auto_login          yes/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/slim.conf|grep "#default_user")
-			sed -i "s/${LINE}/default_user          ${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/slim.conf
-		fi
-		if [ "${DM}" = "/usr/bin/kdm" ]; then
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginEnable=")
-			sed -i "s/${LINE}/AutoLoginEnable=true/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
-			LINE=$(cat ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc|grep "#AutoLoginUser=")
-			sed -i "s/${LINE}/AutoLoginUser=${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/kde4/kdm/kdmrc
+		if [ "${DM}" = "${LIGHTDM}" ]; then
+			LINE=$(grep "#autologin-user=" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf)
+			rpl  "${LINE}" "autologin=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
+		elif [ "${DM}" = "${SLIM}" ]; then
+			LINE=$(grep "auto_login" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
+			rpl "${LINE}" "auto_login          yes" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
+			LINE=$(grep "#default_user" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
+			rpl "${LINE}" "default_user          ${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
+		elif [ "${DM}" = "${KDM}" ]; then
+			LINE=$(grep "AutoLoginEnable=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
+			rpl "${LINE}" "AutoLoginEnable=true" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
+			LINE=$(grep "AutoLoginUser=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
+			rpl "${LINE}" "AutoLoginUser=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
 		fi
 	fi
 }
