@@ -151,22 +151,22 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
-	if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${HOME_PARTITION})" = "" ]; then
-		read -rp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" RESPONCE
-		if [ "${RESPONCE}" = "si" ]; then
+	if [ ! -z ${HOME_PARTITION} ]; then
+		if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${HOME_PARTITION})" = "" ]; then
+			read -rp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" RESPONCE
+			if [ "${RESPONCE}" = "si" ]; then
 			FORMAT_HOME=si
 			parted -s ${INST_DRIVE} -- mkpart primary ext4 ${SIZE_PRIMARY_PART} -1s
 			sync && sync 
-		else
-			return
+			else
+				return
+			fi
 		fi
-	fi
-	IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
-	if [ ! -z "$IS_MOUNTED" ]; then
-		echo "La partizione è montata. Esco."
-	exit
-	fi
-	if [ ! -z ${HOME_PARTITION} ]; then
+		IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
+		if [ ! -z "$IS_MOUNTED" ]; then
+			echo "La partizione è montata. Esco."
+			exit
+		fi
 		if [ ${FORMAT_HOME} = "si" ]; then
 			if [ "${YES_NO}" = "no" ]; then
 				read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
