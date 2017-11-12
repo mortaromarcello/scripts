@@ -345,6 +345,11 @@ function set_autologin() {
 	fi
 }
 
+function restore_inittab() {
+	LINE=$(grep "1:2345:respawn:/sbin/getty" "${INST_ROOT_DIRECTORY}"/etc/inittab)
+	rpl "${LINE}" "1:2345:respawn:/sbin/getty 38400 tty1" "${INST_ROOT_DIRECTORY}"/etc/inittab
+}
+
 function update_minidlna() {
 	sed -i "s/live-user/${USERNAME}/" ${INST_ROOT_DIRECTORY}/etc/minidlna.conf
 }
@@ -353,7 +358,7 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	cp -vf /etc/resolv.conf ${INST_ROOT_DIRECTORY}/etc/
+	#cp -vf /etc/resolv.conf ${INST_ROOT_DIRECTORY}/etc/
 	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
@@ -391,6 +396,7 @@ function run_inst {
 	set_timezone
 	set_hostname
 	set_autologin
+	restore_inittab
 	install_grub
 	end
 }
