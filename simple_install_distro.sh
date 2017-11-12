@@ -191,12 +191,6 @@ function copy_root() {
 }
 
 function remove_users() {
-	#for dir in "${INST_ROOT_DIRECTORY}"/home/*; do
-	#	user="$(basename ${dir})"
-	#	if [ "${user}" != "lost+found" ]; then
-	#		chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
-	#	fi
-	#done
 	chroot ${INST_ROOT_DIRECTORY} userdel -rf devuan
 }
 
