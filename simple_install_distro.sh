@@ -186,7 +186,7 @@ function copy_root() {
 		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} / "${INST_ROOT_DIRECTORY}"
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} "${SQUASH_FS}"/* "${INST_ROOT_DIRECTORY}"
 	fi
 }
 
