@@ -183,20 +183,21 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
 	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
-		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found} / "${INST_ROOT_DIRECTORY}"
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} / "${INST_ROOT_DIRECTORY}"
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
 	fi
 }
 
 function remove_users() {
-	for dir in "${INST_ROOT_DIRECTORY}"/home/*; do
-		user="$(basename ${dir})"
-		if [ "${user}" != "lost+found" ]; then
-			chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
-		fi
-	done
+	#for dir in "${INST_ROOT_DIRECTORY}"/home/*; do
+	#	user="$(basename ${dir})"
+	#	if [ "${user}" != "lost+found" ]; then
+	#		chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
+	#	fi
+	#done
+	chroot ${INST_ROOT_DIRECTORY} userdel -rf devuan
 }
 
 function add_user() {
@@ -431,7 +432,11 @@ do
 			;;
 		-g | --groups)
 			shift
-			ADD_GROUPS=$1
+			ADD_GROUPS=${1}
+			;;
+		-G | --grub-drive)
+			shift
+			GRUB_DRIVE=${1}
 			;;
 		-h | --help)
 			shift
