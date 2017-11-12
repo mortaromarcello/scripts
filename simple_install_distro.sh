@@ -353,11 +353,13 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
+	read -r
 	chroot "${INST_ROOT_DIRECTORY}" debconf-set-selections "debconf/priority string critical\n
 grub-installer/bootdev string ${GRUB_DRIVE}\n"
 	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
 	#chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
 	#chroot ${INST_ROOT_DIRECTORY} update-grub
+	read -r
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
@@ -365,8 +367,10 @@ grub-installer/bootdev string ${GRUB_DRIVE}\n"
 
 function end() {
 	sync
-	if mount | grep ${HOME_PARTITION}; then
-		umount -lv ${HOME_PARTITION}
+	if [ ${HOME_PARTITION} ]; then
+		if mount | grep ${HOME_PARTITION}; then
+			umount -lv ${HOME_PARTITION}
+		fi
 	fi
 	if mount | grep  ${ROOT_PARTITION}; then
 		umount -lv ${ROOT_PARTITION}
