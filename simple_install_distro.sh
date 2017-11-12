@@ -129,7 +129,7 @@ function create_root_and_mount_partition() {
 	fi
 	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${ROOT_PARTITION})" = "" ]; then
 		echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
-		parted -s ${INST_DRIVE} -- mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
+		parted -s ${INST_DRIVE} mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
 		sync && sync 
 	fi
 	IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
