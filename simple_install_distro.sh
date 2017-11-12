@@ -358,7 +358,6 @@ function install_grub() {
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	read -r
 }
 
 function end() {
