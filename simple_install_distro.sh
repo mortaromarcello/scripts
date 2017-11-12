@@ -354,7 +354,7 @@ function install_grub() {
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
 	read -r
-	chroot "${INST_ROOT_DIRECTORY}" debconf-set-selections "debconf/priority string critical\n
+	chroot ${INST_ROOT_DIRECTORY} debconf-set-selections "debconf/priority string critical\n
 grub-installer/bootdev string ${GRUB_DRIVE}\n"
 	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
 	#chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
@@ -363,6 +363,7 @@ grub-installer/bootdev string ${GRUB_DRIVE}\n"
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
+	read -r
 }
 
 function end() {
