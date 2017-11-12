@@ -128,7 +128,7 @@ function create_root_and_mount_partition() {
 		parted -s ${INST_DRIVE} mklabel msdos
 		sync && sync
 	fi
-	if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${ROOT_PARTITION})" = "" ]; then
+	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${ROOT_PARTITION})" = "" ]; then
 		echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
 		parted -s ${INST_DRIVE} -- mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
 		sync && sync 
@@ -152,7 +152,7 @@ function create_root_and_mount_partition() {
 
 function create_home_and_mount_partition() {
 	if [ ! -z ${HOME_PARTITION} ]; then
-		if [ "$(fdisk -l ${INST_DRIVE} 2>1 | grep ${HOME_PARTITION})" = "" ]; then
+		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
 			read -rp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" RESPONCE
 			if [ "${RESPONCE}" = "si" ]; then
 			FORMAT_HOME=si
@@ -353,8 +353,11 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
-	chroot ${INST_ROOT_DIRECTORY} update-grub
+	chroot "${INST_ROOT_DIRECTORY}" debconf-set-selections "debconf/priority string critical\n
+grub-installer/bootdev string ${GRUB_DRIVE}\n"
+	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
+	#chroot ${INST_ROOT_DIRECTORY} grub-install --no-floppy ${GRUB_DRIVE}
+	#chroot ${INST_ROOT_DIRECTORY} update-grub
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
