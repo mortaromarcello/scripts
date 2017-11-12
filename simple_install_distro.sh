@@ -18,7 +18,6 @@ function init() {
 	SWAP_PARTITION=
 	UUID_SWAP_PARTITION=
 	SIZE_PRIMARY_PART=16G
-	
 	INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
 	TYPE_FS="ext4"
 	USERNAME=
@@ -184,23 +183,24 @@ function create_home_and_mount_partition() {
 
 function copy_root() {
 	if [ ${COPY_ROOT_FILESYSTEM} = 1 ]; then
-		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} / "${INST_ROOT_DIRECTORY}"
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found} / "${INST_ROOT_DIRECTORY}"
 	else
 		SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
-		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found,/home/*} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
-		#cp -av ${SQUASH_FS}/* / ${INST_ROOT_DIRECTORY}
+		rsync -aAXv --exclude={/etc/fstab,/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found} "${SQUASH_FS}"/* / "${INST_ROOT_DIRECTORY}"
 	fi
 }
 
 function remove_users() {
-	for user in "${INST_ROOT_DIRECTORY}"/home/*; do
-		if [ "$user" != "lost+found" ] && [ "$user" != "$USERNAME" ]; then
+	for dir in "${INST_ROOT_DIRECTORY}"/home/*; do
+		user="$(basename ${dir})"
+		if [ "${user}" != "lost+found" ]; then
 			chroot ${INST_ROOT_DIRECTORY} userdel -rf "$user"
 		fi
 	done
 }
 
 function add_user() {
+	remove_users
 	if [ -z ${USERNAME} ]; then
 		read -rp "Digita la username: " USERNAME
 		if [ -z "${USERNAME}" ]; then
@@ -208,7 +208,6 @@ function add_user() {
 			[ -z "${USERNAME}" ] && echo "Installazione abortita!" && exit -1
 		fi
 	fi
-	remove_users
 	if [ -z ${CRYPT_PASSWORD} ]; then
 		while true; do
 			read -rsp "Digita la password: " USER_PASSWORD
@@ -358,7 +357,6 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	#cp -vf /etc/resolv.conf ${INST_ROOT_DIRECTORY}/etc/
 	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
@@ -497,5 +495,5 @@ do
 			;;
 	esac
 done
-
+trap '{ echo interrupt; umount ${INST_ROOT_DIRECTORY} &>/dev/null ; exit 255 ; }' SIGINT SIGTERM
 run_inst
