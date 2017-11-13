@@ -9,7 +9,7 @@ set -xv
 function init() {
 	DISTRO="distro"
 	INST_DRIVE="/dev/sda"
-	GRUB_DRIVE="/dev/sda"
+	GRUB_DRIVE=${INST_DRIVE}
 	ROOT_PARTITION="${INST_DRIVE}1"
 	UUID_ROOT_PARTITION=
 	HOME_PARTITION=
@@ -352,7 +352,8 @@ function install_grub() {
 	for dir in dev dev/pts proc sys; do
 		mount --bind /${dir} ${INST_ROOT_DIRECTORY}/${dir}
 	done
-	chroot ${INST_ROOT_DIRECTORY} apt -y install grub-pc
+	chroot ${INST_ROOT_DIRECTORY} grub-install ${GRUB_DRIVE}
+	chroot ${INST_ROOT_DIRECTORY} update-grub
 	for dir in dev/pts dev proc sys; do
 		umount -lv ${INST_ROOT_DIRECTORY}/${dir}
 	done
