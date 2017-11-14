@@ -122,7 +122,7 @@ put_info() {
 }
 
 function create_root_and_mount_partition() {
-	if ! partprobe -s -d /dev/sda &>/dev/null; then
+	if [ ! "$(partprobe -s -d /dev/sda &>/dev/null)" ]; then
 		echo "La tavola delle partizioni non esiste. Creo la tavola (msdos).";
 		parted -s ${INST_DRIVE} mklabel msdos
 		sync && sync
