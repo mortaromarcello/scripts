@@ -50,7 +50,7 @@ Installa la Live su un disco.
 	-c | --crypt-password <password>       :Password cifrata utente.
 	-C | --crypt-root-password <password>  :Password cifrata root.
 	-d | --inst-drive <drive>              :Drive di installazione per grub.
-	-f | --format-home <si/no>             :Se 'si', formatta la partizione home.
+	-f | --format-home                     :Formatta la partizione home.
 	-g | --groups <group1,...,groupn>      :Gruppi addizionali a cui l'utente appartiene.
 	-h | --help                            :Stampa questa messaggio.
 	-H | --home-partition <partition>      :Partizione di home.
