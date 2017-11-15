@@ -122,11 +122,6 @@ put_info() {
 }
 
 function create_root_and_mount_partition() {
-	if [ ! "$(partprobe -s -d /dev/sda &>/dev/null)" ]; then
-		echo "La tavola delle partizioni non esiste. Creo la tavola (msdos).";
-		parted -s ${INST_DRIVE} mklabel msdos
-		sync && sync
-	fi
 	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${ROOT_PARTITION})" = "" ]; then
 		echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
 		parted -s ${INST_DRIVE} mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
@@ -151,16 +146,6 @@ function create_root_and_mount_partition() {
 
 function create_home_and_mount_partition() {
 	if [ ! -z ${HOME_PARTITION} ]; then
-		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
-			read -rp "La partizione ${HOME_PARTITION} non esiste. Creo la partizione HOME? (si/no)" RESPONCE
-			if [ "${RESPONCE}" = "si" ]; then
-			FORMAT_HOME=si
-			parted -s ${INST_DRIVE} -- mkpart primary ext4 ${SIZE_PRIMARY_PART} -1s
-			sync && sync 
-			else
-				return
-			fi
-		fi
 		IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
 		if [ ! -z "$IS_MOUNTED" ]; then
 			echo "La partizione è montata. Esco."
