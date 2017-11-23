@@ -110,6 +110,7 @@ put_info() {
 	if [ ! -z ${CRYPT_PASSWORD} ]; then
 		echo "Password criptata                 :" ${CRYPT_PASSWORD}
 	fi
+	echo "Drive di installazione del sistema:" ${INST_DRIVE}
 	echo "Drive di installazione di grub    :" ${GRUB_DRIVE}
 	if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
 		echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
