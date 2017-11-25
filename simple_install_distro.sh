@@ -123,9 +123,16 @@ put_info() {
 
 function create_root_and_mount_partition() {
 	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${ROOT_PARTITION})" = "" ]; then
-		echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
-		parted -s ${INST_DRIVE} mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
-		sync && sync 
+		#echo "La partizione ${ROOT_PARTITION} non esiste. Creo la partizione.";
+		#parted -s ${INST_DRIVE} mkpart primary ext4 2MiB ${SIZE_PRIMARY_PART}
+		#sync && sync
+		echo "La partizione ${ROOT_PARTITION} non esiste. Creare prima le partizioni."
+		read -r
+		cfdisk ${INST_DRIVE}
+		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${ROOT_PARTITION})" = "" ]; then
+			echo "La partizione ${ROOT_PARTITION} non esiste. Esco."
+			exit 255
+		fi
 	fi
 	IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
 	if [ ! -z "$IS_MOUNTED" ]; then
@@ -145,6 +152,15 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
+	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
+		echo "La partizione ${HOME_PARTITION} non esiste. Creare prima le partizioni."
+		read -r
+		cfdisk ${INST_DRIVE}
+		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
+			echo "La partizione ${HOME_PARTITION} non esiste. Esco."
+			exit 255
+		fi
+	fi
 	if [ ! -z ${HOME_PARTITION} ]; then
 		IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
 		if [ ! -z "$IS_MOUNTED" ]; then
