@@ -136,8 +136,15 @@ function create_root_and_mount_partition() {
 	fi
 	IS_MOUNTED=$(mount|grep ${ROOT_PARTITION})
 	if [ ! -z "$IS_MOUNTED" ]; then
-		echo "La partizione è montata. Esco."
-		exit
+		read -r "La partizione è montata. Smonto la partizione?." RESPONCE
+		if [ "${RESPONCE}" = "si" ]; then
+			umount ${ROO_PARTITION}
+			if [ "$?" != "0" ]; then
+				echo "C'è stato un errore. Esco."
+				exit 255
+		else
+			exit 255
+		fi
 	fi
 	if [ "${YES_NO}" = "no" ]; then
 		read -rp "Attenzione! la partizione ${ROOT_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
