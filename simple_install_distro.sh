@@ -49,10 +49,9 @@ Installa la Live su un disco.
 	-a | --autologin <true/false>          :Autologin utente. (default 'true').
 	-c | --crypt-password <password>       :Password cifrata utente.
 	-C | --crypt-root-password <password>  :Password cifrata root.
-	-d | --inst-drive <drive>              :Drive di installazione.
+	-d | --inst-drive <drive>              :Drive di installazione per grub.
 	-f | --format-home                     :Formatta la partizione home.
 	-g | --groups <group1,...,groupn>      :Gruppi addizionali a cui l'utente appartiene.
-	-G | --grub-drive                      :Drive di installazione per grub.
 	-h | --help                            :Stampa questa messaggio.
 	-H | --home-partition <partition>      :Partizione di home.
 	-i | --inst-root-directory <directory> :Directory di installazione (default '/mnt/distro').
@@ -110,7 +109,6 @@ put_info() {
 	if [ ! -z ${CRYPT_PASSWORD} ]; then
 		echo "Password criptata                 :" ${CRYPT_PASSWORD}
 	fi
-	echo "Drive di installazione del sistema:" ${INST_DRIVE}
 	echo "Drive di installazione di grub    :" ${GRUB_DRIVE}
 	if [ ! -z ${CRYPT_ROOT_PASSWORD} ]; then
 		echo "Password root criptata            :" ${CRYPT_ROOT_PASSWORD}
@@ -121,7 +119,6 @@ put_info() {
 	echo "Lingua                            :" "${LANG}"
 	echo "Timezone                          :" "${TIMEZONE}"
 	echo "Shell user                        :" "${SHELL_USER}"
-	read -r
 }
 
 function create_root_and_mount_partition() {
