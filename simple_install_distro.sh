@@ -152,16 +152,16 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
-	if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
-		echo "La partizione ${HOME_PARTITION} non esiste. Creare prima le partizioni."
-		read -r
-		cfdisk ${INST_DRIVE}
-		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
-			echo "La partizione ${HOME_PARTITION} non esiste. Esco."
-			exit 255
-		fi
-	fi
 	if [ ! -z ${HOME_PARTITION} ]; then
+		if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
+			echo "La partizione ${HOME_PARTITION} non esiste. Creare prima le partizioni."
+			read -r
+			cfdisk ${INST_DRIVE}
+			if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
+				echo "La partizione ${HOME_PARTITION} non esiste. Esco."
+				exit 255
+			fi
+		fi
 		IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
 		if [ ! -z "$IS_MOUNTED" ]; then
 			echo "La partizione è montata. Esco."
