@@ -138,10 +138,11 @@ function create_root_and_mount_partition() {
 	if [ ! -z "$IS_MOUNTED" ]; then
 		read -r "La partizione è montata. Smonto la partizione?." RESPONCE
 		if [ "${RESPONCE}" = "si" ]; then
-			umount ${ROO_PARTITION}
+			umount ${ROOT_PARTITION}
 			if [ "$?" != "0" ]; then
 				echo "C'è stato un errore. Esco."
 				exit 255
+			fi
 		else
 			exit 255
 		fi
