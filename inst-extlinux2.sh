@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# per distro pclinuxos/debian. Il pacchetto extlinux deve essere già installato nel sistema.
+# per distro pclinuxos/debian/devuan. Il pacchetto extlinux deve essere già installato nel sistema.
 #
 set -xv
-if [ -e /etc/debian_version ]; then
-	SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
-	MBR_DIR="/usr/lib/syslinux/mbr"
-	EXTLINUX="/usr/bin/extlinux"
+if [ -e /etc/debian_version ] || [ -e /etc/devuan_version ]; then
+    SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
+    MBR_DIR="/usr/lib/syslinux/mbr"
+    EXTLINUX="/usr/bin/extlinux"
 else
-	SYSLINUX_DIR="/usr/lib/syslinux"
-	MBR_DIR="/usr/lib/syslinux"
-	EXTLINUX="/usr/sbin/extlinux"
+    SYSLINUX_DIR="/usr/lib/syslinux"
+    MBR_DIR="/usr/lib/syslinux"
+    EXTLINUX="/usr/sbin/extlinux"
 fi
 EXTLINUX_INST="/boot/extlinux"
 SIZE_PRIMARY_PART=4096M
@@ -25,14 +25,14 @@ GRUB_UEFI=0
 #                      functions
 ########################################################################
 function check_root() {
-	if [ $UID != 0 ]; then
-		echo "Devi essere root per eseguire questo script."
-		exit
-	fi
+    if [ $UID != 0 ]; then
+        echo "Devi essere root per eseguire questo script."
+        exit
+    fi
 }
 
 function help() {
-	echo -e "
+    echo -e "
 ${0} <opzioni>
   -d | --device-usb <device>             :device usb.
   -h | --help                            :Stampa questa messaggio.
@@ -45,87 +45,88 @@ ${0} <opzioni>
 }
 
 function check_script() {
-	check_root
-	if [ -z $DEVICE_USB ]; then
-		help
-		exit
-	fi
-	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
-		TYPE_SECONDARY_PART=7
-	elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
-		TYPE_SECONDARY_PART=c
-	fi
-	echo "device usb $DEVICE_USB"
-	echo "path to mount $PATH_TO_MOUNT"
-	echo "extlinux install path $EXTLINUX_INST"
-	echo "size primary partition $SIZE_PRIMARY_PART"
-	echo "size secondary filesystem $SIZE_SECONDARY_PART"
-	echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
-	echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
-	echo "Script verificato. OK."
+    check_root
+    if [ -z $DEVICE_USB ]; then
+        help
+        exit
+    fi
+    if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
+        TYPE_SECONDARY_PART=7
+    elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+        TYPE_SECONDARY_PART=c
+    fi
+    echo "device usb $DEVICE_USB"
+    echo "path to mount $PATH_TO_MOUNT"
+    echo "extlinux install path $EXTLINUX_INST"
+    echo "size primary partition $SIZE_PRIMARY_PART"
+    echo "size secondary filesystem $SIZE_SECONDARY_PART"
+    echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
+    echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
+    echo "Script verificato. OK."
 }
 
 
 function create_partitions() {
-	echo "Sovrascrivo la tabella delle partizioni."
-	parted -s ${DEVICE_USB} mktable msdos
-	read -p "Creo la partizione primaria ext2 e la partizione secondaria ${TYPE_SECONDARY_FS} (premere Invio o Crtl-c per uscire)"
-	sfdisk ${DEVICE_USB} << EOF
+    echo "Sovrascrivo la tabella delle partizioni."
+    parted -s ${DEVICE_USB} mktable msdos
+    read -p "Creo la partizione primaria ext2 e la partizione secondaria ${TYPE_SECONDARY_FS} (premere Invio o Crtl-c per uscire)"
+    blockdev --rereadpt ${DEVICE_USB}
+    sfdisk ${DEVICE_USB} << EOF
 ,${SIZE_PRIMARY_PART},c,*
 ,${SIZE_SECONDARY_PART},${TYPE_SECONDARY_PART}
 EOF
-	sync && sync
-	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
-	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
-	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	mke2fs -t ext2 ${DEVICE_USB}1
-	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
-		mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
-	else
-		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
-	fi
-	if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
-		e2label ${DEVICE_USB}2 persistence
-		tune2fs -i 0 ${DEVICE_USB}2
-	fi
+    sync && sync
+    #echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
+    read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
+    #echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
+    mke2fs -t ext2 ${DEVICE_USB}1
+    read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
+    if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+        mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
+    else
+        mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
+    fi
+    if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
+        e2label ${DEVICE_USB}2 persistence
+        tune2fs -i 0 ${DEVICE_USB}2
+    fi
 }
 
 function install_extlinux() {
-	if [ -e $EXTLINUX ]; then
-		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
-		if ! mount | grep ${PATH_TO_MOUNT}; then
-			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
-			exit
-		fi
-		if [ ! -d ${PATH_TO_MOUNT}${EXTLINUX_INST} ]; then
-			echo "Creo la directory ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
-			read
-			mkdir -p ${PATH_TO_MOUNT}${EXTLINUX_INST}
-		fi
-		echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
-		read
-		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
-		echo "Installo extlinux in ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
-		read
-		$EXTLINUX --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
-		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32 linux.c32; do
-			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${EXTLINUX_INST}
-		done
-		cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${EXTLINUX_INST}
-		if [ ! -d ${PATH_TO_MOUNT}/menus/extlinux ]; then
-			echo "Creo la directory ${PATH_TO_MOUNT}/menus/extlinux (premere Invio o Crtl-c per uscire)"
-			read
-			mkdir -p ${PATH_TO_MOUNT}/menus/extlinux
-		fi
-		cat >${PATH_TO_MOUNT}${EXTLINUX_INST}/extlinux.conf <<EOF
+    if [ -e $EXTLINUX ]; then
+        mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
+        if ! mount | grep ${PATH_TO_MOUNT}; then
+            echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
+            exit
+        fi
+        if [ ! -d ${PATH_TO_MOUNT}${EXTLINUX_INST} ]; then
+            echo "Creo la directory ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
+            read
+            mkdir -p ${PATH_TO_MOUNT}${EXTLINUX_INST}
+        fi
+        echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
+        read
+        cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
+        echo "Installo extlinux in ${PATH_TO_MOUNT}${EXTLINUX_INST} (premere Invio o Crtl-c per uscire)"
+        read
+        $EXTLINUX --install ${PATH_TO_MOUNT}${EXTLINUX_INST}
+        for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32 linux.c32; do
+            cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${EXTLINUX_INST}
+        done
+        cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${EXTLINUX_INST}
+        if [ ! -d ${PATH_TO_MOUNT}/menus/extlinux ]; then
+            echo "Creo la directory ${PATH_TO_MOUNT}/menus/extlinux (premere Invio o Crtl-c per uscire)"
+            read
+            mkdir -p ${PATH_TO_MOUNT}/menus/extlinux
+        fi
+        cat >${PATH_TO_MOUNT}${EXTLINUX_INST}/extlinux.conf <<EOF
 DEFAULT main
 
 LABEL main
 COM32 ${EXTLINUX_INST}/menu.c32
 APPEND /menus/extlinux/main.cfg
 EOF
-		cat >${PATH_TO_MOUNT}/menus/extlinux/defaults.cfg <<EOF
+        cat >${PATH_TO_MOUNT}/menus/extlinux/defaults.cfg <<EOF
 MENU TITLE Title
 
 MENU MARGIN 0
@@ -148,7 +149,7 @@ MENU COLOR TABMSG 37;40
 MENU COLOR DISABLED 37;40
 MENU COLOR HELP 32;40
 EOF
-		cat >${PATH_TO_MOUNT}/menus/extlinux/main.cfg <<EOF
+        cat >${PATH_TO_MOUNT}/menus/extlinux/main.cfg <<EOF
 MENU INCLUDE /menus/extlinux/defaults.cfg
 UI ${EXTLINUX_INST}/menu.c32
 
@@ -166,64 +167,64 @@ TEXT HELP
 ENDTEXT
 COM32 ${EXTLINUX_INST}/reboot.c32
 EOF
-		if [ ${GRUB_UEFI} = 1 ]; then
-			create_grub-uefi
-		fi
-		sync && sync
-		umount -v $PATH_TO_MOUNT
-		echo "Fatto!"
-	else
-		echo "extlinux non è installato sul tuo sistema. Esco."
-	fi
+        if [ ${GRUB_UEFI} = 1 ]; then
+            create_grub-uefi
+        fi
+        sync && sync
+        umount -v $PATH_TO_MOUNT
+        echo "Fatto!"
+    else
+        echo "extlinux non è installato sul tuo sistema. Esco."
+    fi
 }
 
 function create_grub-uefi() {
-	git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
-	cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
+    git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
+    cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
 }
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 until [ -z ${1} ]
 do
-	case ${1} in
-		-d | --device-usb)
-			shift
-			DEVICE_USB=${1}
-			;;
-		-g | --grub-uefi)
-			shift
-			GRUB_UEFI=1
-			;;
-		-h | --help)
-			shift
-			help
-			exit
-			;;
-		-p | --path-to-mount)
-			shift
-			PATH_TO_MOUNT=${1}
-			;;
-		-s | --path-to-install-extlinux)
-			shift
-			EXTLINUX_INST=${1}
-			;;
-		-n | --size-primary-part)
-			shift
-			SIZE_PRIMARY_PART=${1}M
-			;;
-		-o | --size-secondary-part)
-			shift
-			SIZE_SECONDARY_PART=${1}M
-			;;
-		-t | --type-secondary-filesystem)
-			shift
-			TYPE_SECONDARY_FS=${1}
-			;;
-		*)
-			shift
-			;;
-	esac
+    case ${1} in
+        -d | --device-usb)
+            shift
+            DEVICE_USB=${1}
+            ;;
+        -g | --grub-uefi)
+            shift
+            GRUB_UEFI=1
+            ;;
+        -h | --help)
+            shift
+            help
+            exit
+            ;;
+        -p | --path-to-mount)
+            shift
+            PATH_TO_MOUNT=${1}
+            ;;
+        -s | --path-to-install-extlinux)
+            shift
+            EXTLINUX_INST=${1}
+            ;;
+        -n | --size-primary-part)
+            shift
+            SIZE_PRIMARY_PART=${1}M
+            ;;
+        -o | --size-secondary-part)
+            shift
+            SIZE_SECONDARY_PART=${1}M
+            ;;
+        -t | --type-secondary-filesystem)
+            shift
+            TYPE_SECONDARY_FS=${1}
+            ;;
+        *)
+            shift
+            ;;
+    esac
 done
 
 check_script
@@ -233,6 +234,6 @@ umount -v ${DEVICE_USB}2
 echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei d'accordo (s/n)?"
 read sn
 if [ ${sn} = "s" ]; then
-	create_partitions
+    create_partitions
 fi
 install_extlinux
