@@ -103,7 +103,7 @@ function install_syslinux() {
     fi
     echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
     read
-    cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
+    dd if=${MBR_DIR}/mbr.bin of=${DEVICE_USB}
     echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
     read
     $SYSLINUX --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
