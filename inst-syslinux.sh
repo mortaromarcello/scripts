@@ -28,6 +28,16 @@ function check_root() {
     fi
 }
 
+function is_removable() {
+	DEVICE=$(echo "${DEVICE_USB}" | cut -d'/' -f 3)
+	if [ $(cat "/sys/block/$DEVICE/removable") == "0" ]; then
+		echo "Il device non è removibile."
+		exit
+	else
+		echo "Il device è removibile. OK!"
+	fi
+}
+
 function help() {
     echo -e "
 ${0} <opzioni>
@@ -48,6 +58,7 @@ function check_script() {
         help
         exit
     fi
+    is_removable
     if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
         TYPE_SECONDARY_PART=7
     elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
