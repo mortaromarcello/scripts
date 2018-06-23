@@ -16,7 +16,7 @@ SIZE_SECONDARY_PART=
 TYPE_SECONDARY_PART=L
 TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
-PATH_TO_MOUNT="/mnt"
+PATH_TO_MOUNT="/tmp/usb"
 
 ########################################################################
 #                      functions
@@ -91,10 +91,20 @@ EOF
 }
 
 function install_syslinux() {
+    mkdir -vp ${PATH_TO_MOUNT}
     mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
     if ! mount | grep ${PATH_TO_MOUNT}; then
         echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
-        exit
+        read -p "Smonto la partizione? (y/N) " YES_NO
+        if [ $YES_NO = "y" ]; then
+            umount ${DEVICE_USB}
+            if [ $? != "0" ]; then
+                echo "C'è stato un errore."
+                exit
+            fi
+        else
+            exit
+        fi
     fi
     if [ ! -d ${PATH_TO_MOUNT}${SYSLINUX_INST} ]; then
         echo "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
