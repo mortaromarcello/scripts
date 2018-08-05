@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -v -x
+
 ########################################################################
 DISTRO="Devuan"
 LOG="$(pwd)/mkdevuan.log"
@@ -8,9 +10,8 @@ FRONTEND=noninteractive
 VERBOSE=
 STAGE=1
 CLEAN=0
-COMPILE_BOOTSTRAP=0
+COMPILE_BOOTSTRAP=1
 DEBOOTSTRAP_BIN=/usr/sbin/debootstrap
-DEBOOTSTRAP_INCLUDE="libjson-c2"
 CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -18,19 +19,16 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-DE=xfce
+DE=cinnamon
 ARCH=amd64
-DIST=jessie
+DIST=ascii
 ROOT_DIR=devuan
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
 if [ $ISO_DEBUG == 1 ]; then
-	if [ $DIST != "jessie" ]; then
-		PACKAGES="$PACKAGES bashdb"
-	fi
-	PACKAGES="$PACKAGES shellcheck" 
+    PACKAGES="$PACKAGES shellcheck" 
 fi
 
 USERNAME=devuan
@@ -38,7 +36,7 @@ PASSWORD=devuan
 SHELL=/bin/bash
 HOSTNAME=devuan
 CRYPT_PASSWD=$(perl -e 'printf("%s\n", crypt($ARGV[0], "password"))' "$PASSWORD")
-MIRROR=http://auto.mirror.devuan.org/merged
+MIRROR=http://pkgmaster.devuan.org/merged
 SPLASH="iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10dzkAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI
 WXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4AUSEC4NgfB3pwAAIABJREFUeNrt3eti4kqaZuE3TgLX
 /c6PuYa5322kiC9ifkjYYGOnsREIaT3d2VWdtSsP2MAiju7//p//1wQAuIOm/tCr1qrdfifvg4a+
@@ -277,73 +275,73 @@ DEVICE_USB=
 PATH_TO_MOUNT="/mnt"
 
 function create_grub-uefi() {
-	git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
-	cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
+    git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
+    cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
 }
 
 function create_partitions() {
-	echo "Sovrascrivo la tabella delle partizioni."
-	parted -s ${DEVICE_USB} mktable msdos
-	read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
-	sfdisk ${DEVICE_USB} << EOF
+    echo "Sovrascrivo la tabella delle partizioni."
+    parted -s ${DEVICE_USB} mktable msdos
+    read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
+    sfdisk ${DEVICE_USB} << EOF
 ,${SIZE_PRIMARY_PART},c,*
 ,${SIZE_SECONDARY_PART},${TYPE_SECONDARY_PART}
 EOF
-	sync && sync
-	#echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
-	read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
-	#echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
-	mkdosfs -F 32 ${DEVICE_USB}1
-	read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
-	if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
-		mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
-	else
-		mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
-	fi
-	if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
-		e2label ${DEVICE_USB}2 persistence
-		tune2fs -i 0 ${DEVICE_USB}2
-	fi
+    sync && sync
+    #echo -e ",4096,c,*\n,,83" | sfdisk -D -u M ${1}
+    read -p "Formatto la prima partizione. (premere Invio o Crtl-c per uscire)"
+    #echo -e "mkpart primary fat32 1 -1\nset 1 boot on\nq\n" | parted ${1}
+    mkdosfs -F 32 ${DEVICE_USB}1
+    read -p "Formatto la seconda partizione. (premere Invio o Crtl-c per uscire)"
+    if [ ${TYPE_SECONDARY_FS} = "exfat" ] || [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+        mkfs -t ${TYPE_SECONDARY_FS} -n persistence ${DEVICE_USB}2
+    else
+        mkfs -t ${TYPE_SECONDARY_FS} ${DEVICE_USB}2
+    fi
+    if [ ${TYPE_SECONDARY_FS} = "ext2" ] || [ ${TYPE_SECONDARY_FS} = "ext3" ] || [ ${TYPE_SECONDARY_FS} = "ext4" ]; then
+        e2label ${DEVICE_USB}2 persistence
+        tune2fs -i 0 ${DEVICE_USB}2
+    fi
 }
 
 function install_syslinux() {
-	if [ -e /usr/bin/syslinux ]; then
-		mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
-		if ! mount | grep ${PATH_TO_MOUNT}; then
-			echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
-			exit
-		fi
-		if [ ! -d ${PATH_TO_MOUNT}${SYSLINUX_INST} ]; then
-			echo "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
-			read
-			mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
-		fi
-		echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
-		read
-		cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
-		echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
-		read
-		syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
-		for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
-			cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${SYSLINUX_INST}
-		done
-		cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${SYSLINUX_INST}
-		echo "$SPLASH" | base64 --decode > ${SYSLINUX_INST}/splash.png
+    if [ -e /usr/bin/syslinux ]; then
+        mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
+        if ! mount | grep ${PATH_TO_MOUNT}; then
+            echo "Errore montando ${DEVICE_USB}1 in ${PATH_TO_MOUNT}"
+            exit
+        fi
+        if [ ! -d ${PATH_TO_MOUNT}${SYSLINUX_INST} ]; then
+            echo "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST} (premere Invio o Crtl-c per uscire)"
+            read
+            mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
+        fi
+        echo "Copio mbr in ${DEVICE_USB} (premere Invio o Crtl-c per uscire)"
+        read
+        cat ${MBR_DIR}/mbr.bin > ${DEVICE_USB}
+        echo "Installo syslinux in ${DEVICE_USB}1 (premere Invio o Crtl-c per uscire)"
+        read
+        syslinux --directory ${SYSLINUX_INST} --install ${DEVICE_USB}1
+        for i in chain.c32 config.c32 hdt.c32 libcom32.c32 libutil.c32 menu.c32 reboot.c32 vesamenu.c32 whichsys.c32; do
+            cp -v ${SYSLINUX_DIR}/$i ${PATH_TO_MOUNT}${SYSLINUX_INST}
+        done
+        cp -v /usr/lib/syslinux/memdisk ${PATH_TO_MOUNT}${SYSLINUX_INST}
+        echo "$SPLASH" | base64 --decode > ${SYSLINUX_INST}/splash.png
 
-		cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
+        cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
 label menu
-	kernel ${SYSLINUX_INST}/vesamenu.c32
-	config syslinux.cfg
+    kernel ${SYSLINUX_INST}/vesamenu.c32
+    config syslinux.cfg
 EOF
 
-		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/syslinux.cfg <<EOF
+        cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/syslinux.cfg <<EOF
 include menu.cfg
 default ${SYSLINUX_INST}/vesamenu.c32
 prompt 0
 timeout 200
 EOF
 
-		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/menu.cfg <<EOF
+        cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/menu.cfg <<EOF
 menu hshift 6
 menu width 64
 
@@ -351,18 +349,18 @@ menu title Live Media
 include stdmenu.cfg
 include live.cfg
 label help
-	menu label Help
-	config prompt.cfg
+    menu label Help
+    config prompt.cfg
 EOF
-		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/stdmenu.cfg <<EOF
+        cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/stdmenu.cfg <<EOF
 menu background ${SYSLINUX_INST}/splash.png
-menu color title	* #FFFFFFFF *
-menu color border	* #00000000 #00000000 none
-menu color sel		* #ffffffff #76a1d0ff *
-menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
-menu color tabmsg	* #f9f885 #00000000 *
+menu color title    * #FFFFFFFF *
+menu color border   * #00000000 #00000000 none
+menu color sel      * #ffffffff #76a1d0ff *
+menu color hotsel   1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg   * #f9f885 #00000000 *
 menu color cmdline 0 #f9f885 #00000000
-menu color help		37;40 #ffdddd00 #00000000 none
+menu color help     37;40 #ffdddd00 #00000000 none
 menu vshift 8
 menu rows 12
 #menu helpmsgrow 15
@@ -372,46 +370,46 @@ menu rows 12
 menu tabmsg Press ENTER to boot or TAB to edit a menu entry
 EOF
 
-		cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/live.cfg <<EOF
+        cat >${PATH_TO_MOUNT}${SYSLINUX_INST}/live.cfg <<EOF
 label live
 menu label \${DISTRO} (default)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label nox
-	menu label \${DISTRO} (text-mode)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (text-mode)
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label nomodeset
-	menu label \${DISTRO} (no modeset)
-	kernel /live/vmlinuz nomodeset
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (no modeset)
+    kernel /live/vmlinuz nomodeset
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label toram
-	menu label \${DISTRO} (load to RAM)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (load to RAM)
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label noprobe
-	menu label \${DISTRO} (no probe)
-	kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (no probe)
+    kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label memtest
-	menu label Memory test
-	kernel /live/memtest
+    menu label Memory test
+    kernel /live/memtest
 
 label chain.c32 hd0,0
-	menu label Boot hard disk
-	chain.c32 hd0,0
+    menu label Boot hard disk
+    chain.c32 hd0,0
 
 label harddisk
-	menu label Boot hard disk (old way)
-	localboot 0x80
+    menu label Boot hard disk (old way)
+    localboot 0x80
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f1.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f1.txt<<EOF
                   0fLive Media07                                07
 
 
@@ -425,14 +423,14 @@ EOF
 <09F707>   unused
 <09F807>   Where to get more help
 <09F907>   unused
-<09F1007>	Copyrights and Warranties (Debian)
+<09F1007> Copyrights and Warranties (Debian)
 You may:
 - press F2 through F9 to read about the topic
 - type 0fmenu07 and press ENTER to go back to the boot screen
 - press ENTER to boot
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f2.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f2.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -445,7 +443,7 @@ You may:
 
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f3.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f3.txt<<EOF
                   0fBOOT METHODS07                                07
 
 0fMethods list here must correspond to entries in your boot menu. 07        
@@ -475,7 +473,7 @@ You may:
 
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f4.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f4.txt<<EOF
                   0fLive-Boot Options07                                07
 
 ___ Additional boot options ___
@@ -487,7 +485,7 @@ in combination with the boot method (see <09F307>).
 0fswapon07         Use local swap partitions
 0fnofastboot07     Enable filesystem check
 0fnomodeset07      Disable kernel mode setting
-0ftoram07          Copy whole read-only media to RAM		
+0ftoram07          Copy whole read-only media to RAM      
 0fnoapic nolapic07 Disable buggy APIC interrupt routing   
 0fsingle07         Single-user mode (runlevel 1)
 0facpi=noirq07 or 0facpi=off07      (partly) disable ACPI                  
@@ -503,7 +501,7 @@ You may:
 
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f5.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f5.txt<<EOF
                   0fLanguage and Keyboard07                                07
 
 You can specify the default language at the boot prompt below in combination 
@@ -529,7 +527,7 @@ You may:
 - press ENTER to boot
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f6.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f6.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -541,7 +539,7 @@ You may:
 - press ENTER to boot
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f7.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f7.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -553,7 +551,7 @@ You may:
 - press ENTER to boot
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f8.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f8.txt<<EOF
                   0fRefracta!07                                07
 
 Where to get more help:
@@ -573,7 +571,7 @@ You may:
 - press ENTER to boot
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f9.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f9.txt<<EOF
 0fTITLE07                                                    09F1007
 
 
@@ -586,7 +584,7 @@ You may:
 
 EOF
 
-		cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f10.txt<<EOF
+        cat > ${PATH_TO_MOUNT}${SYSLINUX_INST}/f10.txt<<EOF
 0fCOPYRIGHTS AND WARRANTIES07                                                    09F1007
 
 Debian GNU/Linux is Copyright (C) 1993-2011 Software in the Public Interest,
@@ -612,59 +610,59 @@ More information about the Debian Live project can be found at
 Press F1control and F then 1 for the help index, or ENTER to 
 EOF
 
-		if [ $GRUB_UEFI = 1 ]; then
-			create_grub-uefi
-		fi
-		sync && sync
-		umount -v $PATH_TO_MOUNT
-		echo "Fatto!"
-	else
-		echo "syslinux non è installato sul tuo sistema. Esco."
-	fi
+        if [ $GRUB_UEFI = 1 ]; then
+            create_grub-uefi
+        fi
+        sync && sync
+        umount -v $PATH_TO_MOUNT
+        echo "Fatto!"
+    else
+        echo "syslinux non è installato sul tuo sistema. Esco."
+    fi
 }
 
 ########################################################################
 #
 ########################################################################
 function linux_firmware() {
-	FIRMWARE_DIR=$ARCHIVE/linux-firmware
-	[[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
-	git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
-	cp -var $FIRMWARE_DIR/* $1/lib/firmware/
+    FIRMWARE_DIR=$ARCHIVE/linux-firmware
+    [[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
+    git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+    cp -var $FIRMWARE_DIR/* $1/lib/firmware/
 }
 
 
 function create_pendrive_live() {
-	if mount | grep ${PATH_TO_MOUNT}; then
-		umount -v ${PATH_TO_MOUNT}
-	fi
-	if mount | grep ${DEVICE_USB}1; then
-		umount -v ${DEVICE_USB}1
-	fi
-	if mount | grep ${DEVICE_USB}2; then
-		umount -v ${DEVICE_USB}2
-	fi
-	echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei 
+    if mount | grep ${PATH_TO_MOUNT}; then
+        umount -v ${PATH_TO_MOUNT}
+    fi
+    if mount | grep ${DEVICE_USB}1; then
+        umount -v ${DEVICE_USB}1
+    fi
+    if mount | grep ${DEVICE_USB}2; then
+        umount -v ${DEVICE_USB}2
+    fi
+    echo -e "Posso cancellare la pennetta e ricreare la partizione. Sei 
 d'accordo (s/n)?"
-	read sn
-	if [ ${sn} = "s" ]; then
-		create_partitions
-	fi
-	install_syslinux
+    read sn
+    if [ ${sn} = "s" ]; then
+        create_partitions
+    fi
+    install_syslinux
 }
 
 ########################################################################
 # compile_debootstrap
 ########################################################################
 function compile_debootstrap() {
-	DEBOOTSTRAP_DIR=$ARCHIVE/debootstrap
-	export DEBOOTSTRAP_DIR
-	[[ -d $DEBOOTSTRAP_DIR ]] && rm -R $DEBOOTSTRAP_DIR
-	git clone https://git.devuan.org/hellekin/debootstrap.git $DEBOOTSTRAP_DIR
-	cd $DEBOOTSTRAP_DIR
-	make devices.tar.gz
-	DEBOOTSTRAP_BIN=$DEBOOTSTRAP_DIR/debootstrap
-	cd $ARCHIVE
+    DEBOOTSTRAP_DIR=$ARCHIVE/debootstrap
+    export DEBOOTSTRAP_DIR
+    [[ -d $DEBOOTSTRAP_DIR ]] && rm -R $DEBOOTSTRAP_DIR
+    git clone https://git.devuan.org/hellekin/debootstrap.git $DEBOOTSTRAP_DIR
+    cd $DEBOOTSTRAP_DIR
+    make devices.tar.gz
+    DEBOOTSTRAP_BIN=$DEBOOTSTRAP_DIR/debootstrap
+    cd $ARCHIVE
 }
 
 ########################################################################
@@ -672,40 +670,40 @@ function compile_debootstrap() {
 ########################################################################
 trap ctrl_c SIGINT
 ctrl_c() {
-	echo "*** CTRL-C pressed***"
-	unbind $ROOT_DIR
-	exit -1
+    echo "*** CTRL-C pressed***"
+    unbind $ROOT_DIR
+    exit -1
 }
 
 ########################################################################
 # bind()
 ########################################################################
 function bind() {
-	dirs="dev dev/pts proc sys run"
-	for dir in $dirs; do
-		if ! mount | grep $1/$dir; then
-			mount $VERBOSE --bind /$dir $1/$dir
-		fi
-	done
+    dirs="dev dev/pts proc sys run"
+    for dir in $dirs; do
+        if ! mount | grep $1/$dir; then
+            mount $VERBOSE --bind /$dir $1/$dir
+        fi
+    done
 }
 
 ########################################################################
 #
 ########################################################################
 function unbind() {
-	dirs="run sys proc dev/pts dev"
-	for dir in $dirs; do
-		if mount | grep $1/$dir; then
-			umount -l $VERBOSE $1/$dir
-		fi
-	done
+    dirs="run sys proc dev/pts dev"
+    for dir in $dirs; do
+        if mount | grep $1/$dir; then
+            umount -l $VERBOSE $1/$dir
+        fi
+    done
 }
 
 ########################################################################
 #
 ########################################################################
 function log() {
-	echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
+    echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
 $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone 
 $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
 }
@@ -714,184 +712,185 @@ $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
 #
 ########################################################################
 function update() {
-	echo -e $APT_REPS > $1/etc/apt/sources.list
-	chroot $1 apt update
+    echo -e $APT_REPS > $1/etc/apt/sources.list
+    chroot $1 apt update
 }
 
 ########################################################################
 #
 ########################################################################
 function upgrade() {
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
 }
 
 ########################################################################
 #
 ########################################################################
 function add_user() {
-	chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USERNAME
+    chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USERNAME
 }
 
 ########################################################################
 #
 ########################################################################
 function set_locale() {
-	echo $TIMEZONE > $1/etc/timezone
-	LINE=$(cat $1/etc/locale.gen|grep "${LOCALE}")
-	sed -i "s/${LINE}/${LOCALE}/" $1/etc/locale.gen
-	chroot $1 locale-gen
-	chroot $1 update-locale LANG=${LANG}
-	LINE=$(cat $1/etc/default/keyboard|grep "XKBLAYOUT")
-	sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
+    echo $TIMEZONE > $1/etc/timezone
+    LINE=$(cat $1/etc/locale.gen|grep "${LOCALE}")
+    sed -i "s/${LINE}/${LOCALE}/" $1/etc/locale.gen
+    chroot $1 locale-gen
+    chroot $1 update-locale LANG=${LANG}
+    LINE=$(cat $1/etc/default/keyboard|grep "XKBLAYOUT")
+    sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
 }
 
 ########################################################################
 # snapshot() : necessita di montare le dirs dev sys run etc.
 ########################################################################
 function create_snapshot() {
-	cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
-	chmod -v +x $1/tmp/snapshot.sh
-	chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+    cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
+    chmod -v +x $1/tmp/snapshot.sh
+    chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
 }
 
 ########################################################################
 #
 ########################################################################
 function set_distro_env() {
-	if [ $DIST = "jessie" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged jessie-backports main contrib non-free"
-	elif [ $DIST = "ascii" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\n"
-		#INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
-	elif [ $DIST = "ceres" ]; then
-		APT_REPS="deb http://auto.mirror.devuan.org/merged jessie main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ascii main contrib non-free\ndeb http://auto.mirror.devuan.org/merged ceres main contrib non-free\n"
-	fi
-	if [ $COMPILE_BOOTSTRAP = 1 ]; then
-		compile_debootstrap
-	else
-		apt-get install debootstrap
-	fi
+    if [ $DIST = "jessie" ]; then
+        APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged jessie-backports main contrib non-free"
+    elif [ $DIST = "ascii" ]; then
+        APT_REPS="deb http://pkgmaster.devuan.org/merged ascii main contrib non-free\n"
+        #INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
+    elif [ $DIST = "ceres" ]; then
+        APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ascii main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ceres main contrib non-free\n"
+    fi
+    if [ $COMPILE_BOOTSTRAP = 1 ]; then
+        compile_debootstrap
+    else
+        apt-get install debootstrap
+    fi
 }
 
 function jessie() {
-	DIST="jessie"
-	check_script
-	fase1 $ROOT_DIR
-	fase2 $ROOT_DIR
-	fase3 $ROOT_DIR
-	fase4 $ROOT_DIR
+    DIST="jessie"
+    check_script
+    fase1 $ROOT_DIR
+    fase2 $ROOT_DIR
+    fase3 $ROOT_DIR
+    fase4 $ROOT_DIR
 }
 
 function ascii() {
-	DIST="ascii"
-	check_script
-	fase1 $ROOT_DIR
-	fase2 $ROOT_DIR
-	fase3 $ROOT_DIR
-	fase4 $ROOT_DIR
+    DIST="ascii"
+    check_script
+    fase1 $ROOT_DIR
+    fase2 $ROOT_DIR
+    fase3 $ROOT_DIR
+    fase4 $ROOT_DIR
 }
 
 function ceres() {
-	DIST="ceres"
-	check_script
-	fase1 $ROOT_DIR
-	fase2 $ROOT_DIR
-	fase3 $ROOT_DIR
-	fase4 $ROOT_DIR
+    DIST="ceres"
+    check_script
+    fase1 $ROOT_DIR
+    fase2 $ROOT_DIR
+    fase3 $ROOT_DIR
+    fase4 $ROOT_DIR
 }
 
 ########################################################################
 #
 ########################################################################
 function fase1() {
-	log
-	[ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
-	mkdir -p $1
-	#$DEBOOTSTRAP_BIN --include=$DEBOOTSTRAP_INCLUDE --verbose --arch=$ARCH $DIST $1 $MIRROR
-	$DEBOOTSTRAP_BIN --include=$DEBOOTSTRAP_INCLUDE --verbose --arch=$ARCH jessie $1 $MIRROR
-	if [ $? -gt 0 ]; then
-		echo "Big problem!!!"
-		echo -e "===============ERRORE==============">>$LOG
-		log
-		echo -e "===================================">>$LOG
-		exit
-	fi
+    log
+    [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
+    mkdir -p $1
+    $DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
+    if [ $? -gt 0 ]; then
+        echo "Big problem!!!"
+        echo -e "===============ERRORE==============">>$LOG
+        log
+        echo -e "===================================">>$LOG
+        exit
+    fi
 }
 
 ########################################################################
 #
 ########################################################################
 function fase2() {
-	bind $1
-	update $1
-	upgrade $1
-	hook_hostname $1
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS autoremove --purge"
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
-	if [ $? -gt 0 ]; then
-		echo "Big problem!!!"
-		echo -e "===============ERRORE==============">>$LOG
-		log
-		echo -e "===================================">>$LOG
-		unbind $1
-		exit
-	fi
-	linux_firmware $1
-	add_user $1
-	set_locale $1
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INSTALL_DISTRO_DEPS"
-	if [ $? -gt 0 ]; then
-		echo "Big problem!!!"
-		echo -e "===============ERRORE==============">>$LOG
-		log
-		echo -e "===================================">>$LOG
-		unbind $1
-		exit
-	fi
-	hook_install_distro $1
-	unbind $1
+    bind $1
+    update $1
+    upgrade $1
+    hook_hostname $1
+    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS autoremove --purge"
+    hook_create_fake_start_stop_daemon $1
+    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
+    if [ $? -gt 0 ]; then
+        echo "Big problem!!!"
+        echo -e "===============ERRORE==============">>$LOG
+        log
+        echo -e "===================================">>$LOG
+        unbind $1
+        exit
+    fi
+    linux_firmware $1
+    add_user $1
+    set_locale $1
+    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INSTALL_DISTRO_DEPS"
+    if [ $? -gt 0 ]; then
+        echo "Big problem!!!"
+        echo -e "===============ERRORE==============">>$LOG
+        log
+        echo -e "===================================">>$LOG
+        unbind $1
+        exit
+    fi
+    hook_install_distro $1
+    unbind $1
 }
 
 ########################################################################
 #
 ########################################################################
 function fase3() {
-	bind $1
-	chroot $1 dpkg --configure -a --force-confdef,confnew
-	chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
-	if [ $? -gt 0 ]; then
-		echo "Big problem!!!"
-		echo -e "===============ERRORE==============">>$LOG
-		log
-		echo -e "===================================">>$LOG
-		unbind $1
-		exit
-	fi
-	hook_synaptics $1
-	unbind $1
+    bind $1
+    chroot $1 dpkg --configure -a --force-confdef,confnew
+    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
+    if [ $? -gt 0 ]; then
+        echo "Big problem!!!"
+        echo -e "===============ERRORE==============">>$LOG
+        log
+        echo -e "===================================">>$LOG
+        unbind $1
+        exit
+    fi
+    hook_synaptics $1
+    hook_restore_fake_start_stop_daemon $1
+    unbind $1
 }
 
 ########################################################################
 #
 ########################################################################
 function fase4() {
-	update $1
-	bind $1
-	upgrade $1
-	if [ $? -gt 0 ]; then
-		echo "Big problem!!!"
-		echo -e "===============ERRORE==============">>$LOG
-		log
-		echo -e "===================================">>$LOG
-		unbind $1
-		exit
-	fi
-	chroot $1 apt-get $APT_OPTS clean
-	chroot $1 apt-get $APT_OPTS autoremove --purge
-	chroot $1 dpkg --purge -a
-	[ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
-	create_snapshot $1
-	unbind $1
+    update $1
+    bind $1
+    upgrade $1
+    if [ $? -gt 0 ]; then
+        echo "Big problem!!!"
+        echo -e "===============ERRORE==============">>$LOG
+        log
+        echo -e "===================================">>$LOG
+        unbind $1
+        exit
+    fi
+    chroot $1 apt-get $APT_OPTS clean
+    chroot $1 apt-get $APT_OPTS autoremove --purge
+    chroot $1 dpkg --purge -a
+    [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
+    create_snapshot $1
+    unbind $1
 }
 
 ########################################################################
@@ -900,33 +899,50 @@ function fase4() {
 #
 ########################################################################
 function update_hooks() {
-	hook_install_distro $1
-	hook_hostname $1
-	hook_synaptics $1
-	
+    hook_install_distro $1
+    hook_hostname $1
+    hook_synaptics $1
+    
 }
+########################################################################
+#                   hook_create_fake_start_stop_daemon                 #
+########################################################################
+function hook_create_fake_start_stop_daemon() {
+    chroot $1 cp -v /sbin/start-stop-daemon /sbin/start-stop-daemon.orig
+    chroot $1 touch /sbin/start-stop-daemon
+    chroot $1 chmod +x /sbin/start-stop-daemon
+}
+
+########################################################################
+#                  hook_restore_fake_start_stop_daemon                 #
+########################################################################
+function hook_restore_fake_start_stop_daemon() {
+    chroot $1 cp -vf /sbin/start-stop-daemon.orig /sbin/start-stop-daemon
+    chroot $1 rm -vf /sbin/start-stop-daemon.orig
+}
+
 ########################################################################
 #                   hook_install_distro                                #
 ########################################################################
 function hook_install_distro() {
-	TMP="/tmp/scripts"
-	GIT_DIR="scripts"
-	chroot $1 mkdir -p $TMP
-	chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
-	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
-	chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
-	#if [ $DIST = "ascii" ]; then
-	#	chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
-	#	chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
-	#fi
-	chroot $1 rm -R -f $VERBOSE ${TMP}
+    TMP="/tmp/scripts"
+    GIT_DIR="scripts"
+    chroot $1 mkdir -p $TMP
+    chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
+    chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
+    chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
+    #if [ $DIST = "ascii" ]; then
+    #   chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
+    #   chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
+    #fi
+    chroot $1 rm -R -f $VERBOSE ${TMP}
 }
 
 ########################################################################
 #                        hook_synaptics
 ########################################################################
 function hook_synaptics() {
-	SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
+    SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
 # to all touchpads. See xorg.conf.d(5) for more information on\n\
 # InputClass.\n\
 # DO NOT EDIT THIS FILE, your distribution will likely overwrite\n\
@@ -996,18 +1012,18 @@ Section \"InputClass\"\n\
         Option \"SoftButtonAreas\" \"0 0 0 0 0 0 0 0\"\n\
 EndSection\n\
 "
-	mkdir -p $1/etc/X11/xorg.conf.d
-	echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
+    mkdir -p $1/etc/X11/xorg.conf.d
+    echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
 }
 
 ########################################################################
 #                   hook_hostname
 ########################################################################
 function hook_hostname() {
-	cat > $1/etc/hostname <<EOF
+    cat > $1/etc/hostname <<EOF
 ${HOSTNAME}
 EOF
-	cat > $1/etc/hosts <<EOF
+    cat > $1/etc/hosts <<EOF
 127.0.0.1       localhost
 127.0.1.1       ${HOSTNAME}
 ::1             localhost ip6-localhost ip6-loopback
@@ -1024,75 +1040,75 @@ EOF
 #
 ########################################################################
 function check_script() {
-	if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
-		DIST=jessie
-	fi
-	if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
-		ARCH=amd64
-	fi
-	if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ]; then
-		DE="xfce"
-	fi
-	if [ $(id -u) != 0 ]; then
-		echo -e "\nUser $USER not is root."
-		exit
-	fi
-	case $DIST in
-		"jessie")
-			if [ $DE = "kde" ]; then
-				PACKAGES="kde-l10n-$KEYBOARD bluedevil $PACKAGES"
-			fi
-			;;
-		"ascii" | "ceres")
-			PACKAGES="gtk3-engines-breeze $PACKAGES"
-			;;
-		*)
-			;;
-	esac
-	case $DE in
-		"mate")
-			;;
-		"xfce")
-			;;
-		"lxde")
-			;;
-		"kde")
-			;;
-		"cinnamon")
-			;;
-	esac
-	PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
-	set_distro_env
+    if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
+        DIST=ascii
+    fi
+    if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
+        ARCH=amd64
+    fi
+    if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ]; then
+        DE="xfce"
+    fi
+    if [ $(id -u) != 0 ]; then
+        echo -e "\nUser $USER not is root."
+        exit
+    fi
+    case $DIST in
+        "jessie")
+            if [ $DE = "kde" ]; then
+                PACKAGES="kde-l10n-$KEYBOARD bluedevil $PACKAGES"
+            fi
+            ;;
+        "ascii" | "ceres")
+            PACKAGES="gtk3-engines-breeze $PACKAGES"
+            ;;
+        *)
+            ;;
+    esac
+    case $DE in
+        "mate")
+            ;;
+        "xfce")
+            ;;
+        "lxde")
+            ;;
+        "kde")
+            ;;
+        "cinnamon")
+            ;;
+    esac
+    PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+    set_distro_env
 ########################################################################
-	if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
-		TYPE_SECONDARY_PART=7
-	elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
-		TYPE_SECONDARY_PART=c
-	fi
-	
-	if [ -n $DEVICE_USB ]; then
-		echo "device usb $DEVICE_USB"
-		echo "path to mount $PATH_TO_MOUNT"
-		echo "syslinux install path $SYSLINUX_INST"
-		echo "size primary partition $SIZE_PRIMARY_PART"
-		echo "size secondary filesystem $SIZE_SECONDARY_PART"
-		echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
-		echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
-	fi
+    if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
+        TYPE_SECONDARY_PART=7
+    elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
+        TYPE_SECONDARY_PART=c
+    fi
+    
+    if [ -n $DEVICE_USB ]; then
+        echo "device usb $DEVICE_USB"
+        echo "path to mount $PATH_TO_MOUNT"
+        echo "syslinux install path $SYSLINUX_INST"
+        echo "size primary partition $SIZE_PRIMARY_PART"
+        echo "size secondary filesystem $SIZE_SECONDARY_PART"
+        echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
+        echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
+    fi
 ########################################################################
-	echo "distribution $DIST"
-	echo "architecture $ARCH"
-	echo "desktop $DE"
-	echo "stage $STAGE"
-	echo "root directory $ROOT_DIR"
-	echo "locale $LOCALE"
-	echo "lang $LANG"
-	echo "language $LANGUAGE"
-	echo "keyboard $KEYBOARD"
-	echo "timezone $TIMEZONE"
-	echo -e "deb repository $APT_REPS"
-	echo "packages $PACKAGES"
-	echo "Script verificato. OK."
+    echo "distribution: $DIST"
+    echo "architecture: $ARCH"
+    echo "desktop: $DE"
+    echo "stage: $STAGE"
+    echo "root: directory $ROOT_DIR"
+    echo "locale: $LOCALE"
+    echo "lang: $LANG"
+    echo "language: $LANGUAGE"
+    echo "keyboard: $KEYBOARD"
+    echo "timezone: $TIMEZONE"
+    echo -e "deb repository: $APT_REPS"
+    echo "packages: $PACKAGES"
+    echo "Script verificato. OK."
 }
 
 ########################################################################
@@ -1136,159 +1152,159 @@ Crea una live Devuan
 [[ -z $1 ]] && help && exit
 until [ -z "${1}" ]
 do
-	case ${1} in
-		-a | --arch)
-			shift
-			ARCH=${1}
-			;;
-		-c | --clean)
-			shift
-			CLEAN=1
-			;;
-		-cb | --compile-bootstrap)
-			shift
-			COMPILE_BOOTSTRAP=1
-			;;
-		-cs | --clean-snapshoot)
-			shift
-			CLEAN_SNAPSHOT=1
-			;;
-		-d | --distribution)
-			shift
-			DIST=${1}
-			;;
-		-D | --desktop)
-			shift
-			DE=${1}
-			;;
-		-h | --help)
-			shift
-			help
-			exit
-			;;
-		-k | --keyboard)
-			shift
-			KEYBOARD=${1}
-			;;
-		-l | --locale)
-			shift
-			LOCALE=${1}
-			;;
-		-L | --lang)
-			shift
-			LANG=${1}
-			;;
-		-la | --language)
-			shift
-			LANGUAGE=${1}
-			;;
-		-n | --hostname)
-			shift
-			HOSTNAME=${1}
-			;;
-		-r | --root-dir)
-			shift
-			ROOT_DIR=$1
-			;;
-		-s | --stage)
-			shift
-			STAGE=${1}
-			;;
-		-T | --timezone)
-			shift
-			TIMEZONE=${1}
-			;;
-		-u | --user)
-			shift
-			USERNAME=${1}
-			;;
-		-v | --verbose)
-			shift
-			VERBOSE=-v
-			;;
+    case ${1} in
+        -a | --arch)
+            shift
+            ARCH=${1}
+            ;;
+        -c | --clean)
+            shift
+            CLEAN=1
+            ;;
+        -cb | --compile-bootstrap)
+            shift
+            COMPILE_BOOTSTRAP=1
+            ;;
+        -cs | --clean-snapshoot)
+            shift
+            CLEAN_SNAPSHOT=1
+            ;;
+        -d | --distribution)
+            shift
+            DIST=${1}
+            ;;
+        -D | --desktop)
+            shift
+            DE=${1}
+            ;;
+        -h | --help)
+            shift
+            help
+            exit
+            ;;
+        -k | --keyboard)
+            shift
+            KEYBOARD=${1}
+            ;;
+        -l | --locale)
+            shift
+            LOCALE=${1}
+            ;;
+        -L | --lang)
+            shift
+            LANG=${1}
+            ;;
+        -la | --language)
+            shift
+            LANGUAGE=${1}
+            ;;
+        -n | --hostname)
+            shift
+            HOSTNAME=${1}
+            ;;
+        -r | --root-dir)
+            shift
+            ROOT_DIR=$1
+            ;;
+        -s | --stage)
+            shift
+            STAGE=${1}
+            ;;
+        -T | --timezone)
+            shift
+            TIMEZONE=${1}
+            ;;
+        -u | --user)
+            shift
+            USERNAME=${1}
+            ;;
+        -v | --verbose)
+            shift
+            VERBOSE=-v
+            ;;
 # device-usb
-		-du | --device-usb)
-			shift
-			DEVICE_USB=${1}
-			;;
-		-gu | --grub-uefi)
-			shift
-			GRUB_UEFI=1
-			;;
-		-pm | --path-to-mount)
-			shift
-			PATH_TO_MOUNT=${1}
-			;;
-		-pi | --path-to-install-syslinux)
-			shift
-			SYSLINUX_INST=${1}
-			;;
-		-sp | --size-primary-part)
-			shift
-			SIZE_PRIMARY_PART=${1}M
-			;;
-		-ss | --size-secondary-part)
-			shift
-			SIZE_SECONDARY_PART=${1}M
-			;;
-		-ts | --type-secondary-filesystem)
-			shift
-			TYPE_SECONDARY_FS=${1}
-			;;
-		*)
-			shift
-			;;
-	esac
+        -du | --device-usb)
+            shift
+            DEVICE_USB=${1}
+            ;;
+        -gu | --grub-uefi)
+            shift
+            GRUB_UEFI=1
+            ;;
+        -pm | --path-to-mount)
+            shift
+            PATH_TO_MOUNT=${1}
+            ;;
+        -pi | --path-to-install-syslinux)
+            shift
+            SYSLINUX_INST=${1}
+            ;;
+        -sp | --size-primary-part)
+            shift
+            SIZE_PRIMARY_PART=${1}M
+            ;;
+        -ss | --size-secondary-part)
+            shift
+            SIZE_SECONDARY_PART=${1}M
+            ;;
+        -ts | --type-secondary-filesystem)
+            shift
+            TYPE_SECONDARY_FS=${1}
+            ;;
+        *)
+            shift
+            ;;
+    esac
 done
 
 case $STAGE in
-	"")
-		#;&
-		help
-		;;
-	1)
-		check_script
-		fase1 $ROOT_DIR
-		;;
-	2)
-		check_script
-		fase2 $ROOT_DIR
-		;;
-	3)
-		check_script
-		fase3 $ROOT_DIR
-		;;
-	4)
-		check_script
-		fase4 $ROOT_DIR
-		;;
-	min)
-		check_script
-		fase1 $ROOT_DIR
-		fase2 $ROOT_DIR
-		fase4 $ROOT_DIR
-		;;
-	jessie)
-		jessie
-		;;
-	ascii)
-		ascii
-		;;
-	ceres)
-		ceres
-		;;
-	iso-update)
-		check_script
-		update_hooks $ROOT_DIR
-		fase4 $ROOT_DIR
-		;;
-	upgrade)
-		check_script
-		bind $ROOT_DIR
-		update $ROOT_DIR
-		upgrade $ROOT_DIR
-		unbind $ROOT_DIR
-		;;
-	*)
-		;;
+    "")
+        #;&
+        help
+        ;;
+    1)
+        check_script
+        fase1 $ROOT_DIR
+        ;;
+    2)
+        check_script
+        fase2 $ROOT_DIR
+        ;;
+    3)
+        check_script
+        fase3 $ROOT_DIR
+        ;;
+    4)
+        check_script
+        fase4 $ROOT_DIR
+        ;;
+    min)
+        check_script
+        fase1 $ROOT_DIR
+        fase2 $ROOT_DIR
+        fase4 $ROOT_DIR
+        ;;
+    jessie)
+        jessie
+        ;;
+    ascii)
+        ascii
+        ;;
+    ceres)
+        ceres
+        ;;
+    iso-update)
+        check_script
+        update_hooks $ROOT_DIR
+        fase4 $ROOT_DIR
+        ;;
+    upgrade)
+        check_script
+        bind $ROOT_DIR
+        update $ROOT_DIR
+        upgrade $ROOT_DIR
+        unbind $ROOT_DIR
+        ;;
+    *)
+        ;;
 esac
