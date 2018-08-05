@@ -3,6 +3,9 @@
 set -v -x
 
 ########################################################################
+#
+########################################################################
+
 DISTRO="Devuan"
 LOG="$(pwd)/mkdevuan.log"
 PATH_SCRIPTS=$(dirname $0)
@@ -274,11 +277,17 @@ TYPE_SECONDARY_FS=ext4
 DEVICE_USB=
 PATH_TO_MOUNT="/mnt"
 
+########################################################################
+# create_grub-uefi:
+########################################################################
 function create_grub-uefi() {
     git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
     cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
 }
 
+########################################################################
+# create_partitions:
+########################################################################
 function create_partitions() {
     echo "Sovrascrivo la tabella delle partizioni."
     parted -s ${DEVICE_USB} mktable msdos
@@ -303,6 +312,10 @@ EOF
         tune2fs -i 0 ${DEVICE_USB}2
     fi
 }
+
+########################################################################
+# install_syslinux:
+########################################################################
 
 function install_syslinux() {
     if [ -e /usr/bin/syslinux ]; then
@@ -622,15 +635,20 @@ EOF
 }
 
 ########################################################################
-#
+# linux_firmware:
 ########################################################################
 function linux_firmware() {
-    FIRMWARE_DIR=$ARCHIVE/linux-firmware
-    [[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
-    git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
-    cp -var $FIRMWARE_DIR/* $1/lib/firmware/
+    if [ $1 ]; then
+        FIRMWARE_DIR=$ARCHIVE/linux-firmware
+        [[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
+        git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+        cp -var $FIRMWARE_DIR/* $1/lib/firmware/
+    fi
 }
 
+########################################################################
+# create_pendrive_live:
+########################################################################
 
 function create_pendrive_live() {
     if mount | grep ${PATH_TO_MOUNT}; then
@@ -652,7 +670,7 @@ d'accordo (s/n)?"
 }
 
 ########################################################################
-# compile_debootstrap
+# compile_debootstrap:
 ########################################################################
 function compile_debootstrap() {
     DEBOOTSTRAP_DIR=$ARCHIVE/debootstrap
@@ -666,7 +684,7 @@ function compile_debootstrap() {
 }
 
 ########################################################################
-# ctrl_c
+# ctrl_c:
 ########################################################################
 trap ctrl_c SIGINT
 ctrl_c() {
@@ -676,91 +694,106 @@ ctrl_c() {
 }
 
 ########################################################################
-# bind()
+# bind:
 ########################################################################
 function bind() {
-    dirs="dev dev/pts proc sys run"
-    for dir in $dirs; do
-        if ! mount | grep $1/$dir; then
-            mount $VERBOSE --bind /$dir $1/$dir
-        fi
-    done
+    if [ $1 ]; then
+        dirs="dev dev/pts proc sys run"
+        for dir in $dirs; do
+            if ! mount | grep $1/$dir; then
+                mount $VERBOSE --bind /$dir $1/$dir
+            fi
+        done
+    fi
 }
 
 ########################################################################
-#
+# unbind:
 ########################################################################
 function unbind() {
-    dirs="run sys proc dev/pts dev"
-    for dir in $dirs; do
-        if mount | grep $1/$dir; then
-            umount -l $VERBOSE $1/$dir
-        fi
-    done
+    if [ $1 ]; then
+        dirs="run sys proc dev/pts dev"
+        for dir in $dirs; do
+            if mount | grep $1/$dir; then
+                umount -l $VERBOSE $1/$dir
+            fi
+        done
+    fi
 }
 
 ########################################################################
-#
+# log:
 ########################################################################
 function log() {
-    echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
+    if [ $1 ]; then
+        echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
 $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone 
 $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
+    fi
 }
 
 ########################################################################
-#
+# update: 
 ########################################################################
 function update() {
-    echo -e $APT_REPS > $1/etc/apt/sources.list
-    chroot $1 apt update
+    if [ $1 ]; then
+        echo -e $APT_REPS > $1/etc/apt/sources.list
+        chroot $1 apt update
+    fi
 }
 
 ########################################################################
 #
 ########################################################################
 function upgrade() {
-    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+    if [ $1 ]; then
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+    fi
 }
 
 ########################################################################
-#
+#                  add_user
 ########################################################################
 function add_user() {
-    chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USERNAME
+    if [ $1 ]; then
+        chroot $1 useradd -m -p $CRYPT_PASSWD -s $SHELL $USERNAME
+    fi
 }
 
 ########################################################################
-#
+#                 set_locale
 ########################################################################
 function set_locale() {
-    echo $TIMEZONE > $1/etc/timezone
-    LINE=$(cat $1/etc/locale.gen|grep "${LOCALE}")
-    sed -i "s/${LINE}/${LOCALE}/" $1/etc/locale.gen
-    chroot $1 locale-gen
-    chroot $1 update-locale LANG=${LANG}
-    LINE=$(cat $1/etc/default/keyboard|grep "XKBLAYOUT")
-    sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
+    if [ $1 ]; then
+        echo $TIMEZONE > $1/etc/timezone
+        LINE=$(cat $1/etc/locale.gen|grep "${LOCALE}")
+        sed -i "s/${LINE}/${LOCALE}/" $1/etc/locale.gen
+        chroot $1 locale-gen
+        chroot $1 update-locale LANG=${LANG}
+        LINE=$(cat $1/etc/default/keyboard|grep "XKBLAYOUT")
+        sed -i "s/${LINE}/XKBLAYOUT=\"${KEYBOARD}\"/" $1/etc/default/keyboard
+    fi
 }
 
 ########################################################################
-# snapshot() : necessita di montare le dirs dev sys run etc.
+# snapshot : necessita di montare le dirs dev sys run etc.
 ########################################################################
 function create_snapshot() {
-    cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
-    chmod -v +x $1/tmp/snapshot.sh
-    chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+    if [ $1 ]; then
+        cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
+        chmod -v +x $1/tmp/snapshot.sh
+        chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+    fi
 }
 
 ########################################################################
-#
+# set_distro_env:
 ########################################################################
 function set_distro_env() {
     if [ $DIST = "jessie" ]; then
         APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged jessie-backports main contrib non-free"
     elif [ $DIST = "ascii" ]; then
         APT_REPS="deb http://pkgmaster.devuan.org/merged ascii main contrib non-free\n"
-        #INSTALL_DISTRO_DEPS="$INSTALL_DISTRO_DEPS yad"
     elif [ $DIST = "ceres" ]; then
         APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ascii main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ceres main contrib non-free\n"
     fi
@@ -771,6 +804,10 @@ function set_distro_env() {
     fi
 }
 
+########################################################################
+# jessie:
+########################################################################
+
 function jessie() {
     DIST="jessie"
     check_script
@@ -780,6 +817,10 @@ function jessie() {
     fase4 $ROOT_DIR
 }
 
+########################################################################
+# ascii:
+########################################################################
+
 function ascii() {
     DIST="ascii"
     check_script
@@ -788,6 +829,10 @@ function ascii() {
     fase3 $ROOT_DIR
     fase4 $ROOT_DIR
 }
+
+########################################################################
+# ceres:
+########################################################################
 
 function ceres() {
     DIST="ceres"
@@ -799,150 +844,167 @@ function ceres() {
 }
 
 ########################################################################
-#
+# fase1:
 ########################################################################
 function fase1() {
-    log
-    [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
-    mkdir -p $1
-    $DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
-    if [ $? -gt 0 ]; then
-        echo "Big problem!!!"
-        echo -e "===============ERRORE==============">>$LOG
-        log
-        echo -e "===================================">>$LOG
-        exit
+    if [ $1 ]; then
+        log $1
+        [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
+        mkdir -p $1
+        $DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
+        if [ $? -gt 0 ]; then
+            echo "Big problem!!!"
+            echo -e "===============ERRORE==============">>$LOG
+            log $1
+            echo -e "===================================">>$LOG
+            exit
+        fi
     fi
 }
 
 ########################################################################
-#
+# fase2:
 ########################################################################
 function fase2() {
-    bind $1
-    update $1
-    upgrade $1
-    hook_hostname $1
-    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS autoremove --purge"
-    hook_create_fake_start_stop_daemon $1
-    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
-    if [ $? -gt 0 ]; then
-        echo "Big problem!!!"
-        echo -e "===============ERRORE==============">>$LOG
-        log
-        echo -e "===================================">>$LOG
+    if [ $1 ]; then
+        bind $1
+        update $1
+        upgrade $1
+        hook_hostname $1
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS autoremove --purge"
+        hook_create_fake_start_stop_daemon $1
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INCLUDES"
+        if [ $? -gt 0 ]; then
+            echo "Big problem!!!"
+            echo -e "===============ERRORE==============">>$LOG
+            log $1
+            echo -e "===================================">>$LOG
+            unbind $1
+            exit
+        fi
+        linux_firmware $1
+        add_user $1
+        set_locale $1
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INSTALL_DISTRO_DEPS"
+        if [ $? -gt 0 ]; then
+            echo "Big problem!!!"
+            echo -e "===============ERRORE==============">>$LOG
+            log $1
+            echo -e "===================================">>$LOG
+            unbind $1
+            exit
+        fi
+        hook_install_distro $1
         unbind $1
-        exit
     fi
-    linux_firmware $1
-    add_user $1
-    set_locale $1
-    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $INSTALL_DISTRO_DEPS"
-    if [ $? -gt 0 ]; then
-        echo "Big problem!!!"
-        echo -e "===============ERRORE==============">>$LOG
-        log
-        echo -e "===================================">>$LOG
-        unbind $1
-        exit
-    fi
-    hook_install_distro $1
-    unbind $1
 }
 
 ########################################################################
-#
+# fase3:
 ########################################################################
 function fase3() {
-    bind $1
-    chroot $1 dpkg --configure -a --force-confdef,confnew
-    chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
-    if [ $? -gt 0 ]; then
-        echo "Big problem!!!"
-        echo -e "===============ERRORE==============">>$LOG
-        log
-        echo -e "===================================">>$LOG
+    if [ $1 ]; then
+        bind $1
+        chroot $1 dpkg --configure -a --force-confdef,confnew
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
+        if [ $? -gt 0 ]; then
+            echo "Big problem!!!"
+            echo -e "===============ERRORE==============">>$LOG
+            log $1
+            echo -e "===================================">>$LOG
+            unbind $1
+            exit
+        fi
+        hook_synaptics $1
+        hook_restore_fake_start_stop_daemon $1
         unbind $1
-        exit
     fi
-    hook_synaptics $1
-    hook_restore_fake_start_stop_daemon $1
-    unbind $1
 }
 
 ########################################################################
-#
+# fase4:
 ########################################################################
 function fase4() {
-    update $1
-    bind $1
-    upgrade $1
-    if [ $? -gt 0 ]; then
-        echo "Big problem!!!"
-        echo -e "===============ERRORE==============">>$LOG
-        log
-        echo -e "===================================">>$LOG
+    if [ $1 ]; then
+        update $1
+        bind $1
+        upgrade $1
+        if [ $? -gt 0 ]; then
+            echo "Big problem!!!"
+            echo -e "===============ERRORE==============">>$LOG
+            log $1
+            echo -e "===================================">>$LOG
+            unbind $1
+            exit
+        fi
+        chroot $1 apt-get $APT_OPTS clean
+        chroot $1 apt-get $APT_OPTS autoremove --purge
+        chroot $1 dpkg --purge -a
+        [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $ROOT_DIR/home/snapshot/filesystem.squashfs-*
+        create_snapshot $1
         unbind $1
-        exit
     fi
-    chroot $1 apt-get $APT_OPTS clean
-    chroot $1 apt-get $APT_OPTS autoremove --purge
-    chroot $1 dpkg --purge -a
-    [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $VERBOSE $ROOT_DIR/home/snapshot/filesystem.squashfs-*
-    create_snapshot $1
-    unbind $1
 }
 
 ########################################################################
 #                         HOOKS                                        #
 ########################################################################
-#
+
 ########################################################################
+# update_hooks:
+########################################################################
+
 function update_hooks() {
-    hook_install_distro $1
-    hook_hostname $1
-    hook_synaptics $1
-    
-}
-########################################################################
-#                   hook_create_fake_start_stop_daemon                 #
-########################################################################
-function hook_create_fake_start_stop_daemon() {
-    chroot $1 cp -v /sbin/start-stop-daemon /sbin/start-stop-daemon.orig
-    chroot $1 touch /sbin/start-stop-daemon
-    chroot $1 chmod +x /sbin/start-stop-daemon
+    if [ $1 ]; then
+        hook_install_distro $1
+        hook_hostname $1
+        hook_synaptics $1
+    fi
 }
 
 ########################################################################
-#                  hook_restore_fake_start_stop_daemon                 #
+# hook_create_fake_start_stop_daemon:
+########################################################################
+
+function hook_create_fake_start_stop_daemon() {
+    if [ $1 ]; then
+        chroot $1 cp -v /sbin/start-stop-daemon /sbin/start-stop-daemon.orig
+        chroot $1 touch /sbin/start-stop-daemon
+        chroot $1 chmod +x /sbin/start-stop-daemon
+    fi
+}
+
+########################################################################
+# hook_restore_fake_start_stop_daemon:
 ########################################################################
 function hook_restore_fake_start_stop_daemon() {
-    chroot $1 cp -vf /sbin/start-stop-daemon.orig /sbin/start-stop-daemon
-    chroot $1 rm -vf /sbin/start-stop-daemon.orig
+    if [ $1 ]; then
+        chroot $1 cp -vf /sbin/start-stop-daemon.orig /sbin/start-stop-daemon
+        chroot $1 rm -vf /sbin/start-stop-daemon.orig
+    fi
 }
 
 ########################################################################
-#                   hook_install_distro                                #
+# hook_install_distro:
 ########################################################################
 function hook_install_distro() {
-    TMP="/tmp/scripts"
-    GIT_DIR="scripts"
-    chroot $1 mkdir -p $TMP
-    chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
-    chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
-    chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
-    #if [ $DIST = "ascii" ]; then
-    #   chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/
-    #   chroot $1 chmod $VERBOSE +x /usr/local/bin/yad_install_distro.sh
-    #fi
-    chroot $1 rm -R -f $VERBOSE ${TMP}
+    if [ $1 ]; then
+        TMP="/tmp/scripts"
+        GIT_DIR="scripts"
+        chroot $1 mkdir -p $TMP
+        chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
+        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
+        chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
+        chroot $1 rm -R -f $VERBOSE ${TMP}
+    fi
 }
 
 ########################################################################
-#                        hook_synaptics
+# hook_synaptics:
 ########################################################################
 function hook_synaptics() {
-    SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
+    if [ $1 ]; then
+        SYNAPTICS_CONF="# Example xorg.conf.d snippet that assigns the touchpad driver\n\
 # to all touchpads. See xorg.conf.d(5) for more information on\n\
 # InputClass.\n\
 # DO NOT EDIT THIS FILE, your distribution will likely overwrite\n\
@@ -1012,18 +1074,21 @@ Section \"InputClass\"\n\
         Option \"SoftButtonAreas\" \"0 0 0 0 0 0 0 0\"\n\
 EndSection\n\
 "
-    mkdir -p $1/etc/X11/xorg.conf.d
-    echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
+        mkdir -p $1/etc/X11/xorg.conf.d
+        echo -e "$SYNAPTICS_CONF" >$1/etc/X11/xorg.conf.d/50-synaptics.conf
+    fi
 }
 
 ########################################################################
-#                   hook_hostname
+# hook_hostname:
 ########################################################################
+
 function hook_hostname() {
-    cat > $1/etc/hostname <<EOF
+    if [ $1 ]; then
+        cat > $1/etc/hostname <<EOF
 ${HOSTNAME}
 EOF
-    cat > $1/etc/hosts <<EOF
+        cat > $1/etc/hosts <<EOF
 127.0.0.1       localhost
 127.0.1.1       ${HOSTNAME}
 ::1             localhost ip6-localhost ip6-loopback
@@ -1032,13 +1097,15 @@ ff00::0         ip6-mcastprefix
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 EOF
+    fi
 }
 
 ########################################################################
 
 ########################################################################
-#
+# check_script:
 ########################################################################
+
 function check_script() {
     if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
         DIST=ascii
@@ -1047,7 +1114,7 @@ function check_script() {
         ARCH=amd64
     fi
     if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ]; then
-        DE="xfce"
+        DE="cinnamon"
     fi
     if [ $(id -u) != 0 ]; then
         echo -e "\nUser $USER not is root."
@@ -1068,34 +1135,30 @@ function check_script() {
     case $DE in
         "mate")
             ;;
-        "xfce")
-            ;;
-        "lxde")
+        "xfce" | "lxde")
+            PACKAGES="wicd $PACKAGES"
             ;;
         "kde")
             ;;
         "cinnamon")
             ;;
     esac
-    PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups wicd geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+    PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
     set_distro_env
-########################################################################
     if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
         TYPE_SECONDARY_PART=7
     elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
         TYPE_SECONDARY_PART=c
     fi
-    
     if [ -n $DEVICE_USB ]; then
-        echo "device usb $DEVICE_USB"
-        echo "path to mount $PATH_TO_MOUNT"
-        echo "syslinux install path $SYSLINUX_INST"
-        echo "size primary partition $SIZE_PRIMARY_PART"
-        echo "size secondary filesystem $SIZE_SECONDARY_PART"
-        echo "tipo di  filesystem partizione secondaria $TYPE_SECONDARY_FS"
-        echo "tipo partizione secondaria $TYPE_SECONDARY_PART"
+        echo "device usb: $DEVICE_USB"
+        echo "path to mount: $PATH_TO_MOUNT"
+        echo "syslinux install path: $SYSLINUX_INST"
+        echo "size primary partition: $SIZE_PRIMARY_PART"
+        echo "size secondary filesystem: $SIZE_SECONDARY_PART"
+        echo "tipo di  filesystem partizione secondaria: $TYPE_SECONDARY_FS"
+        echo "tipo partizione secondaria: $TYPE_SECONDARY_PART"
     fi
-########################################################################
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
@@ -1112,7 +1175,7 @@ function check_script() {
 }
 
 ########################################################################
-#
+# help:
 ########################################################################
 function help() {
   echo -e "
@@ -1147,8 +1210,9 @@ Crea una live Devuan
 }
 
 ########################################################################
-#
+# main:
 ########################################################################
+
 [[ -z $1 ]] && help && exit
 until [ -z "${1}" ]
 do
