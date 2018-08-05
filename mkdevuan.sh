@@ -725,11 +725,7 @@ function unbind() {
 # log:
 ########################################################################
 function log() {
-    if [ $1 ]; then
-        echo -e "$(date):\n\tstage $1\n\tdistribution $DIST\n\troot directory 
-$ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone 
-$TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
-    fi
+    echo -e "$(date):\n\tstage $STAGE\n\tdistribution $DIST\n\troot directory $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
 }
 
 ########################################################################
@@ -848,14 +844,14 @@ function ceres() {
 ########################################################################
 function fase1() {
     if [ $1 ]; then
-        log $1
+        log
         [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
         mkdir -p $1
         $DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log $1
+            log
             echo -e "===================================">>$LOG
             exit
         fi
@@ -877,7 +873,7 @@ function fase2() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log $1
+            log
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -889,7 +885,7 @@ function fase2() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log $1
+            log
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -910,7 +906,7 @@ function fase3() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log $1
+            log
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -932,7 +928,7 @@ function fase4() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log $1
+            log
             echo -e "===================================">>$LOG
             unbind $1
             exit
