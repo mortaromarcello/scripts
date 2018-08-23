@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-
 set -v -x
 
 ########################################################################
-#
+# environment: variabili script
 ########################################################################
 
-DISTRO="Devuan"
 LOG="$(pwd)/mkdevuan.log"
 PATH_SCRIPTS=$(dirname $0)
 FRONTEND=noninteractive
@@ -22,7 +20,8 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-DE=cinnamon
+#DE=cinnamon
+DE=lxde
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
@@ -725,7 +724,7 @@ function unbind() {
 # log:
 ########################################################################
 function log() {
-    echo -e "$(date):\n\tstage $STAGE\n\tdistribution $DIST\n\troot directory $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
+    echo -e "Line:$1 - $(date):\n\tstage $STAGE\n\tdistribution $DIST\n\troot directory $ROOT_DIR\n\tkeyboard $KEYBOARD\n\tlocale $LOCALE\n\tlanguage $LANG\n\ttimezone $TIMEZONE\n\tdesktop $DE\n\tarchitecture $ARCH">>$LOG
 }
 
 ########################################################################
@@ -786,31 +785,16 @@ function create_snapshot() {
 # set_distro_env:
 ########################################################################
 function set_distro_env() {
-    if [ $DIST = "jessie" ]; then
-        APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged jessie-backports main contrib non-free"
-    elif [ $DIST = "ascii" ]; then
+    if [ $DIST = "ascii" ]; then
         APT_REPS="deb http://pkgmaster.devuan.org/merged ascii main contrib non-free\n"
-    elif [ $DIST = "ceres" ]; then
-        APT_REPS="deb http://pkgmaster.devuan.org/merged jessie main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ascii main contrib non-free\ndeb http://pkgmaster.devuan.org/merged ceres main contrib non-free\n"
+    elif [ $DIST = "beowulf" ]; then
+        APT_REPS="deb http://pkgmaster.devuan.org/merged ascii main contrib non-free\ndeb http://pkgmaster.devuan.org/merged beowulf main contrib non-free\n"
     fi
     if [ $COMPILE_BOOTSTRAP = 1 ]; then
         compile_debootstrap
     else
         apt-get install debootstrap
     fi
-}
-
-########################################################################
-# jessie:
-########################################################################
-
-function jessie() {
-    DIST="jessie"
-    check_script
-    fase1 $ROOT_DIR
-    fase2 $ROOT_DIR
-    fase3 $ROOT_DIR
-    fase4 $ROOT_DIR
 }
 
 ########################################################################
@@ -827,11 +811,11 @@ function ascii() {
 }
 
 ########################################################################
-# ceres:
+# beowulf:
 ########################################################################
 
-function ceres() {
-    DIST="ceres"
+function beowulf() {
+    DIST="beowulf"
     check_script
     fase1 $ROOT_DIR
     fase2 $ROOT_DIR
@@ -844,14 +828,15 @@ function ceres() {
 ########################################################################
 function fase1() {
     if [ $1 ]; then
-        log
+        log ${LINENO}
         [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
         mkdir -p $1
-        $DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
+        #$DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
+        $DEBOOTSTRAP_BIN --verbose --arch=$ARCH ascii $1 $MIRROR
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log
+            log ${LINENO}
             echo -e "===================================">>$LOG
             exit
         fi
@@ -873,7 +858,7 @@ function fase2() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log
+            log ${LINENO}
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -885,7 +870,7 @@ function fase2() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log
+            log ${LINENO}
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -906,7 +891,7 @@ function fase3() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log
+            log ${LINENO}
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -928,7 +913,7 @@ function fase4() {
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
-            log
+            log ${LINENO}
             echo -e "===================================">>$LOG
             unbind $1
             exit
@@ -1103,13 +1088,13 @@ EOF
 ########################################################################
 
 function check_script() {
-    if [ $DIST != jessie ] && [ $DIST != ascii ] && [ $DIST != ceres ]; then
+    if [ $DIST != ascii ] && [ $DIST != beowulf ]; then
         DIST=ascii
     fi
     if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
         ARCH=amd64
     fi
-    if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ]; then
+    if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ] && [ $DE != "gnome" ]; then
         DE="cinnamon"
     fi
     if [ $(id -u) != 0 ]; then
@@ -1117,12 +1102,7 @@ function check_script() {
         exit
     fi
     case $DIST in
-        "jessie")
-            if [ $DE = "kde" ]; then
-                PACKAGES="kde-l10n-$KEYBOARD bluedevil $PACKAGES"
-            fi
-            ;;
-        "ascii" | "ceres")
+        "ascii" | "beowulf")
             PACKAGES="gtk3-engines-breeze $PACKAGES"
             ;;
         *)
@@ -1132,11 +1112,12 @@ function check_script() {
         "mate")
             ;;
         "xfce" | "lxde")
-            PACKAGES="wicd $PACKAGES"
             ;;
         "kde")
             ;;
         "cinnamon")
+            ;;
+        "gnome")
             ;;
     esac
     PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
@@ -1186,19 +1167,14 @@ Crea una live Devuan
   -L | --lang                            :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
   -s | --stage <stage>                   :Numero fase:
-                                         1) crea la base del sistema
-                                         2) setta lo user, hostname e la lingua 
-                                            e i pacchetti indispensabili
-                                         3) installa pacchetti aggiuntivi e il
-                                            desktop
-                                         4) installa lo script d'installazione
-                                            e crea la iso.
-                                         min) fase 1 + fase 2 + fase 4
-                                         iso-upgrade) aggiorna la iso
-                                         jessie)
-                                         ascii)
-                                         ceres) crea le rispettive iso delle
-                                                distribuzioni.
+        1) crea la base del sistema
+        2) setta lo user, hostname e la lingua e i pacchetti indispensabili
+        3) installa pacchetti aggiuntivi e il desktop
+        4) installa lo script d'installazine e crea la iso.
+        min) fase 1 + fase 2 + fase 4
+        iso-upgrade) aggiorna la iso
+        ascii)
+        beowulf) crea le rispettive iso delle distribuzioni.
   -r | --root-dir <dir>                  :Directory della root
   -T | --timezone <timezone>             :Timezone (default 'Europe/Rome').
   -u | --user                            :Nome utente.
@@ -1342,16 +1318,14 @@ case $STAGE in
         check_script
         fase1 $ROOT_DIR
         fase2 $ROOT_DIR
+        hook_restore_fake_start_stop_daemon $ROOT_DIR
         fase4 $ROOT_DIR
-        ;;
-    jessie)
-        jessie
         ;;
     ascii)
         ascii
         ;;
-    ceres)
-        ceres
+    beowulf)
+        beowulf
         ;;
     iso-update)
         check_script

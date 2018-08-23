@@ -10,7 +10,7 @@ if [ ! $1 ] || [ ! $2 ]; then
 fi
 LOOP=$(losetup -f)
 STARTP1=$(parted $LOOP unit B p| awk 'FNR > 5 && $2 ~ /[0-9]/ {print $2}')
-if [ -n $STARTP1 ]; then
+if [ $STARTP1 ]; then
 	STARTP1=$(echo ${STARTP1:0:${#STARTP1} - 1})
 else
 	exit
