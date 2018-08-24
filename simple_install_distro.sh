@@ -333,7 +333,9 @@ function set_autologin() {
 		fi
 		if [ "${DM}" = "${LIGHTDM}" ]; then
 			LINE=$(grep "#autologin-user=" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf)
-			rpl  "${LINE}" "autologin=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
+			rpl "${LINE}" "autologin=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
+            LINE=$(grep "#autologin-user-timeout=" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf)
+            rpl "${LINE}" "autologin-user-timeout=0" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
 		elif [ "${DM}" = "${SLIM}" ]; then
 			LINE=$(grep "auto_login" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
 			rpl "${LINE}" "auto_login          yes" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
