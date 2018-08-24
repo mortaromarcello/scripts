@@ -1336,7 +1336,6 @@ case $STAGE in
         bind $ROOT_DIR
         update $ROOT_DIR
         upgrade $ROOT_DIR
-        hook_install_distro $ROOT_DIR
         unbind $ROOT_DIR
         ;;
     *)
