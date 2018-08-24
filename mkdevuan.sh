@@ -1171,7 +1171,7 @@ Crea una live Devuan
         3) installa pacchetti aggiuntivi e il desktop
         4) installa lo script d'installazine e crea la iso.
         min) fase 1 + fase 2 + fase 4
-        iso-upgrade) aggiorna la iso
+        iso-update) aggiorna la iso
         ascii)
         beowulf) crea le rispettive iso delle distribuzioni.
   -r | --root-dir <dir>                  :Directory della root

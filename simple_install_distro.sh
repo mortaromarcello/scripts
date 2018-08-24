@@ -169,6 +169,7 @@ function create_home_and_mount_partition() {
                 echo "La partizione ${HOME_PARTITION} non esiste. Esco."
                 exit 255
             fi
+            mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
         fi
     fi
     IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
