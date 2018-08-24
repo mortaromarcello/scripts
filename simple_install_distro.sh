@@ -17,7 +17,7 @@ function init() {
 	FORMAT_HOME="no"
 	SWAP_PARTITION=
 	UUID_SWAP_PARTITION=
-	SIZE_PRIMARY_PART=16G
+	#SIZE_PRIMARY_PART=16G
 	INST_ROOT_DIRECTORY="/mnt/${DISTRO}"
 	TYPE_FS="ext4"
 	USERNAME=
@@ -28,9 +28,9 @@ function init() {
 	LANG="it_IT.UTF-8"
 	KEYBOARD="it"
 	HOSTNAME="devuan"
-	SLIM=/usr/bin/slim
-	KDM=/usr/bin/kdm
-	LIGHTDM=/usr/bin/lightdm
+	SLIM="/usr/bin/slim"
+	KDM="/usr/bin/kdm"
+	LIGHTDM="/usr/sbin/lightdm"
 	if grep -q android /etc/group; then
 		ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,lp,dialout,netdev,android"
 	else

@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -v -x
+#!/bin/bash
+#set -v -x
 
 ########################################################################
 # environment: variabili script
@@ -20,12 +20,11 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-#DE=cinnamon
-DE=lxde
+DE=cinnamon
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
