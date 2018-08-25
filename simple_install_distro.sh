@@ -160,6 +160,11 @@ function create_root_and_mount_partition() {
 }
 
 function create_home_and_mount_partition() {
+    IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
+    if [ ! -z "$IS_MOUNTED" ]; then
+        echo "La partizione è montata. Esco."
+        exit
+    fi
     if [ ! -z ${HOME_PARTITION} ]; then
         if [ "$(fdisk -l ${INST_DRIVE} 2>/dev/null | grep ${HOME_PARTITION})" = "" ]; then
             echo "La partizione ${HOME_PARTITION} non esiste. Creare prima le partizioni."
@@ -169,22 +174,20 @@ function create_home_and_mount_partition() {
                 echo "La partizione ${HOME_PARTITION} non esiste. Esco."
                 exit 255
             fi
+            echo "Formatto la partizione."
+            read -r
             mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
         fi
-    fi
-    IS_MOUNTED=$(mount|grep ${HOME_PARTITION})
-    if [ ! -z "$IS_MOUNTED" ]; then
-        echo "La partizione è montata. Esco."
-        exit
-    fi
-    if [ ${FORMAT_HOME} = "si" ]; then
-        if [ "${YES_NO}" = "no" ]; then
-            read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
+    else
+        if [ ${FORMAT_HOME} = "si" ]; then
+            if [ "${YES_NO}" = "no" ]; then
+                read -rp "Attenzione! la partizione ${HOME_PARTITION} sarà formattata! Continuo?(si/no): " RESPONCE
+            fi
+            if [ "${RESPONCE}" = "no" ] || [ -z "${RESPONCE}" ]; then
+                exit
+            fi
+            mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
         fi
-        if [ "${RESPONCE}" = "no" ] || [ -z "${RESPONCE}" ]; then
-            exit
-        fi
-        mkfs -L HOME -t ${TYPE_FS} ${HOME_PARTITION}
     fi
     UUID_HOME_PARTITION=$(blkid -o value -s UUID ${HOME_PARTITION})
     mkdir -p ${INST_ROOT_DIRECTORY}/home
