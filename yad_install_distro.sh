@@ -51,6 +51,9 @@ function init() {
     LANGUAGE_CODE="it_IT.UTF-8"
     KEYBOARD="it"
     HOSTNAME="debian"
+    SLIM="/usr/bin/slim"
+    SDDM="/usr/bin/sddm"
+    LIGHTDM="/usr/sbin/lightdm"
     AUTOLOGIN="TRUE"
     ADD_GROUPS="cdrom,floppy,audio,dip,video,plugdev,lp,dialout,netdev"
     TIMEZONE="Europe/Rome"
@@ -210,7 +213,7 @@ function set_home_partition() {
             arr=($res)
             HOME_PARTITION=${arr[0]}
             FORMAT_HOME=${arr[1]}
-            echo -e "#-Imposto la partizione di home a: /dev/${HOME_PARTITION}-#" >> ${FILE_LOG}
+            echo -e "#-Impostasto la partizione di home a: /dev/${HOME_PARTITION}-#" >> ${FILE_LOG}
         else
             MESSAGE=" C'è stato un errore. Esco. "
             error_exit
@@ -224,6 +227,7 @@ function set_swap_partition() {
 }
 
 function set_user() {
+    echo -e "#-Imposto l'utente di default-#"
     res=$(yad --on-top --center --form --image="dialog-question" --separator='\n' \
         --field="Nome utente:" $USER \
         --field="Password:h"
@@ -246,6 +250,7 @@ function set_user() {
 }
 
 function set_root_password() {
+    echo -e "#-Imposto la password di root-#"
     res=$(yad --on-top --center --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
     if [ $res ]; then
         CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${res})
@@ -272,14 +277,14 @@ function create_root_and_mount_partition() {
     fi
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
     mkfs -F -t ${TYPE_FS} /dev/${ROOT_PARTITION}
-    echo -e " Formattata la partizione /dev/${ROOT_PARTITION}. " >> ${FILE_LOG}
+    echo -e "#-Formattata la partizione /dev/${ROOT_PARTITION}.-#" >> ${FILE_LOG}
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_ROOT_PARTITION=\$(blkid -o value -s UUID /dev/${ROOT_PARTITION})" &>> ${FILE_DEBUG} || \
     UUID_ROOT_PARTITION=$(blkid -o value -s UUID /dev/${ROOT_PARTITION})
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkdir -p ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
     mkdir -p ${INST_ROOT_DIRECTORY}
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount /dev/${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
     mount /dev/${ROOT_PARTITION} ${INST_ROOT_DIRECTORY}
-    echo -e "Montaggio di /dev/${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}\n" >> ${FILE_LOG}
+    echo -e "#-Montaggio di /dev/${ROOT_PARTITION} in ${INST_ROOT_DIRECTORY}-#" >> ${FILE_LOG}
 }
 
 function create_home_and_mount_partition() {
@@ -299,7 +304,7 @@ function create_home_and_mount_partition() {
             fi
             [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
             mkfs -F -t ${TYPE_FS} /dev/${HOME_PARTITION}
-            echo -e " Formattata la partizione /dev/${HOME_PARTITION} " >> ${FILE_LOG}
+            echo -e "#-Formattata la partizione /dev/${HOME_PARTITION}-#" >> ${FILE_LOG}
         fi
         [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:UUID_HOME_PARTITION=\$(blkid -o value -s UUID /dev/${HOME_PARTITION})" &>> ${FILE_DEBUG} || \
         UUID_HOME_PARTITION=$(blkid -o value -s UUID /dev/${HOME_PARTITION})
@@ -307,7 +312,7 @@ function create_home_and_mount_partition() {
         mkdir -p ${INST_ROOT_DIRECTORY}/home
         [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mount /dev/${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home" &>> ${FILE_DEBUG} || \
         mount /dev/${HOME_PARTITION} ${INST_ROOT_DIRECTORY}/home
-        echo -e "Montaggio di /dev/${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home\n" >> ${FILE_LOG}
+        echo -e "#-Montaggio di /dev/${HOME_PARTITION} in ${INST_ROOT_DIRECTORY}/home-#" >> ${FILE_LOG}
     fi
 }
 
@@ -328,6 +333,7 @@ function add_user() {
         MESSAGE=" Failed to add a user! "
         error_exit
     fi
+    echo -e "#-Aggiunto user ${USER}-#"
 }
 
 function add_sudo_user() {
@@ -428,7 +434,7 @@ function set_autologin() {
             rpl "${LINE}" "auto_login          yes" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
             LINE=$(grep "#default_user" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
             rpl "${LINE}" "default_user          ${USER}" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
-        elif [ "${DM}" = "${KDM}" ]; then
+        elif [ "${DM}" = "${SDDM}" ]; then
             LINE=$(grep "AutoLoginEnable=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
             rpl "${LINE}" "AutoLoginEnable=true" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
             LINE=$(grep "AutoLoginUser=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
