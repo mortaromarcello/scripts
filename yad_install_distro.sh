@@ -45,7 +45,6 @@ function init() {
     YES_NO="FALSE"
     FILE_DEBUG="./debug.txt"
     FILE_LOG="./log.txt"
-    FILES_WRITTEN="./files.writes"
     DISTRO="distro"
     INST_DRIVE="sda"
     LOCALE="it_IT.UTF-8 UTF-8"
@@ -69,7 +68,7 @@ function init() {
 function error_exit() {
     echo ${MESSAGE} >> ${FILE_LOG}
     [[ $PROC_ID ]] && kill -9 ${PROC_ID}
-    yad --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="\n${MESSAGE}\n"
+    yad --on-top --center --button=gtk-close --buttons-layout=center --image=gtk-dialog-error --text="\n${MESSAGE}\n"
     exit
 }
 
@@ -114,7 +113,7 @@ function parse_opts() {
 }
 
 function set_options() {
-    result=$(yad --center --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text=" Opzioni modificabili " \
+    result=$(yad --on-top --center --form --image "dialog-question" --separator='\n' --quoted-output --title="Opzioni" --text=" Opzioni modificabili " \
     --field="Nome distro:" "$DISTRO" \
     --field="Partizione di root:cb" "$partitionslist" \
     --field="Drive di installazione::cb" "$diskslist" \
@@ -190,37 +189,42 @@ function check_options() {
     fi
     if [ ${YES_NO} = "TRUE" ] && [ -z "${CRYPT_PASSWORD}" ]; then
         MESSAGE=" Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root. "
-        error_exit " Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root. "
+        error_exit
     fi
     if [ ${YES_NO} = "TRUE" ] && [ -z "${CRYPT_ROOT_PASSWORD}" ]; then
         MESSAGE=" Con l'opzione -y deve essere specificato lo user, la password cryptata dello user e la password cryptata di root. "
         error_exit
     fi
-    [ ${YES_NO} = "FALSE" ] && yad --center --button=gtk-close --image=gtk-dialog-info --text=" Script verificato. OK. "
+    #[ ${YES_NO} = "FALSE" ] && yad --center --button=gtk-close --image=gtk-dialog-info --text=" Script verificato. OK. "
 }
 
 function set_home_partition() {
-    echo -e "#-Imposto la partizione home a ${HOME_PARTITION}-#" >> ${FILE_LOG}
+    echo -e "#-Imposto la partizione home-#" >> ${FILE_LOG}
     if [ "${USE_HOME}" = "TRUE" ]; then
         list=$(echo ${partitionslist//$ROOT_PARTITION!/})
-        res=$(yad --center --form --image "dialog-question" --separator='\n' \
+        res=$(yad --on-top --center --form --image "dialog-question" --separator='\n' \
         --field="Partizione home:cb" "$list" \
         --field="Formattare la partizione:chk" $FORMAT_HOME
         )
-        arr=($res)
-        HOME_PARTITION=${arr[0]}
-        FORMAT_HOME=${arr[1]}
-        echo -e "Partizione di home /dev/${HOME_PARTITION}" >> ${FILE_LOG}
+        if [[ $res ]]; then
+            arr=($res)
+            HOME_PARTITION=${arr[0]}
+            FORMAT_HOME=${arr[1]}
+            echo -e "#-Imposto la partizione di home a: /dev/${HOME_PARTITION}-#" >> ${FILE_LOG}
+        else
+            MESSAGE=" C'è stato un errore. Esco. "
+            error_exit
+        fi
     fi
 }
 
 function set_swap_partition() {
     SWAP_PARTITION=$(fdisk -l|awk '{if ($0 ~ /[Ss]wap/) print $1}')
-    echo -e "Trovata partizione di swap ${SWAP_PARTITION}." >> ${FILE_LOG}
+    echo -e "#-Trovata partizione di swap ${SWAP_PARTITION}.-#" >> ${FILE_LOG}
 }
 
 function set_user() {
-    res=$(yad --center --form --image="dialog-question" --separator='\n' \
+    res=$(yad --on-top --center --form --image="dialog-question" --separator='\n' \
         --field="Nome utente:" $USER \
         --field="Password:h"
     )
@@ -238,18 +242,18 @@ function set_user() {
         error_exit
     fi
     CRYPT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${USER_PASSWORD})
-    echo -e "Utente ${USER}, password criptata ${CRYPT_PASSWORD}" >> ${FILE_LOG}
+    echo -e "#-Utente ${USER}, password criptata ${CRYPT_PASSWORD}-#" >> ${FILE_LOG}
 }
 
 function set_root_password() {
-    res=$(yad --center --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
+    res=$(yad --on-top --center --form --image="dialog-question" --separator='\n' --field="Passord di root:h")
     if [ $res ]; then
         CRYPT_ROOT_PASSWORD=$(perl -e 'print crypt($ARGV[0], "password")' ${res})
     else
         MESSAGE=" Bisogna inserire una password! Esco. "
         error_exit
     fi
-    echo -e "Password criptata di root ${CRYPT_ROOT_PASSWORD}" >> ${FILE_LOG}
+    echo -e "#-Password criptata di root ${CRYPT_ROOT_PASSWORD}-#" >> ${FILE_LOG}
 }
 
 function create_root_and_mount_partition() {
@@ -261,10 +265,9 @@ function create_root_and_mount_partition() {
         error_exit
     fi
     if [ ${YES_NO} = "FALSE" ]; then
-        yad --on-top --title="Attenzione!!!" \
+        ret=$(yad --on-top --title="Attenzione!!!" \
         --image=gtk-dialog-warning --text="Attenzione! La partizione /dev/${ROOT_PARTITION} sarà formattata! Continuo?" \
-        --button="gtk-ok:0" --button="gtk-close:1"
-        ret=$?
+        --button="gtk-ok:0" --button="gtk-close:1")
         [[ $ret -eq 1 ]] && MESSAGE=" Installazione interrotta " && error_exit
     fi
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
@@ -289,10 +292,9 @@ function create_home_and_mount_partition() {
     if [ ! -z ${HOME_PARTITION} ]; then
         if [ ${FORMAT_HOME} = "TRUE" ]; then
             if [ ${YES_NO} = "FALSE" ]; then
-                yad --on-top --title="Attenzione!!!" \
+                ret=$(yad --on-top --title="Attenzione!!!" \
                 --image=gtk-dialog-warning --text="Attenzione! La partizione /dev/${HOME_PARTITION} sarà formattata! Continuo?" \
-                --button="gtk-ok:0" --button="gtk-close:1"
-                ret=$?
+                --button="gtk-ok:0" --button="gtk-close:1")
                 [[ $ret -eq 1 ]] && MESSAGE=" Installazione interrotta " && error_exit
             fi
             [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:mkfs -t ${TYPE_FS} /dev/${HOME_PARTITION}" &>> ${FILE_DEBUG} || \
@@ -313,7 +315,7 @@ function copy_root() {
     SQUASH_FS="/lib/live/mount/rootfs/filesystem.squashfs"
     echo -e "#-Inizio copia del root system-#" >> ${FILE_LOG}
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:yad --progress --auto-close --pulsate | cp -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY}" &>> ${FILE_DEBUG} || \
-    rsync -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY} > ${FILES_WRITTEN}
+    rsync -av ${SQUASH_FS}/* ${INST_ROOT_DIRECTORY} >> ${FILE_LOG}
     echo -e "#-Fine copia del root system-#" >> ${FILE_LOG}
 }
 
@@ -363,7 +365,7 @@ EOF
 UUID=${UUID_SWAP_PARTITION} none swap sw 0 0
 EOF
     fi
-    echo -e "Aggiornato /etc/fstab.">>${FILE_LOG}
+    echo -e "#-Aggiornato /etc/fstab.-#">>${FILE_LOG}
 }
 
 function set_locale() {
@@ -410,26 +412,27 @@ EOF
 
 function set_autologin() {
     if [ ${AUTOLOGIN} = "TRUE" ]; then
-        echo -e "#-Imposto l'autologin di ${USER}-#" >> ${FILE_LOG}
+        echo -e "#-Imposto l'autologin per ${USER}-#" >> ${FILE_LOG}
         DM=$(cat "${INST_ROOT_DIRECTORY}"/etc/X11/default-display-manager)
         if [ "${DM}" = "" ]; then
             return
         fi
+        echo -e "Imposto l'autologin per il display manager ${DM}" >>${FILE_LOG}
         if [ "${DM}" = "${LIGHTDM}" ]; then
             LINE=$(grep "#autologin-user=" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf)
-            rpl "${LINE}" "autologin-user=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
+            rpl "${LINE}" "autologin-user=${USER}" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
             LINE=$(grep "#autologin-user-timeout=" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf)
             rpl "${LINE}" "autologin-user-timeout=0" "${INST_ROOT_DIRECTORY}"/etc/lightdm/lightdm.conf
         elif [ "${DM}" = "${SLIM}" ]; then
             LINE=$(grep "auto_login" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
             rpl "${LINE}" "auto_login          yes" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
             LINE=$(grep "#default_user" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
-            rpl "${LINE}" "default_user          ${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
+            rpl "${LINE}" "default_user          ${USER}" "${INST_ROOT_DIRECTORY}"/etc/slim.conf
         elif [ "${DM}" = "${KDM}" ]; then
             LINE=$(grep "AutoLoginEnable=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
             rpl "${LINE}" "AutoLoginEnable=true" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
             LINE=$(grep "AutoLoginUser=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
-            rpl "${LINE}" "AutoLoginUser=${USERNAME}" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
+            rpl "${LINE}" "AutoLoginUser=${USER}" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc
         fi
     fi
 }
@@ -459,13 +462,15 @@ function end() {
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:umount /dev/${ROOT_PARTITION}" &>> ${FILE_DEBUG} || \
     umount /dev/${ROOT_PARTITION}
     [ ${DEBUG} = "TRUE" ] && echo -e "-----------------------------------------------------------------------\ndebug_info ${LINENO}:Debug terminato:$(date)\n-----------------------------------------------------------------------" &>> ${FILE_DEBUG} || \
-    echo "Installazione terminata $(date)." >> ${FILE_LOG}
+    echo "#-Installazione terminata $(date).-#" >> ${FILE_LOG}
     kill -9 ${PROC_ID}
 }
 
 function run_inst(){
     parse_opts
     check_root
+    tail -f ${FILE_LOG} | yad --on-top --text-info --width=460 --height=200 --no-buttons --center --no-markup --tail &
+    PROC_ID=$!
     get_partitions_and_disks
     [ $YES_NO = "FALSE" ] && set_options
     check_debug
@@ -475,8 +480,6 @@ function run_inst(){
     [ -z $USER ] && set_user
     [ -z $CRYPT_PASSWORD ] && set_user
     [ -z $CRYPT_ROOT_PASSWORD ] && set_root_password
-    tail -f ${FILE_LOG} | yad --on-top --text-info --width=460 --height=200 --no-buttons --center --no-markup --tail &
-    PROC_ID=$!
     create_root_and_mount_partition
     create_home_and_mount_partition
     copy_root
