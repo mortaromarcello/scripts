@@ -745,6 +745,12 @@ function upgrade() {
     fi
 }
 
+function upgrade_packages() {
+    if [ $1 ]; then
+        chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
+    fi
+}
+
 ########################################################################
 #                  add_user
 ########################################################################
@@ -973,7 +979,7 @@ function hook_install_distro() {
         GIT_DIR="scripts"
         chroot $1 mkdir -p $TMP
         chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
-        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/simple_install_distro.sh /usr/local/bin/install_distro.sh
+        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/install_distro.sh
         chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
         chroot $1 rm -R -f $VERBOSE ${TMP}
     fi
@@ -1102,7 +1108,7 @@ function check_script() {
     fi
     case $DIST in
         "ascii" | "beowulf")
-            PACKAGES="gtk3-engines-breeze $PACKAGES"
+            PACKAGES="yad gtk3-engines-breeze $PACKAGES"
             ;;
         *)
             ;;
@@ -1329,6 +1335,7 @@ case $STAGE in
     iso-update)
         check_script
         update_hooks $ROOT_DIR
+        upgrade_packages $ROOT_DIR
         fase4 $ROOT_DIR
         ;;
     upgrade)
