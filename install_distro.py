@@ -759,27 +759,12 @@ class MyFrame(wx.Frame):
         self.progress_bar.Show()
         self.timer.Start(100)
         copied_files = 0
-        ver31 = is31rsync()
-        """
-        if ver31:
-            cmd = 'rsync -a --info=stats2 --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
-        else:
-            cmd = 'rsync -a --stats --dry-run %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
-
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        remainder = proc.communicate()[0]
-        if ver31:
-            mn = re.findall(r'reg: (\d+.*? )', remainder)
-            if mn: total_files = int(mn[0])
-        else:
-            mn = re.findall(r'Number of files: (\d+)', remainder)
-            if mn: total_files = int(mn[0].replace(',', ''))
-        """
         proc = subprocess.Popen("find %s -type f | wc -l" % (Glob.SQUASH_FS), shell=True, stdout=subprocess.PIPE)
         total_files = int(proc.communicate()[0])
         # debug
         print total_files
         #
+        ver31 = is31rsync()
         if ver31:
             cmd = 'rsync -av --info=progress2,stats2 %s/* %s' % (Glob.SQUASH_FS, Glob.INST_ROOT_DIRECTORY)
         else:

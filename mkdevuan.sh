@@ -1001,7 +1001,7 @@ NoDisplay=true
 Exec=sudo /usr/local/bin/install_distro.py
 Name=Install Distro
 Comment=
-Categories=System;Settings;
+Categories=GTK;System;Settings;
 Icon=/usr/local/bin/install_distro.png
 EOF
         chroot $1 rm -R -f $VERBOSE ${TMP}
