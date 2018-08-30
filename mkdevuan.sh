@@ -1004,7 +1004,7 @@ Exec=sudo /usr/local/bin/install_distro
 Name=Install Distro
 Comment=
 Categories=GTK;System;Settings;
-Icon=/usr/local/bin/install_distro.png
+Icon=/usr/local/share/install_distro/install_distro.png
 EOF
         chroot $1 rm -R -f $VERBOSE ${TMP}
     fi
