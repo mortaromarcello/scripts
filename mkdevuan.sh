@@ -741,13 +741,21 @@ function update() {
 ########################################################################
 function upgrade() {
     if [ $1 ]; then
+        bind $1
+        hook_create_fake_start_stop_daemon
         chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS dist-upgrade"
+        hook_restore_fake_start_stop_daemon
+        unbind $1
     fi
 }
 
 function upgrade_packages() {
     if [ $1 ]; then
+        bind $1
+        hook_create_fake_start_stop_daemon
         chroot $1 /bin/bash -c "DEBIAN_FRONTEND=$FRONTEND apt-get $APT_OPTS install $PACKAGES"
+        hook_restore_fake_start_stop_daemon
+        unbind $1
     fi
 }
 
@@ -954,9 +962,11 @@ function update_hooks() {
 
 function hook_create_fake_start_stop_daemon() {
     if [ $1 ]; then
-        chroot $1 cp -v /sbin/start-stop-daemon /sbin/start-stop-daemon.orig
-        chroot $1 touch /sbin/start-stop-daemon
-        chroot $1 chmod +x /sbin/start-stop-daemon
+        if [ ! -e /sbin/start-stop-daemon.orig ]; then
+            chroot $1 cp -v /sbin/start-stop-daemon /sbin/start-stop-daemon.orig
+            chroot $1 touch /sbin/start-stop-daemon
+            chroot $1 chmod +x /sbin/start-stop-daemon
+        fi
     fi
 }
 
@@ -965,8 +975,10 @@ function hook_create_fake_start_stop_daemon() {
 ########################################################################
 function hook_restore_fake_start_stop_daemon() {
     if [ $1 ]; then
-        chroot $1 cp -vf /sbin/start-stop-daemon.orig /sbin/start-stop-daemon
-        chroot $1 rm -vf /sbin/start-stop-daemon.orig
+        if [ -e /sbin/start-stop-daemon.orig ]; then
+            chroot $1 cp -vf /sbin/start-stop-daemon.orig /sbin/start-stop-daemon
+            chroot $1 rm -vf /sbin/start-stop-daemon.orig
+        fi
     fi
 }
 
@@ -980,7 +992,18 @@ function hook_install_distro() {
         chroot $1 mkdir -p $TMP
         chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
         chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/install_distro.sh
-        chroot $1 chmod $VERBOSE +x /usr/local/bin/install_distro.sh
+        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/install_distro.{py,png} /usr/local/bin/
+        cat > $1/usr/share/applications/install_distro.desktop <<EOF
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+NoDisplay=true
+Exec=sudo /usr/local/bin/install_distro.py
+Name=Install Distro
+Comment=
+Categories=System;Settings;
+Icon=/usr/local/bin/install_distro.png
+EOF
         chroot $1 rm -R -f $VERBOSE ${TMP}
     fi
 }
@@ -1125,7 +1148,7 @@ function check_script() {
         "gnome")
             ;;
     esac
-    PACKAGES="filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+    PACKAGES="mc spyder python-rope python-wxgtk3.0 python-parted filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
     set_distro_env
     if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
         TYPE_SECONDARY_PART=7

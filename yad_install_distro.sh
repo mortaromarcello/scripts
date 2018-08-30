@@ -340,7 +340,7 @@ function add_sudo_user() {
     echo -e "#-Aggiungo ${USER} al gruppo sudo-#" >> ${FILE_LOG}
     [ ${DEBUG} = "TRUE" ] && echo "debug_info ${LINENO}:chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo" &>> ${FILE_DEBUG} || \
     chroot ${INST_ROOT_DIRECTORY} gpasswd -a ${USER} sudo
-    echo -e "Aggiunto user ${USER} al gruppo 'sudo'.">>${FILE_LOG}
+    echo -e "#-Aggiunto user ${USER} al gruppo 'sudo'.-#">>${FILE_LOG}
 }
 
 function create_fstab() {
