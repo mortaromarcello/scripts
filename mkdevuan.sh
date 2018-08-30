@@ -992,7 +992,9 @@ function hook_install_distro() {
         chroot $1 mkdir -p $TMP
         chroot $1 git clone https://github.com/mortaromarcello/scripts.git $TMP/$GIT_DIR
         chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/yad_install_distro.sh /usr/local/bin/install_distro.sh
-        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/install_distro.{py,png} /usr/local/bin/
+        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/install_distro.py /usr/local/bin/
+        mkdir -p $1/usr/local/share/install_distro
+        chroot $1 cp $VERBOSE -a $TMP/$GIT_DIR/install_distro.png /usr/local/share/install_distro/
         cat > $1/usr/share/applications/install_distro.desktop <<EOF
 [Desktop Entry]
 Encoding=UTF-8
