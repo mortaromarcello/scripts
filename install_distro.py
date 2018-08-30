@@ -631,7 +631,7 @@ class MyFrame(wx.Frame):
         self.panel_info.Show()
         self.log.Show()
         self.sizer.Fit(self)
-        self.panel_info.updateInfo("\n Name Distro:\t\t\t\t%s\n Root partition:\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
+        self.panel_info.updateInfo("\n Name Distro:\t\t\t\t%s\n Root partition:\t\t\t\t%s\n" % (Glob.DISTRO, Glob.ROOT_PARTITION))
         if Glob.HOME_PARTITION: self.panel_info.updateInfo(" Home partition:\t\t\t%s\n" % Glob.HOME_PARTITION)
         if Glob.UUID_HOME_PARTITION: self.panel_info.updateInfo("UUID home partition:\t\t%s\n" % Glob.UUID_HOME_PARTITION)
         if Glob.SWAP_PARTITION: self.panel_info.updateInfo(" Swap partition:\t\t\t%s\n" % Glob.SWAP_PARTITION)
