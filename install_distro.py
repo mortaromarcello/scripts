@@ -448,7 +448,7 @@ class AdvancedDialog(wx.Dialog):
         self.dirs_to_copy = wx.TextCtrl(self)
         s1 = wx.StaticBoxSizer(wx.StaticBox(self, -1, _("Advertiment")), wx.VERTICAL)
         s1.Add(wx.StaticText(self, -1, _("Queste opzioni sono per installazioni particolari dove si\npresuppone che l'utente sappia quello che sta facendo.\n")), 0, wx.ALL, padding)
-        s2 = wx.FlexGridSizer(3, 2, padding, padding)
+        s2 = wx.FlexGridSizer(4, 2, padding, padding)
         s2.AddGrowableCol(1)
         s2.Add(wx.StaticText(self, -1, _("Path of Log File:")), 0, wx.ALIGN_CENTER_VERTICAL)
         s2.Add(self.path_file_log, 1, wx.EXPAND)
