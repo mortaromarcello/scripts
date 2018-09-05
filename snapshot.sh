@@ -226,6 +226,9 @@ FBRikPeeBwTAPQOwKWfW/gHAXXB2H4AlBGC1qsqtHwAwb/d5/zbaFzzTvAAeHIBmlaNfAGCW6nPy
 fhztC5HRPgALCcDWmgoHPwPAbbuPTR0AFh2AlelfALhN9U2jfTEoJG7qALDgACzZmP4FgL90nx83
 dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 "
+# modifica 5/09/2018
+snapshot_basename="snapshot"
+# fine modifica
 
 ########################################################################
 
@@ -233,40 +236,40 @@ dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 #
 ########################################################################
 function snapshot_configuration() {
-	error_log="/var/log/snapshot_errors.log"
-	work_dir="/home/work"
-	snapshot_dir="/home/snapshot"
-	save_work="no"
-	snapshot_excludes="/tmp/snapshot_exclude.list"
-	kernel_image="/vmlinuz"
-	initrd_image="/initrd.img"
-	stamp="datetime"
-	snapshot_basename="snapshot"
-	make_md5sum="yes"
-	make_isohybrid="yes"
-	edit_boot_menu="no"
-	iso_dir="/tmp/iso"
-	boot_menu="live.cfg"
-	nocopy="no"
-	text_editor="/usr/bin/nano"
-	pmount_fixed="yes"
-	update_mlocate="yes"
-	clear_geany="yes"
-	ssh_pass="yes"
-	patch_init_nosystemd="yes"
-	username="devuan"
-	#limit_cpu="no"
-	#limit="50"
-	rsync_option1="--delete-before"
-	rsync_option2=" --delete-excluded"
-	rsync_option3=""
-	text_editor="/usr/bin/nano"
-	mksq_opt="-info"
-	mkdir -p $iso_dir/isolinux
-	mkdir -p $iso_dir/live
-	echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
+    error_log="/var/log/snapshot_errors.log"
+    work_dir="/home/work"
+    snapshot_dir="/home/snapshot"
+    save_work="no"
+    snapshot_excludes="/tmp/snapshot_exclude.list"
+    kernel_image="/vmlinuz"
+    initrd_image="/initrd.img"
+    stamp="datetime"
+#    snapshot_basename="snapshot" # modifica 5/09/2018
+    make_md5sum="yes"
+    make_isohybrid="yes"
+    edit_boot_menu="no"
+    iso_dir="/tmp/iso"
+    boot_menu="live.cfg"
+    nocopy="no"
+    text_editor="/usr/bin/nano"
+    pmount_fixed="yes"
+    update_mlocate="yes"
+    clear_geany="yes"
+    ssh_pass="yes"
+    patch_init_nosystemd="yes"
+    username="devuan"
+    #limit_cpu="no"
+    #limit="50"
+    rsync_option1="--delete-before"
+    rsync_option2=" --delete-excluded"
+    rsync_option3=""
+    text_editor="/usr/bin/nano"
+    mksq_opt="-info"
+    mkdir -p $iso_dir/isolinux
+    mkdir -p $iso_dir/live
+    echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
 
-	cat > /tmp/snapshot_exclude.list <<EOF
+    cat > /tmp/snapshot_exclude.list <<EOF
 - /dev/*
 - /cdrom/*
 - /media/*
@@ -424,62 +427,62 @@ function snapshot_configuration() {
 #- /home/*/.[a-z,A-Z,0-9]*
 EOF
 
-	########################################################################
-	# files isolinux
-	########################################################################
-	cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
+    ########################################################################
+    # files isolinux
+    ########################################################################
+    cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
 label menu
-	kernel /isolinux/vesamenu.c32
-	config isolinux.cfg
+    kernel /isolinux/vesamenu.c32
+    config isolinux.cfg
 EOF
 
-	cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
+    cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
 include menu.cfg
 default /isolinux/vesamenu.c32
 prompt 0
 timeout 200
 EOF
 
-	cat > /tmp/iso/isolinux/live.cfg<<EOF
+    cat > /tmp/iso/isolinux/live.cfg<<EOF
 label live
 menu label \${DISTRO} (default)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label nox
-	menu label \${DISTRO} (text-mode)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (text-mode)
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} 3 \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label nomodeset
-	menu label \${DISTRO} (no modeset)
-	kernel /live/vmlinuz nomodeset
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (no modeset)
+    kernel /live/vmlinuz nomodeset
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label toram
-	menu label \${DISTRO} (load to RAM)
-	kernel /live/vmlinuz
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (load to RAM)
+    kernel /live/vmlinuz
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} toram \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label noprobe
-	menu label \${DISTRO} (no probe)
-	kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
-	append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
+    menu label \${DISTRO} (no probe)
+    kernel /live/vmlinuz noapic noapm nodma nomce nolapic nosmp vga=normal\n\
+    append initrd=/live/initrd.img boot=live \${netconfig_opt} \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence
 
 label memtest
-	menu label Memory test
-	kernel /live/memtest
+    menu label Memory test
+    kernel /live/memtest
 
 label chain.c32 hd0,0
-	menu label Boot hard disk
-	chain.c32 hd0,0
+    menu label Boot hard disk
+    chain.c32 hd0,0
 
 label harddisk
-	menu label Boot hard disk (old way)
-	localboot 0x80
+    menu label Boot hard disk (old way)
+    localboot 0x80
 EOF
 
-	cat > /tmp/iso/isolinux/menu.cfg<<EOF
+    cat > /tmp/iso/isolinux/menu.cfg<<EOF
 menu hshift 6
 menu width 64
 
@@ -487,19 +490,19 @@ menu title Live Media
 include stdmenu.cfg
 include live.cfg
 label help
-	menu label Help
-	config prompt.cfg
+    menu label Help
+    config prompt.cfg
 EOF
 
-	cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
+    cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
 menu background /isolinux/splash.png
-menu color title	* #FFFFFFFF *
-menu color border	* #00000000 #00000000 none
-menu color sel		* #ffffffff #76a1d0ff *
-menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
-menu color tabmsg	* #f9f885 #00000000 *
+menu color title    * #FFFFFFFF *
+menu color border   * #00000000 #00000000 none
+menu color sel      * #ffffffff #76a1d0ff *
+menu color hotsel   1;7;37;40 #ffffffff #76a1d0ff *
+menu color tabmsg   * #f9f885 #00000000 *
 menu color cmdline 0 #f9f885 #00000000
-menu color help		37;40 #ffdddd00 #00000000 none
+menu color help     37;40 #ffdddd00 #00000000 none
 menu vshift 8
 menu rows 12
 #menu helpmsgrow 15
@@ -509,7 +512,7 @@ menu rows 12
 menu tabmsg Press ENTER to boot or TAB to edit a menu entry
 EOF
 
-	cat > /tmp/iso/isolinux/f1.txt<<EOF
+    cat > /tmp/iso/isolinux/f1.txt<<EOF
                   0fLive Media07                                07
 
 
@@ -523,14 +526,14 @@ EOF
 <09F707>   unused
 <09F807>   Where to get more help
 <09F907>   unused
-<09F1007>	Copyrights and Warranties (Debian)
+<09F1007> Copyrights and Warranties (Debian)
 You may:
 - press F2 through F9 to read about the topic
 - type 0fmenu07 and press ENTER to go back to the boot screen
 - press ENTER to boot
 EOF
 
-	cat > /tmp/iso/isolinux/f2.txt<<EOF
+    cat > /tmp/iso/isolinux/f2.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -543,7 +546,7 @@ You may:
 
 EOF
 
-	cat > /tmp/iso/isolinux/f3.txt<<EOF
+    cat > /tmp/iso/isolinux/f3.txt<<EOF
                   0fBOOT METHODS07                                07
 
 0fMethods list here must correspond to entries in your boot menu. 07                                                                  09F307
@@ -572,7 +575,7 @@ You may:
 
 EOF
 
-	cat > /tmp/iso/isolinux/f4.txt<<EOF
+    cat > /tmp/iso/isolinux/f4.txt<<EOF
                   0fLive-Boot Options07                                07
 
 ___ Additional boot options ___
@@ -584,7 +587,7 @@ in combination with the boot method (see <09F307>).
 0fswapon07         Use local swap partitions
 0fnofastboot07     Enable filesystem check
 0fnomodeset07      Disable kernel mode setting
-0ftoram07          Copy whole read-only media to RAM		
+0ftoram07          Copy whole read-only media to RAM      
 0fnoapic nolapic07 Disable buggy APIC interrupt routing   
 0fsingle07         Single-user mode (runlevel 1)
 0facpi=noirq07 or 0facpi=off07      (partly) disable ACPI                  
@@ -600,7 +603,7 @@ You may:
 
 EOF
 
-	cat > /tmp/iso/isolinux/f5.txt<<EOF
+    cat > /tmp/iso/isolinux/f5.txt<<EOF
                   0fLanguage and Keyboard07                                07
 
 You can specify the default language at the boot prompt below in combination 
@@ -626,7 +629,7 @@ You may:
 - press ENTER to boot
 EOF
 
-	cat > /tmp/iso/isolinux/f6.txt<<EOF
+    cat > /tmp/iso/isolinux/f6.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -638,7 +641,7 @@ You may:
 - press ENTER to boot
 EOF
 
-	cat > /tmp/iso/isolinux/f7.txt<<EOF
+    cat > /tmp/iso/isolinux/f7.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -650,7 +653,7 @@ You may:
 - press ENTER to boot
 EOF
 
-	cat > /tmp/iso/isolinux/f8.txt<<EOF
+    cat > /tmp/iso/isolinux/f8.txt<<EOF
                   0fRefracta!07                                07
 
 Where to get more help:
@@ -670,7 +673,7 @@ You may:
 - press ENTER to boot
 EOF
 
-	cat > /tmp/iso/isolinux/f9.txt<<EOF
+    cat > /tmp/iso/isolinux/f9.txt<<EOF
 0fTITLE07                                                    09F1007
 
 
@@ -683,7 +686,7 @@ You may:
 
 EOF
 
-	cat > /tmp/iso/isolinux/f10.txt<<EOF
+    cat > /tmp/iso/isolinux/f10.txt<<EOF
 0fCOPYRIGHTS AND WARRANTIES07                                                    09F1007
 
 Debian GNU/Linux is Copyright (C) 1993-2011 Software in the Public Interest,
@@ -716,8 +719,8 @@ EOF
 function unpatch_init() {
 
 #  Check for previous patch.
-	if $(grep -q nuke "$target_file") ; then
-		echo "
+    if $(grep -q nuke "$target_file") ; then
+        echo "
 It looks like $target_file was previously patched by an 
 earlier version of snapshot. This patch is no longer needed.
 You can comment out the added lines as shown below (or remove the
@@ -728,114 +731,114 @@ it won't hurt anything if you leave it the way it is.
 
 Do not change or remove the lines that begin with \"mount\"
 
-	mount -n -o move /sys ${rootmnt}/sys
-	#nuke /sys
-	#ln -s ${rootmnt}/sys /sys
-	mount -n -o move /proc ${rootmnt}/proc
-	#nuke /proc
-	#ln -s ${rootmnt}/proc /proc
+    mount -n -o move /sys ${rootmnt}/sys
+    #nuke /sys
+    #ln -s ${rootmnt}/sys /sys
+    mount -n -o move /proc ${rootmnt}/proc
+    #nuke /proc
+    #ln -s ${rootmnt}/proc /proc
 "
-	
-		while true ; do
-			echo "Open $target_file in an editor? (y/N)"
-			read ans
-			case $ans in
-				[Yy]*)	"$text_editor" "$target_file"
-						update-initramfs -u
-						break ;;
-					*)	break ;;
-			esac
-		done
-	echo -e "\n  Wait for the disk report to complete...\n\n"
-	fi
+    
+        while true ; do
+            echo "Open $target_file in an editor? (y/N)"
+            read ans
+            case $ans in
+                [Yy]*)  "$text_editor" "$target_file"
+                        update-initramfs -u
+                        break ;;
+                    *)  break ;;
+            esac
+        done
+    echo -e "\n  Wait for the disk report to complete...\n\n"
+    fi
 }
 
 ########################################################################
 # Function to check for old snapshots and filesystem copy
 ########################################################################
 function check_copies() {
-	# Check how many snapshots already exist and their total size
-	if [[ -d $snapshot_dir ]]; then
-		if ls "$snapshot_dir"/*.iso > /dev/null ; then
-			snapshot_count=$(ls "$snapshot_dir"/*.iso | wc -l)
-		else
-			snapshot_count="0"
-		fi
-		snapshot_size=$(du -sh "$snapshot_dir" | awk '{print $1}')
-		if [[ -z $snapshot_size ]]; then
-			snapshot_size="0 bytes"
-		fi
-	else
-		snapshot_count="0"
-		snapshot_size="0 bytes"
-	fi
+    # Check how many snapshots already exist and their total size
+    if [[ -d $snapshot_dir ]]; then
+        if ls "$snapshot_dir"/*.iso > /dev/null ; then
+            snapshot_count=$(ls "$snapshot_dir"/*.iso | wc -l)
+        else
+            snapshot_count="0"
+        fi
+        snapshot_size=$(du -sh "$snapshot_dir" | awk '{print $1}')
+        if [[ -z $snapshot_size ]]; then
+            snapshot_size="0 bytes"
+        fi
+    else
+        snapshot_count="0"
+        snapshot_size="0 bytes"
+    fi
 
-	# Check for saved copy of the system
-	if [[ -d "$work_dir"/myfs ]]; then
-		saved_size=$(du -sh "$work_dir"/myfs | awk '{ print $1 }')
-		saved_copy=$(echo "* You have a saved copy of the system using $saved_size of space
+    # Check for saved copy of the system
+    if [[ -d "$work_dir"/myfs ]]; then
+        saved_size=$(du -sh "$work_dir"/myfs | awk '{ print $1 }')
+        saved_copy=$(echo "* You have a saved copy of the system using $saved_size of space
    located at $work_dir/myfs.")
-	fi
+    fi
 
-	# Create a message to say whether the filesystem copy will be saved or not.
-	if [[ $save_work = "yes" ]]; then
-		save_message=$(echo "* The temporary copy of the filesystem will be saved at $work_dir/myfs.")
-	else
-		save_message=$(echo "* The temporary copy of the filesystem will be created at $work_dir/myfs and removed when this program finishes.")
-	fi
+    # Create a message to say whether the filesystem copy will be saved or not.
+    if [[ $save_work = "yes" ]]; then
+        save_message=$(echo "* The temporary copy of the filesystem will be saved at $work_dir/myfs.")
+    else
+        save_message=$(echo "* The temporary copy of the filesystem will be created at $work_dir/myfs and removed when this program finishes.")
+    fi
 }
 
 ########################################################################
 # Create snapshot_dir and work_dir if necessary.
 ########################################################################
 function check_directories() {
-	# Don't use /media/* for $snapshot_dir or $work_dir unless it is a mounted filesystem
-	snapdir_is_remote=$(echo ${snapshot_dir} | awk -F / '{ print "/" $2 "/" $3 }' | grep /media/)
-	workdir_is_remote=$(echo ${work_dir} | awk -F / '{ print "/" $2 "/" $3 }' | grep /media/)
-	if [ -n "$snapdir_is_remote" ] && cat /proc/mounts | grep -q ${snapdir_is_remote}; then
-		echo "$snapshot_dir is mounted"
-	elif [ -n "$snapdir_is_remote" ] ; then
-		echo " Error.. The selected snapshot directory cannot be accessed. Do you need to mount it?"
-		exit 1
-	fi
-	if [ -n "$workdir_is_remote" ] && cat /proc/mounts | grep -q ${workdir_is_remote}; then
-		echo "$work_dir is mounted"
-	elif [ -n "$workdir_is_remote" ] ; then
-		echo " Error.. The selected work directory cannot be accessed. Do you need to mount it?"
-		exit 1
-	fi
-	# Check that snapshot_dir exists
-	if ! [[ -d $snapshot_dir ]]; then
-		mkdir -p "$snapshot_dir"
-		chmod 777 "$snapshot_dir"
-	fi
-	# Check that work directories exist or create them.
-	if [[ $save_work = "no" ]]; then
-		if [[ -d $work_dir ]]; then
-			rm -rf "$work_dir"
-		fi
-		mkdir -p "$work_dir"/iso
-		mkdir -p "$work_dir"/myfs
-	elif [[ $save_work = "yes" ]]; then
-		if ! [[ -d $work_dir ]]; then
-			mkdir -p "$work_dir"/iso
-			mkdir -p "$work_dir"/myfs
-		fi
-	fi
+    # Don't use /media/* for $snapshot_dir or $work_dir unless it is a mounted filesystem
+    snapdir_is_remote=$(echo ${snapshot_dir} | awk -F / '{ print "/" $2 "/" $3 }' | grep /media/)
+    workdir_is_remote=$(echo ${work_dir} | awk -F / '{ print "/" $2 "/" $3 }' | grep /media/)
+    if [ -n "$snapdir_is_remote" ] && cat /proc/mounts | grep -q ${snapdir_is_remote}; then
+        echo "$snapshot_dir is mounted"
+    elif [ -n "$snapdir_is_remote" ] ; then
+        echo " Error.. The selected snapshot directory cannot be accessed. Do you need to mount it?"
+        exit 1
+    fi
+    if [ -n "$workdir_is_remote" ] && cat /proc/mounts | grep -q ${workdir_is_remote}; then
+        echo "$work_dir is mounted"
+    elif [ -n "$workdir_is_remote" ] ; then
+        echo " Error.. The selected work directory cannot be accessed. Do you need to mount it?"
+        exit 1
+    fi
+    # Check that snapshot_dir exists
+    if ! [[ -d $snapshot_dir ]]; then
+        mkdir -p "$snapshot_dir"
+        chmod 777 "$snapshot_dir"
+    fi
+    # Check that work directories exist or create them.
+    if [[ $save_work = "no" ]]; then
+        if [[ -d $work_dir ]]; then
+            rm -rf "$work_dir"
+        fi
+        mkdir -p "$work_dir"/iso
+        mkdir -p "$work_dir"/myfs
+    elif [[ $save_work = "yes" ]]; then
+        if ! [[ -d $work_dir ]]; then
+            mkdir -p "$work_dir"/iso
+            mkdir -p "$work_dir"/myfs
+        fi
+    fi
 }
 
 ########################################################################
 # Check disk space on mounted /, /home, /media, /mnt, /tmp
 ########################################################################
 function check_space() {
-	disk_space=$(df -h -x tmpfs -x devtmpfs -x iso9660 | awk '{ print "  " $2 "\t" $3 "\t" $4 "\t" $5 "  \t" $6 "\t\t\t" $1 }')
+    disk_space=$(df -h -x tmpfs -x devtmpfs -x iso9660 | awk '{ print "  " $2 "\t" $3 "\t" $4 "\t" $5 "  \t" $6 "\t\t\t" $1 }')
 }
 
 ########################################################################
 # Show current settings and disk space
 ########################################################################
 function report_space() {
-	echo "
+    echo "
  You will need plenty of free space. It is recommended that free space 
  (Avail) in the partition that holds the work directory (probably \"/\")
  should be two times the total installed system size (Used). You can 
@@ -866,47 +869,47 @@ function report_space() {
 #
 ########################################################################
 function copy_isolinux() {
-	if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]] ; then
-		isolinuxbin="/usr/lib/ISOLINUX/isolinux.bin"
-	elif [[ -f /usr/lib/syslinux/isolinux.bin ]] ; then
-		isolinuxbin="/usr/lib/syslinux/isolinux.bin"
-	else
-		echo "You need to install the isolinux package."
-		exit 1
-	fi
+    if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]] ; then
+        isolinuxbin="/usr/lib/ISOLINUX/isolinux.bin"
+    elif [[ -f /usr/lib/syslinux/isolinux.bin ]] ; then
+        isolinuxbin="/usr/lib/syslinux/isolinux.bin"
+    else
+        echo "You need to install the isolinux package."
+        exit 1
+    fi
 
-	### Might need to add chain.c32 to this list of copied files:
-	if [[ -f /usr/lib/syslinux/modules/bios/vesamenu.c32 ]] ; then
-		vesamenu="/usr/lib/syslinux/modules/bios/vesamenu.c32"
-		rsync -va /usr/lib/syslinux/modules/bios/chain.c32 "$iso_dir"/isolinux/
-		rsync -va /usr/lib/syslinux/modules/bios/ldlinux.c32 "$iso_dir"/isolinux/
-		rsync -va /usr/lib/syslinux/modules/bios/libcom32.c32 "$iso_dir"/isolinux/
-		rsync -va /usr/lib/syslinux/modules/bios/libutil.c32 "$iso_dir"/isolinux/
-	else
-		vesamenu="/usr/lib/syslinux/vesamenu.c32"
-	fi
-	rsync -va "$isolinuxbin" "$iso_dir"/isolinux/
-	rsync -va "$vesamenu" "$iso_dir"/isolinux/
+    ### Might need to add chain.c32 to this list of copied files:
+    if [[ -f /usr/lib/syslinux/modules/bios/vesamenu.c32 ]] ; then
+        vesamenu="/usr/lib/syslinux/modules/bios/vesamenu.c32"
+        rsync -va /usr/lib/syslinux/modules/bios/chain.c32 "$iso_dir"/isolinux/
+        rsync -va /usr/lib/syslinux/modules/bios/ldlinux.c32 "$iso_dir"/isolinux/
+        rsync -va /usr/lib/syslinux/modules/bios/libcom32.c32 "$iso_dir"/isolinux/
+        rsync -va /usr/lib/syslinux/modules/bios/libutil.c32 "$iso_dir"/isolinux/
+    else
+        vesamenu="/usr/lib/syslinux/vesamenu.c32"
+    fi
+    rsync -va "$isolinuxbin" "$iso_dir"/isolinux/
+    rsync -va "$vesamenu" "$iso_dir"/isolinux/
 }
 
 ########################################################################
 #
 ########################################################################
 function copy_kernel() {
-	rsync -va "$iso_dir"/ "$work_dir"/iso/
-	cp -v "$kernel_image" "$work_dir"/iso/live/
-	cp -v "$initrd_image" "$work_dir"/iso/live/
-	if [ -f /usr/lib/syslinux/memdisk ]; then
-		cp -v /usr/lib/syslinux/memdisk "$work_dir"/iso/live/
-	fi
+    rsync -va "$iso_dir"/ "$work_dir"/iso/
+    cp -v "$kernel_image" "$work_dir"/iso/live/
+    cp -v "$initrd_image" "$work_dir"/iso/live/
+    if [ -f /usr/lib/syslinux/memdisk ]; then
+        cp -v /usr/lib/syslinux/memdisk "$work_dir"/iso/live/
+    fi
 }
 
 ########################################################################
 # Copy the filesystem
 ########################################################################
 function copy_filesystem() {
-	rsync -av / myfs/ ${rsync_option1} ${rsync_option2} ${rsync_option3} \
-	--exclude="$work_dir" --exclude="$snapshot_dir" --exclude-from="$snapshot_excludes"
+    rsync -av / myfs/ ${rsync_option1} ${rsync_option2} ${rsync_option3} \
+    --exclude="$work_dir" --exclude="$snapshot_dir" --exclude-from="$snapshot_excludes"
 }
 
 ########################################################################
@@ -914,51 +917,51 @@ function copy_filesystem() {
 ########################################################################
 function snapshot() {
 
-	snapshot_configuration
-	exec 2>"$error_log"
+    snapshot_configuration
+    exec 2>"$error_log"
 
-	if [[ $DEBUG = "yes" ]] ; then
-		set -x
-	fi
+    if [[ $DEBUG = "yes" ]] ; then
+        set -x
+    fi
 
-	# Default text editor is nano. Make sure it exists if user intends to
-	# edit files before squashing the filesystem.
-	if [[ $edit_boot_menu = "yes" ]] ; then
-		[[ -e $text_editor ]] || { echo -e "\n Error! The text editor is set to ${text_editor},
+    # Default text editor is nano. Make sure it exists if user intends to
+    # edit files before squashing the filesystem.
+    if [[ $edit_boot_menu = "yes" ]] ; then
+        [[ -e $text_editor ]] || { echo -e "\n Error! The text editor is set to ${text_editor},
  but it is not installed. Edit $configfile
  and set the text_editor variable to the editor of your choice.
  (examples: /usr/bin/vim, /usr/bin/joe)\n" ; exit 1 ; }
-	fi
+    fi
 
-	# Test for systemd, util-linux version and patch intramfs-tools/init.
-	if [[ $patch_init_nosystemd = "yes" ]] ; then
-		utillinux_version=$(dpkg -l util-linux | awk '/util-linux/ { print $3 }' | cut -d. -f2)
-		target_file="/usr/share/initramfs-tools/init"
-		if [[ ! -h /sbin/init ]] ; then 
-			if [[ $utillinux_version -ge 25 ]] ; then
-				unpatch_init
-			fi
-		fi
-	fi
+    # Test for systemd, util-linux version and patch intramfs-tools/init.
+    if [[ $patch_init_nosystemd = "yes" ]] ; then
+        utillinux_version=$(dpkg -l util-linux | awk '/util-linux/ { print $3 }' | cut -d. -f2)
+        target_file="/usr/share/initramfs-tools/init"
+        if [[ ! -h /sbin/init ]] ; then 
+            if [[ $utillinux_version -ge 25 ]] ; then
+                unpatch_init
+            fi
+        fi
+    fi
 
-	# Use the login name set in the config file. If not set, use the primary
-	# user's name. If the name is not "user" then add boot option. ALso use
-	# the same username for cleaning geany history.
+    # Use the login name set in the config file. If not set, use the primary
+    # user's name. If the name is not "user" then add boot option. ALso use
+    # the same username for cleaning geany history.
 
-	if [[ -n "$username" ]] ; then
-		username_opt="username=$username"
-	else
-		username=$(awk -F":" '/1000:1000/ { print $1 }' /etc/passwd)
-		if [[ $username != user ]] ; then
-			username_opt="username=$username"
-		fi
-	fi
+    if [[ -n "$username" ]] ; then
+        username_opt="username=$username"
+    else
+        username=$(awk -F":" '/1000:1000/ { print $1 }' /etc/passwd)
+        if [[ $username != user ]] ; then
+            username_opt="username=$username"
+        fi
+    fi
 
-	# Check that kernel and initrd exist
-	[[ -e "$kernel_image" ]] || kernel_message=" Warning:   Kernel image is missing. "
-	[[ -e "$initrd_image" ]] || initrd_message=" Warning:   initrd image is missing. "
-	if [[ -n "$kernel_message" ]] || [[ -n "$initrd_message" ]] ; then
-		echo "
+    # Check that kernel and initrd exist
+    [[ -e "$kernel_image" ]] || kernel_message=" Warning:   Kernel image is missing. "
+    [[ -e "$initrd_image" ]] || initrd_message=" Warning:   initrd image is missing. "
+    if [[ -n "$kernel_message" ]] || [[ -n "$initrd_message" ]] ; then
+        echo "
 $kernel_message
 $initrd_message
 
@@ -966,254 +969,260 @@ $initrd_message
  set in the config file are correct, and check 
  that the boot menu is also correct.
 "
-		exit 1
-	fi
+        exit 1
+    fi
 
-	check_copies
-	check_directories
-	check_space
-	report_space
+    check_copies
+    check_directories
+    check_space
+    report_space
 
-	# Prepare initrd to use encryption
-	# This is only going to work if the latest kernel version is running.
-	# (i.e. the one linked from /initrd.img)
-	if [[ $initrd_crypt = "yes" ]] ; then
-		if ! [[ -f /initrd.img_pre-snapshot ]] ; then
-			cp -v /initrd.img /initrd.img_pre-snapshot
-		fi
-		if [[ -f /usr/sbin/update-initramfs.orig.initramfs-tools ]] ; then
-			CRYPTSETUP=y usr/sbin/update-initramfs.orig.initramfs-tools -u
-		else 
-			CRYPTSETUP=y usr/sbin/update-initramfs -u
-		fi
-	fi
+    # Prepare initrd to use encryption
+    # This is only going to work if the latest kernel version is running.
+    # (i.e. the one linked from /initrd.img)
+    if [[ $initrd_crypt = "yes" ]] ; then
+        if ! [[ -f /initrd.img_pre-snapshot ]] ; then
+            cp -v /initrd.img /initrd.img_pre-snapshot
+        fi
+        if [[ -f /usr/sbin/update-initramfs.orig.initramfs-tools ]] ; then
+            CRYPTSETUP=y usr/sbin/update-initramfs.orig.initramfs-tools -u
+        else 
+            CRYPTSETUP=y usr/sbin/update-initramfs -u
+        fi
+    fi
 
-	# updated the mlocate database 
-	if [[ $update_mlocate = "yes" ]]; then
-		echo -e "\nRunning updatedb...\n"
-		updatedb
-	fi
+    # updated the mlocate database 
+    if [[ $update_mlocate = "yes" ]]; then
+        echo -e "\nRunning updatedb...\n"
+        updatedb
+    fi
 
-	# The real work starts here
-	cd "$work_dir"
+    # The real work starts here
+    cd "$work_dir"
 
-	# @@@@  Warning: This will replace these files in custom iso_dir  @@@@@
-	#copy some isolinux stuff from the system to the snapshot
+    # @@@@  Warning: This will replace these files in custom iso_dir  @@@@@
+    #copy some isolinux stuff from the system to the snapshot
 
 
-	# Let iso/, vmlinuz and initrd.img get copied, even if work_dir was saved,
-	# in case they have changed, unless $nocopy = yes.
+    # Let iso/, vmlinuz and initrd.img get copied, even if work_dir was saved,
+    # in case they have changed, unless $nocopy = yes.
 
-	if [ "$nocopy" != "yes" ]; then
-		copy_isolinux
-		copy_kernel
-		copy_filesystem
-	fi
+    if [ "$nocopy" != "yes" ]; then
+        copy_isolinux
+        copy_kernel
+        copy_filesystem
+    fi
 
-	# Truncate logs, remove archived logs.
-	find myfs/var/log -name "*gz" -print0 | xargs -0r rm -f
-	find myfs/var/log/ -type f -exec truncate -s 0 {} \;
+    # Truncate logs, remove archived logs.
+    find myfs/var/log -name "*gz" -print0 | xargs -0r rm -f
+    find myfs/var/log/ -type f -exec truncate -s 0 {} \;
 
-	# Allow all fixed drives to be mounted with pmount
-	if [[ $pmount_fixed = "yes" ]] ; then
-		if [[ -f "$work_dir"/myfs/etc/pmount.allow ]]; then
-			sed -i 's:#/dev/sd\[a-z\]:/dev/sd\[a-z\]:' "$work_dir"/myfs/etc/pmount.allow
-		fi
-	fi
+    # Allow all fixed drives to be mounted with pmount
+    if [[ $pmount_fixed = "yes" ]] ; then
+        if [[ -f "$work_dir"/myfs/etc/pmount.allow ]]; then
+            sed -i 's:#/dev/sd\[a-z\]:/dev/sd\[a-z\]:' "$work_dir"/myfs/etc/pmount.allow
+        fi
+    fi
 
-	# Clear list of recently used files in geany for primary user.
-	if [[ $clear_geany = "yes" ]] ; then
-		sed -i 's/recent_files=.*;/recent_files=/' "$work_dir"/myfs/home/"$username"/.config/geany/geany.conf
-	fi
+    # Clear list of recently used files in geany for primary user.
+    if [[ $clear_geany = "yes" ]] ; then
+        sed -i 's/recent_files=.*;/recent_files=/' "$work_dir"/myfs/home/"$username"/.config/geany/geany.conf
+    fi
 
-	# Enable or disable password login through ssh for users (not root)
-	# Remove obsolete live-config file
-	if [[ -e "$work_dir"/myfs/lib/live/config/1161-openssh-server ]] ; then
-		rm -f "$work_dir"/myfs/lib/live/config/1161-openssh-server
-	fi
+    # Enable or disable password login through ssh for users (not root)
+    # Remove obsolete live-config file
+    if [[ -e "$work_dir"/myfs/lib/live/config/1161-openssh-server ]] ; then
+        rm -f "$work_dir"/myfs/lib/live/config/1161-openssh-server
+    fi
 
-	sed -i 's/PermitRootLogin yes/PermitRootLogin without-password/' "$work_dir"/myfs/etc/ssh/sshd_config
+    sed -i 's/PermitRootLogin yes/PermitRootLogin without-password/' "$work_dir"/myfs/etc/ssh/sshd_config
 
-	if [[ $ssh_pass = "yes" ]] ; then
-		sed -i 's|.*PasswordAuthentication.*no|PasswordAuthentication yes|' "$work_dir"/myfs/etc/ssh/sshd_config
-		sed -i 's|#.*PasswordAuthentication.*yes|PasswordAuthentication yes|' "$work_dir"/myfs/etc/ssh/sshd_config
-	elif [[ $ssh_pass = "no" ]] ; then
-		sed -i 's|.*PasswordAuthentication.*yes|PasswordAuthentication no|' "$work_dir"/myfs/etc/ssh/sshd_config
-	fi
+    if [[ $ssh_pass = "yes" ]] ; then
+        sed -i 's|.*PasswordAuthentication.*no|PasswordAuthentication yes|' "$work_dir"/myfs/etc/ssh/sshd_config
+        sed -i 's|#.*PasswordAuthentication.*yes|PasswordAuthentication yes|' "$work_dir"/myfs/etc/ssh/sshd_config
+    elif [[ $ssh_pass = "no" ]] ; then
+        sed -i 's|.*PasswordAuthentication.*yes|PasswordAuthentication no|' "$work_dir"/myfs/etc/ssh/sshd_config
+    fi
 
-	# /etc/fstab should exist, even if it's empty,
-	# to prevent error messages at boot
-	touch "$work_dir"/myfs/etc/fstab
+    # /etc/fstab should exist, even if it's empty,
+    # to prevent error messages at boot
+    touch "$work_dir"/myfs/etc/fstab
 
-	# Blank out systemd machine id. If it does not exist, systemd-journald
-	# will fail, but if it exists and is empty, systemd will automatically
-	# set up a new unique ID.
+    # Blank out systemd machine id. If it does not exist, systemd-journald
+    # will fail, but if it exists and is empty, systemd will automatically
+    # set up a new unique ID.
 
-	if [ -e "$work_dir"/myfs/etc/machine-id ]; then
-		rm -f "$work_dir"/myfs/etc/machine-id
-		: > "$work_dir"/myfs/etc/machine-id
-	fi
+    if [ -e "$work_dir"/myfs/etc/machine-id ]; then
+        rm -f "$work_dir"/myfs/etc/machine-id
+        : > "$work_dir"/myfs/etc/machine-id
+    fi
 
-	# add some basic files to /dev
-	mknod -m 622 "$work_dir"/myfs/dev/console c 5 1
-	mknod -m 666 "$work_dir"/myfs/dev/null c 1 3
-	mknod -m 666 "$work_dir"/myfs/dev/zero c 1 5
-	mknod -m 666 "$work_dir"/myfs/dev/ptmx c 5 2
-	mknod -m 666 "$work_dir"/myfs/dev/tty c 5 0
-	mknod -m 444 "$work_dir"/myfs/dev/random c 1 8
-	mknod -m 444 "$work_dir"/myfs/dev/urandom c 1 9
-	chown -v root:tty "$work_dir"/myfs/dev/{console,ptmx,tty}
+    # add some basic files to /dev
+    mknod -m 622 "$work_dir"/myfs/dev/console c 5 1
+    mknod -m 666 "$work_dir"/myfs/dev/null c 1 3
+    mknod -m 666 "$work_dir"/myfs/dev/zero c 1 5
+    mknod -m 666 "$work_dir"/myfs/dev/ptmx c 5 2
+    mknod -m 666 "$work_dir"/myfs/dev/tty c 5 0
+    mknod -m 444 "$work_dir"/myfs/dev/random c 1 8
+    mknod -m 444 "$work_dir"/myfs/dev/urandom c 1 9
+    chown -v root:tty "$work_dir"/myfs/dev/{console,ptmx,tty}
 
-	ln -sv /proc/self/fd "$work_dir"/myfs/dev/fd
-	ln -sv /proc/self/fd/0 "$work_dir"/myfs/dev/stdin
-	ln -sv /proc/self/fd/1 "$work_dir"/myfs/dev/stdout
-	ln -sv /proc/self/fd/2 "$work_dir"/myfs/dev/stderr
-	ln -sv /proc/kcore "$work_dir"/myfs/dev/core
-	ln -sv /run/shm "$work_dir"/myfs/dev/shm
-	mkdir -v "$work_dir"/myfs/dev/pts
+    ln -sv /proc/self/fd "$work_dir"/myfs/dev/fd
+    ln -sv /proc/self/fd/0 "$work_dir"/myfs/dev/stdin
+    ln -sv /proc/self/fd/1 "$work_dir"/myfs/dev/stdout
+    ln -sv /proc/self/fd/2 "$work_dir"/myfs/dev/stderr
+    ln -sv /proc/kcore "$work_dir"/myfs/dev/core
+    ln -sv /run/shm "$work_dir"/myfs/dev/shm
+    mkdir -v "$work_dir"/myfs/dev/pts
 
-	# Need to define $filename here (moved up from genisoimage)
-	# and use it as directory name to identify the build on the cdrom.
-	# and put package list inside that directory
-	if [[ $stamp = "datetime" ]]; then
-		# use this variable so iso and md5 have same time stamp
-		filename="$snapshot_basename"-$(date +%Y%m%d_%H%M).iso
-	else
-		n=1
-		while [[ -f "$snapshot_dir"/snapshot$n.iso ]]; do
-			((n++))
-		done
-		filename="$snapshot_basename"$n.iso
-	fi
+    # Need to define $filename here (moved up from genisoimage)
+    # and use it as directory name to identify the build on the cdrom.
+    # and put package list inside that directory
+    if [[ $stamp = "datetime" ]]; then
+        # use this variable so iso and md5 have same time stamp
+        filename="$snapshot_basename"-$(date +%Y%m%d_%H%M).iso
+    else
+        n=1
+        while [[ -f "$snapshot_dir"/snapshot$n.iso ]]; do
+            ((n++))
+        done
+        filename="$snapshot_basename"$n.iso
+    fi
 
-	# Prepend the dir name with a constant,
-	# so you can find and delete the old ones.
-	#
-	dir_prefix="pkglist"
+    # Prepend the dir name with a constant,
+    # so you can find and delete the old ones.
+    #
+    dir_prefix="pkglist"
 
-	for dir in "$work_dir"/iso/"$dir_prefix"* ; do
-		rm -r "$dir"
-	done
-	mkdir -p "$work_dir"/iso/"${dir_prefix}_${filename%.iso}"
-	dpkg -l | egrep "ii|hi" | awk '{ print $2 }' > "$work_dir"/iso/"${dir_prefix}_${filename%.iso}"/package_list
+    for dir in "$work_dir"/iso/"$dir_prefix"* ; do
+        rm -r "$dir"
+    done
+    mkdir -p "$work_dir"/iso/"${dir_prefix}_${filename%.iso}"
+    dpkg -l | egrep "ii|hi" | awk '{ print $2 }' > "$work_dir"/iso/"${dir_prefix}_${filename%.iso}"/package_list
 
-	# Add the Release Notes to the iso
-	if [[ -f /usr/share/doc/_Release_Notes/Release_Notes ]] ; then
-		rsync -va /usr/share/doc/_Release_Notes/Release_Notes "$work_dir"/iso/
-	fi
+    # Add the Release Notes to the iso
+    if [[ -f /usr/share/doc/_Release_Notes/Release_Notes ]] ; then
+        rsync -va /usr/share/doc/_Release_Notes/Release_Notes "$work_dir"/iso/
+    fi
 
-	# Create the boot menu unless iso_dir or boot_menu is not default.
-	if [[ -n "$DISTRO" ]] ; then
-		live_config_version=$(dpkg -l live-config | awk '/live-config/ { print $3 }' | cut -d. -f1)
-		if [[ $live_config_version -gt 3 ]] ; then
-			CONFIGS="components"
-		else
-			CONFIGS="config"
-		fi
+    # Create the boot menu unless iso_dir or boot_menu is not default.
+    if [[ -n "$DISTRO" ]] ; then
+        live_config_version=$(dpkg -l live-config | awk '/live-config/ { print $3 }' | cut -d. -f1)
+        if [[ $live_config_version -gt 3 ]] ; then
+            CONFIGS="components"
+        else
+            CONFIGS="config"
+        fi
 
-		sed -i "s:\${DISTRO}:$DISTRO:g" "$work_dir"/iso/isolinux/"$boot_menu"
-		sed -i "s:\${netconfig_opt}:$netconfig_opt:g" "$work_dir"/iso/isolinux/"$boot_menu"
-		sed -i "s:\${username_opt}:$username_opt:g" "$work_dir"/iso/isolinux/"$boot_menu"
-		#sed -i "s:\${CONFIGS}:$CONFIGS:g" "$work_dir"/iso/isolinux/"$boot_menu"
-	fi
+        sed -i "s:\${DISTRO}:$DISTRO:g" "$work_dir"/iso/isolinux/"$boot_menu"
+        sed -i "s:\${netconfig_opt}:$netconfig_opt:g" "$work_dir"/iso/isolinux/"$boot_menu"
+        sed -i "s:\${username_opt}:$username_opt:g" "$work_dir"/iso/isolinux/"$boot_menu"
+        #sed -i "s:\${CONFIGS}:$CONFIGS:g" "$work_dir"/iso/isolinux/"$boot_menu"
+    fi
 
-	# Clear configs from /etc/network/interfaces, wicd and NetworkManager
-	# so they aren't stealthily included in the snapshot.
-	if [[ -z $netconfig_opt ]] ; then
-		echo "# The loopback network interface
+    # Clear configs from /etc/network/interfaces, wicd and NetworkManager
+    # so they aren't stealthily included in the snapshot.
+    if [[ -z $netconfig_opt ]] ; then
+        echo "# The loopback network interface
 auto lo
 iface lo inet loopback
 " > "$work_dir"/myfs/etc/network/interfaces
-		rm -f "$work_dir"/myfs/var/lib/wicd/configurations/*
-		rm -f "$work_dir"/myfs/etc/NetworkManager/system-connections
-	fi
+        rm -f "$work_dir"/myfs/var/lib/wicd/configurations/*
+        rm -f "$work_dir"/myfs/etc/NetworkManager/system-connections
+    fi
 
-	# Pause to edit the boot menu or anything else in $work_dir
-	if [[ $edit_boot_menu = "yes" ]]; then
-		echo "
+    # Pause to edit the boot menu or anything else in $work_dir
+    if [[ $edit_boot_menu = "yes" ]]; then
+        echo "
  You may now go to another virtual console to edit any files in the work
  directory, or hit ENTER and edit the boot menu.
  "
-		read -p " "
-		"$text_editor" "$work_dir"/iso/isolinux/"$boot_menu"
-		# "$text_editor" "$work_dir"/iso/boot/grub/"$grub_menu"
-	fi
+        read -p " "
+        "$text_editor" "$work_dir"/iso/isolinux/"$boot_menu"
+        # "$text_editor" "$work_dir"/iso/boot/grub/"$grub_menu"
+    fi
 
-	# Squash the filesystem copy
-	echo "Squashing the filesystem..."
-	mksquashfs "$work_dir"/myfs/ "$work_dir"/iso/live/filesystem.squashfs ${mksq_opt}
-	cp -va "$work_dir"/iso/live/filesystem.squashfs "$snapshot_dir"/filesystem.squashfs-$(date +%Y%m%d_%H%M)
+    # Squash the filesystem copy
+    echo "Squashing the filesystem..."
+    mksquashfs "$work_dir"/myfs/ "$work_dir"/iso/live/filesystem.squashfs ${mksq_opt}
+    cp -va "$work_dir"/iso/live/filesystem.squashfs "$snapshot_dir"/filesystem.squashfs-$(date +%Y%m%d_%H%M)
 
-	# This code is redundant, because $work_dir gets removed later, but
-	# it might help by making more space on the hard drive for the iso.
-	if [[ $save_work = "no" ]]; then
-		rm -rf myfs
-	fi
+    # This code is redundant, because $work_dir gets removed later, but
+    # it might help by making more space on the hard drive for the iso.
+    if [[ $save_work = "no" ]]; then
+        rm -rf myfs
+    fi
 
-	# create the iso file, make it isohybrid
-	# create md5sum file for the iso
-	echo "Creating CD/DVD image file..."
+    # create the iso file, make it isohybrid
+    # create md5sum file for the iso
+    echo "Creating CD/DVD image file..."
 
-	# If isohdpfx.bin gets moved again, maybe use:   isohdpfx=$(find /usr/lib/ -name isohdpfx.bin)
-	if [[ $make_isohybrid = "yes" ]]; then
-		if [[ -f /usr/lib/syslinux/mbr/isohdpfx.bin ]] ; then
-			isohybrid_opt="-isohybrid-mbr /usr/lib/syslinux/mbr/isohdpfx.bin"
-		elif [[ -f /usr/lib/syslinux/isohdpfx.bin ]] ; then
-			isohybrid_opt="-isohybrid-mbr /usr/lib/syslinux/isohdpfx.bin"
-		elif [[ -f /usr/lib/ISOLINUX/isohdpfx.bin ]] ; then
-			isohybrid_opt="-isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin"
-		else
-			echo "Can't create isohybrid.  File: isohdpfx.bin not found. The resulting image will be a standard iso file."
-		fi
-	fi
+    # If isohdpfx.bin gets moved again, maybe use:   isohdpfx=$(find /usr/lib/ -name isohdpfx.bin)
+    if [[ $make_isohybrid = "yes" ]]; then
+        if [[ -f /usr/lib/syslinux/mbr/isohdpfx.bin ]] ; then
+            isohybrid_opt="-isohybrid-mbr /usr/lib/syslinux/mbr/isohdpfx.bin"
+        elif [[ -f /usr/lib/syslinux/isohdpfx.bin ]] ; then
+            isohybrid_opt="-isohybrid-mbr /usr/lib/syslinux/isohdpfx.bin"
+        elif [[ -f /usr/lib/ISOLINUX/isohdpfx.bin ]] ; then
+            isohybrid_opt="-isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin"
+        else
+            echo "Can't create isohybrid.  File: isohdpfx.bin not found. The resulting image will be a standard iso file."
+        fi
+    fi
 
-	xorriso -as mkisofs -r -J -joliet-long -l ${isohybrid_opt} \
-	-partition_offset 16 -V "snapshot-live-cd"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
-	-boot-load-size 4 -boot-info-table -o "$snapshot_dir"/"$filename" iso/ 
+    xorriso -as mkisofs -r -J -joliet-long -l ${isohybrid_opt} \
+    -partition_offset 16 -V "snapshot-live-cd"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot \
+    -boot-load-size 4 -boot-info-table -o "$snapshot_dir"/"$filename" iso/ 
 
-	if [[ $make_md5sum = "yes" ]]; then
-		cd "$snapshot_dir"
-		md5sum "$filename" > "$filename".md5
-		cd "$work_dir"
-	fi
+    if [[ $make_md5sum = "yes" ]]; then
+        cd "$snapshot_dir"
+        md5sum "$filename" > "$filename".md5
+        cd "$work_dir"
+    fi
 
-	# Cleanup
-	if [[ $save_work = "no" ]]; then
-		echo "Cleaning..."
-		cd /
-		rm -rf "$work_dir"
-	else
-		rm "$work_dir"/iso/live/filesystem.squashfs
-	fi
+    # Cleanup
+    if [[ $save_work = "no" ]]; then
+        echo "Cleaning..."
+        cd /
+        rm -rf "$work_dir"
+    else
+        rm "$work_dir"/iso/live/filesystem.squashfs
+    fi
 
-	echo "All finished! "
+    echo "All finished! "
 }
 
 ########################################################################
 #
 ########################################################################
 until [ -z "${1}" ]; do
-	case ${1} in
-		-d | --distro)
-			shift
-			DISTRO=${1}
-			;;
-		-k | --keyboard)
-			shift
-			KEYBOARD=${1}
-			;;
-		-l | --locale)
-			shift
-			LOCALE=${1}
-			;;
-		-u | --username)
-			shift
-			username=${1}
-			;;
-		*)
-			shift
-			;;
-	esac
+    case ${1} in
+        -d | --distro)
+            shift
+            DISTRO=${1}
+            ;;
+        -k | --keyboard)
+            shift
+            KEYBOARD=${1}
+            ;;
+        -l | --locale)
+            shift
+            LOCALE=${1}
+            ;;
+    # modifica 5/09/2018
+        -s | --snapshot)
+            shift
+            snapshot_basename=${1}
+            ;;
+    # fine modifica
+        -u | --username)
+            shift
+            username=${1}
+            ;;
+        *)
+            shift
+            ;;
+    esac
 done
 
 snapshot

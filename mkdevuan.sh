@@ -13,6 +13,7 @@ STAGE=1
 CLEAN=0
 COMPILE_BOOTSTRAP=1
 DEBOOTSTRAP_BIN=/usr/sbin/debootstrap
+SNAPSHOT=""
 CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -20,7 +21,7 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-DE=cinnamon
+DE=xfce
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
@@ -790,7 +791,11 @@ function create_snapshot() {
     if [ $1 ]; then
         cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
         chmod -v +x $1/tmp/snapshot.sh
-        chroot $1 /bin/bash -c "/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+        cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+        if [ ${SNAPSHOT} ]; then
+            cmd="${cmd} -s ${SNAPSHOT}"
+        fi
+        chroot $1 /bin/bash -c ${cmd}
     fi
 }
 
@@ -1304,6 +1309,10 @@ do
         -pi | --path-to-install-syslinux)
             shift
             SYSLINUX_INST=${1}
+            ;;
+        -sb | snapshot_basename)
+            shift
+            SNAPSHOT=${1}
             ;;
         -sp | --size-primary-part)
             shift
