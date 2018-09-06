@@ -1,10 +1,13 @@
 #!/bin/bash
-#set -v -x
+set -v -x
 
 ########################################################################
 # environment: variabili script
 ########################################################################
 
+LOCAL_DIRECTORY="$(pwd)"
+TEMP_REPOSITORY="repo"
+FILE_LIST="local.list"
 LOG="$(pwd)/mkdevuan.log"
 PATH_SCRIPTS=$(dirname $0)
 FRONTEND=noninteractive
@@ -25,12 +28,13 @@ DE=xfce
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
+PACKAGES_FILE="packages_default"
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
 if [ $ISO_DEBUG == 1 ]; then
-    PACKAGES="$PACKAGES shellcheck" 
+    PACKAGES="shellcheck $PACKAGES" 
 fi
 
 USERNAME=devuan
@@ -669,6 +673,26 @@ d'accordo (s/n)?"
 }
 
 ########################################################################
+# init:
+########################################################################
+function init() {
+    echo "init"
+    [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
+    if [ -d ${ROOT_DIR} ]; then
+        mkdir -p ${ROOT_DIR}
+    fi
+    if [ ! -d "${TEMP_REPOSITORY}" ]; then
+        mkdir -p "${TEMP_REPOSITORY}"
+    fi
+    if [ ! -d ${ROOT_DIR}/var/cache/apt/archives ]; then
+        mkdir -p ${ROOT_DIR}/var/cache/apt/archives
+    fi
+    if ! mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
+        mount $VERBOSE --bind ${TEMP_REPOSITORY} ${ROOT_DIR}/var/cache/apt/archives
+    fi
+}
+
+########################################################################
 # compile_debootstrap:
 ########################################################################
 function compile_debootstrap() {
@@ -688,7 +712,10 @@ function compile_debootstrap() {
 trap ctrl_c SIGINT
 ctrl_c() {
     echo "*** CTRL-C pressed***"
-    unbind $ROOT_DIR
+    unbind ${ROOT_DIR}
+    if mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
+        umount -l ${VERBOSE} ${ROOT_DIR}/var/cache/apt/archives
+    fi
     exit -1
 }
 
@@ -847,10 +874,7 @@ function beowulf() {
 function fase1() {
     if [ $1 ]; then
         log ${LINENO}
-        [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
-        mkdir -p $1
-        #$DEBOOTSTRAP_BIN --verbose --arch=$ARCH $DIST $1 $MIRROR
-        $DEBOOTSTRAP_BIN --verbose --arch=$ARCH ascii $1 $MIRROR
+        $DEBOOTSTRAP_BIN --verbose --arch=$ARCH ${DIST} $1 $MIRROR
         if [ $? -gt 0 ]; then
             echo "Big problem!!!"
             echo -e "===============ERRORE==============">>$LOG
@@ -1130,7 +1154,7 @@ function check_script() {
         ARCH=amd64
     fi
     if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ] && [ $DE != "gnome" ]; then
-        DE="cinnamon"
+        DE="xfce"
     fi
     if [ $(id -u) != 0 ]; then
         echo -e "\nUser $USER not is root."
@@ -1146,16 +1170,25 @@ function check_script() {
     case $DE in
         "mate")
             ;;
-        "xfce" | "lxde")
+        "xfce")
+            ;;
+        "lxde")
             ;;
         "kde")
             ;;
         "cinnamon")
+            PACKAGES_FILE="packages_cinnamon"
             ;;
         "gnome")
+            PACKAGES_FILE="packages_gnome"
             ;;
     esac
-    PACKAGES="mc spyder python-rope python-wxgtk3.0 python-parted filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+    # alternativa
+    if [ -e ${PACKAGES_FILE} ]; then
+        PACKAGES="$(cat ./${PACKAGES_FILE}) task-$LANGUAGE iceweasel-l10n-$KEYBOARD $PACKAGES"
+    else
+        PACKAGES="mc spyder python-rope python-wxgtk3.0 python-parted filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+    fi
     set_distro_env
     if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
         TYPE_SECONDARY_PART=7
@@ -1202,18 +1235,29 @@ Crea una live Devuan
   -L | --lang                            :Lingua (default 'it_IT.UTF-8').
   -n | --hostname                        :Nome hostname (default 'devuan').
   -s | --stage <stage>                   :Numero fase:
-        1) crea la base del sistema
-        2) setta lo user, hostname e la lingua e i pacchetti indispensabili
-        3) installa pacchetti aggiuntivi e il desktop
-        4) installa lo script d'installazine e crea la iso.
-        min) fase 1 + fase 2 + fase 4
-        iso-update) aggiorna la iso
+        1) crea la base del sistema;
+        2) setta lo user, hostname e la lingua e i pacchetti indispensabili;
+        3) installa pacchetti aggiuntivi e il desktop;
+        4) installa lo script d'installazine e crea la iso;
+        min) fase 1 + fase 2 + fase 4;
+        iso-update) aggiorna la iso;
         ascii)
-        beowulf) crea le rispettive iso delle distribuzioni.
+        beowulf) crea le rispettive iso delle distribuzioni;
+  -sb| --snapshot_basename               : Nome base dello snapshot.
   -r | --root-dir <dir>                  :Directory della root
   -T | --timezone <timezone>             :Timezone (default 'Europe/Rome').
   -u | --user                            :Nome utente.
 "
+}
+
+########################################################################
+# end:
+########################################################################
+function end() {
+    echo "end"
+    if mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
+        umount -l $VERBOSE ${ROOT_DIR}/var/cache/apt/archives
+    fi
 }
 
 ########################################################################
@@ -1332,6 +1376,8 @@ do
     esac
 done
 
+init
+
 case $STAGE in
     "")
         #;&
@@ -1382,3 +1428,5 @@ case $STAGE in
     *)
         ;;
 esac
+
+end
