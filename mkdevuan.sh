@@ -5,7 +5,6 @@ set -v -x
 # environment: variabili script
 ########################################################################
 
-LOCAL_DIRECTORY="$(pwd)"
 TEMP_REPOSITORY="repo"
 FILE_LIST="local.list"
 LOG="$(pwd)/mkdevuan.log"
@@ -960,7 +959,7 @@ function fase4() {
             unbind $1
             exit
         fi
-        chroot $1 apt-get $APT_OPTS clean
+        #chroot $1 apt-get $APT_OPTS clean
         chroot $1 apt-get $APT_OPTS autoremove --purge
         chroot $1 dpkg --purge -a
         [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $ROOT_DIR/home/snapshot/filesystem.squashfs-*
