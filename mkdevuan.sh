@@ -6,7 +6,6 @@ set -v -x
 ########################################################################
 
 TEMP_REPOSITORY="repo"
-FILE_LIST="local.list"
 LOG="$(pwd)/mkdevuan.log"
 PATH_SCRIPTS=$(dirname $0)
 FRONTEND=noninteractive
@@ -15,7 +14,7 @@ STAGE=1
 CLEAN=0
 COMPILE_BOOTSTRAP=1
 DEBOOTSTRAP_BIN=/usr/sbin/debootstrap
-SNAPSHOT=""
+SNAPSHOT=
 CLEAN_SNAPSHOT=0
 KEYBOARD=it
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -27,7 +26,7 @@ DE=xfce
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
-PACKAGES_FILE="packages_default"
+PACKAGES_FILE="packages_xfce"
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
@@ -651,7 +650,6 @@ function linux_firmware() {
 ########################################################################
 # create_pendrive_live:
 ########################################################################
-
 function create_pendrive_live() {
     if mount | grep ${PATH_TO_MOUNT}; then
         umount -v ${PATH_TO_MOUNT}
@@ -672,10 +670,21 @@ d'accordo (s/n)?"
 }
 
 ########################################################################
+# check_root:
+########################################################################
+function check_root() {
+    if [ ${UID} != 0 ]; then
+        echo "Devi essere root per eseguire questo script."
+        exit
+    fi
+}
+
+########################################################################
 # init:
 ########################################################################
 function init() {
     echo "init"
+    check_root
     [ $CLEAN = 1 ] && rm $VERBOSE -R $ROOT_DIR
     if [ -d ${ROOT_DIR} ]; then
         mkdir -p ${ROOT_DIR}
@@ -764,7 +773,7 @@ function update() {
 }
 
 ########################################################################
-#
+# upgrade:
 ########################################################################
 function upgrade() {
     if [ $1 ]; then
@@ -776,6 +785,9 @@ function upgrade() {
     fi
 }
 
+########################################################################
+# upgrade_packages:
+########################################################################
 function upgrade_packages() {
     if [ $1 ]; then
         bind $1
@@ -787,7 +799,7 @@ function upgrade_packages() {
 }
 
 ########################################################################
-#                  add_user
+# add_user:
 ########################################################################
 function add_user() {
     if [ $1 ]; then
@@ -796,7 +808,7 @@ function add_user() {
 }
 
 ########################################################################
-#                 set_locale
+# set_locale
 ########################################################################
 function set_locale() {
     if [ $1 ]; then
@@ -820,6 +832,9 @@ function create_snapshot() {
         cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
         if [ ${SNAPSHOT} ]; then
             cmd="${cmd} -s ${SNAPSHOT}"
+        fi
+        if mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
+            umount -l $VERBOSE ${ROOT_DIR}/var/cache/apt/archives
         fi
         chroot $1 /bin/bash -c ${cmd}
     fi
@@ -959,23 +974,20 @@ function fase4() {
             unbind $1
             exit
         fi
-        #chroot $1 apt-get $APT_OPTS clean
         chroot $1 apt-get $APT_OPTS autoremove --purge
         chroot $1 dpkg --purge -a
-        [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/snapshot-* $ROOT_DIR/home/snapshot/filesystem.squashfs-*
+        [ $CLEAN_SNAPSHOT = 1 ] && rm $VERBOSE $ROOT_DIR/home/snapshot/* $ROOT_DIR/home/snapshot/filesystem.squashfs-*
         create_snapshot $1
         unbind $1
     fi
 }
 
 ########################################################################
-#                         HOOKS                                        #
+# HOOKS
 ########################################################################
-
 ########################################################################
 # update_hooks:
 ########################################################################
-
 function update_hooks() {
     if [ $1 ]; then
         hook_install_distro $1
@@ -987,7 +999,6 @@ function update_hooks() {
 ########################################################################
 # hook_create_fake_start_stop_daemon:
 ########################################################################
-
 function hook_create_fake_start_stop_daemon() {
     if [ $1 ]; then
         if [ ! -e /sbin/start-stop-daemon.orig ]; then
@@ -1121,7 +1132,6 @@ EndSection\n\
 ########################################################################
 # hook_hostname:
 ########################################################################
-
 function hook_hostname() {
     if [ $1 ]; then
         cat > $1/etc/hostname <<EOF
@@ -1140,11 +1150,11 @@ EOF
 }
 
 ########################################################################
-
+# END HOOKS
+########################################################################
 ########################################################################
 # check_script:
 ########################################################################
-
 function check_script() {
     if [ $DIST != ascii ] && [ $DIST != beowulf ]; then
         DIST=ascii
@@ -1152,12 +1162,11 @@ function check_script() {
     if [ $ARCH != i386 ] && [ $ARCH != amd64 ]; then
         ARCH=amd64
     fi
-    if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ] && [ $DE != "gnome" ]; then
+    if [ $DE != "mate" ] && [ $DE != "xfce" ] && [ $DE != "lxde" ] && [ $DE != "kde" ] && [ $DE != "cinnamon" ] && [ $DE != "gnome" ] && [ $DE != "lxqt" ]; then
         DE="xfce"
     fi
-    if [ $(id -u) != 0 ]; then
-        echo -e "\nUser $USER not is root."
-        exit
+    if [ ! ${SNAPSHOT} ]; then
+        SNAPSHOT=${ROOT_DIR}-${DE}
     fi
     case $DIST in
         "ascii" | "beowulf")
@@ -1168,12 +1177,16 @@ function check_script() {
     esac
     case $DE in
         "mate")
+            PACKAGES_FILE="packages_mate"
             ;;
         "xfce")
+            PACKAGES_FILE="packages_xfce"
             ;;
         "lxde")
+            PACKAGES_FILE="packages_lxde"
             ;;
         "kde")
+            PACKAGES_FILE="packages_kde"
             ;;
         "cinnamon")
             PACKAGES_FILE="packages_cinnamon"
@@ -1181,10 +1194,13 @@ function check_script() {
         "gnome")
             PACKAGES_FILE="packages_gnome"
             ;;
+        "lxqt")
+            PACKAGES_FILE="packages_lxqt"
+            ;;
     esac
     # alternativa
     if [ -e ${PACKAGES_FILE} ]; then
-        PACKAGES="$(cat ./${PACKAGES_FILE}) task-$LANGUAGE iceweasel-l10n-$KEYBOARD $PACKAGES"
+        PACKAGES="$(cat ./${PACKAGES_FILE}) python-wxgtk3.0 python-parted task-$LANGUAGE iceweasel-l10n-$KEYBOARD $PACKAGES"
     else
         PACKAGES="mc spyder python-rope python-wxgtk3.0 python-parted filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
     fi
@@ -1207,6 +1223,7 @@ function check_script() {
     echo "architecture: $ARCH"
     echo "desktop: $DE"
     echo "stage: $STAGE"
+    echo "snapshot: $SNAPSHOT"
     echo "root: directory $ROOT_DIR"
     echo "locale: $LOCALE"
     echo "lang: $LANG"
@@ -1226,6 +1243,7 @@ function help() {
 ${0} <opzioni>
 Crea una live Devuan
   -a | --arch <architecture>             :tipo di architettura.
+  -c | --clean                           :cancella la cartella root.
   -d | --distribuition <dist>            :tipo di distribuzione.
   -D | --desktop <desktop>               :tipo di desktop mate, xfce (default), lxde o kde.
   -h | --help                            :Stampa questa messaggio.

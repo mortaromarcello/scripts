@@ -240,8 +240,8 @@ class MyPanel(wx.Panel):
         self.str_timezones      = ['Europe/Rome', 'Europe/London', 'Europe/Madrid', 'Europe/Berlin', 'Europe/Paris', 'Etc/UTC']
         self.str_shells         = ['/bin/bash', '/bin/sh']
         self.sizer              = wx.StaticBoxSizer(wx.StaticBox(self, -1, _(' Initialization ')), wx.VERTICAL)
-        self.part_root          = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
-        self.part_home          = wx.ComboBox(self, -1, choices=self.parts, style=wx.CB_READONLY)
+        self.part_root          = wx.ComboBox(self, -1, choices=[""]+self.parts, style=wx.CB_READONLY)
+        self.part_home          = wx.ComboBox(self, -1, choices=[""]+self.parts, style=wx.CB_READONLY)
         self.disk_inst          = wx.ComboBox(self, -1, choices=self.disks, style=wx.CB_READONLY)
         self.check_format_home  = wx.CheckBox(self, -1, _("Format the partition  home"))
         self.check_autologin    =  wx.CheckBox(self, -1, _("Automatic login"))
@@ -258,6 +258,9 @@ class MyPanel(wx.Panel):
         self.timezone           = wx.ComboBox(self, -1, choices=self.str_timezones, style=wx.CB_READONLY)
         self.shell              = wx.ComboBox(self, -1, choices=self.str_shells, style=wx.CB_READONLY)
         self.optimize_usb       = wx.CheckBox(self, -1, _("Optimize USB"))
+        #
+        self.check_format_home.Disable()
+        self.Bind(wx.EVT_COMBOBOX, self.Check)
         #
         # inizializza l'interfaccia
         self.initGui()
@@ -345,6 +348,16 @@ class MyPanel(wx.Panel):
         horizontal_sizer.Add(grid_sizer2)
         self.sizer.Add(horizontal_sizer, 0, wx.EXPAND|wx.ALL, padding)
         self.sizer.Fit(self)
+
+    def Check(self, event):
+        value = self.part_home.GetValue()
+        if value:
+            if value == self.part_root.GetValue():
+                self.part_home.SetValue("")
+            else:
+                self.check_format_home.Enable()
+        else:
+            self.check_format_home.Disable()
 
     def initDisks(self):
         """
