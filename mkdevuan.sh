@@ -22,7 +22,7 @@ LANG="it_IT.UTF-8"
 TIMEZONE="Europe/Rome"
 LANGUAGE="italian"
 ARCHIVE=$(pwd)
-DE=xfce
+DE=kde
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
@@ -1219,6 +1219,12 @@ function check_script() {
         echo "tipo di  filesystem partizione secondaria: $TYPE_SECONDARY_FS"
         echo "tipo partizione secondaria: $TYPE_SECONDARY_PART"
     fi
+    if [ -e /usr/bin/git ]; then
+        apt-get -y install git
+    fi
+    if [ -e /sbin/MAKEDEV ]; then
+        apt-get -y install makedev
+    fi 
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
