@@ -829,9 +829,10 @@ function create_snapshot() {
     if [ $1 ]; then
         cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
         chmod -v +x $1/tmp/snapshot.sh
-        cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
         if [ ${SNAPSHOT} ]; then
-            cmd="${cmd} -s ${SNAPSHOT}"
+            cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME -s $SNAPSHOT"
+        else
+            cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
         fi
         if mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
             umount -l $VERBOSE ${ROOT_DIR}/var/cache/apt/archives
@@ -954,6 +955,7 @@ function fase3() {
         fi
         hook_synaptics $1
         hook_restore_fake_start_stop_daemon $1
+        hook_set_autologin $1
         unbind $1
     fi
 }
@@ -1150,6 +1152,34 @@ EOF
 }
 
 ########################################################################
+# hook_set_autologin
+########################################################################
+function hook_set_autologin() {
+    if [ $1 ]; then
+        DM=$(cat "${1}"/etc/X11/default-display-manager)
+        if [ "${DM}" = "" ]; then
+            return
+        fi
+        if [ "${DM}" = "${LIGHTDM}" ]; then
+            LINE=$(grep "#autologin-user=" "${1}"/etc/lightdm/lightdm.conf)
+            rpl "${LINE}" "autologin-user=${USERNAME}" "${1}"/etc/lightdm/lightdm.conf
+            LINE=$(grep "#autologin-user-timeout=" "${1}"/etc/lightdm/lightdm.conf)
+            rpl "${LINE}" "autologin-user-timeout=0" "${1}"/etc/lightdm/lightdm.conf
+        elif [ "${DM}" = "${SLIM}" ]; then
+            LINE=$(grep "auto_login" "${1}"/etc/slim.conf)
+            rpl "${LINE}" "auto_login          yes" "${1}"/etc/slim.conf
+            LINE=$(grep "#default_user" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
+            rpl "${LINE}" "default_user          ${USERNAME}" "${1}"/etc/slim.conf
+        elif [ "${DM}" = "${KDM}" ]; then
+            LINE=$(grep "AutoLoginEnable=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
+            rpl "${LINE}" "AutoLoginEnable=true" "${1}"/etc/kde4/kdm/kdmrc
+            LINE=$(grep "AutoLoginUser=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
+            rpl "${LINE}" "AutoLoginUser=${USERNAME}" "${1}"/etc/kde4/kdm/kdmrc
+        fi
+    fi
+}
+
+########################################################################
 # END HOOKS
 ########################################################################
 ########################################################################
@@ -1219,12 +1249,15 @@ function check_script() {
         echo "tipo di  filesystem partizione secondaria: $TYPE_SECONDARY_FS"
         echo "tipo partizione secondaria: $TYPE_SECONDARY_PART"
     fi
-    if [ -e /usr/bin/git ]; then
+    if [ ! -e /usr/bin/git ]; then
         apt-get -y install git
     fi
-    if [ -e /sbin/MAKEDEV ]; then
+    if [ ! -e /sbin/MAKEDEV ]; then
         apt-get -y install makedev
-    fi 
+    fi
+    if [ ! -e /usr/bin/rpl ]; then
+        apt-get -y install rpl
+    fi
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
