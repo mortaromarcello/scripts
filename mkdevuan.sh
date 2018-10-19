@@ -641,8 +641,17 @@ EOF
 function linux_firmware() {
     if [ $1 ]; then
         FIRMWARE_DIR=$ARCHIVE/linux-firmware
-        [[ -d $FIRMWARE_DIR ]] && rm -R $FIRMWARE_DIR
-        git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+        if [ -d $FIRMWARE_DIR ]; then
+            cd $FIRMWARE_DIR
+            git pull
+            if [ $? != '0' ]; then
+                rm -R $FIRMWARE_DIR
+                git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+            fi
+            cd $ARCHIVE
+        else
+            git clone git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git $FIRMWARE_DIR
+        fi
         cp -var $FIRMWARE_DIR/* $1/lib/firmware/
     fi
 }
@@ -955,7 +964,6 @@ function fase3() {
         fi
         hook_synaptics $1
         hook_restore_fake_start_stop_daemon $1
-        hook_set_autologin $1
         unbind $1
     fi
 }
@@ -1148,34 +1156,6 @@ ff00::0         ip6-mcastprefix
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 EOF
-    fi
-}
-
-########################################################################
-# hook_set_autologin
-########################################################################
-function hook_set_autologin() {
-    if [ $1 ]; then
-        DM=$(cat "${1}"/etc/X11/default-display-manager)
-        if [ "${DM}" = "" ]; then
-            return
-        fi
-        if [ "${DM}" = "${LIGHTDM}" ]; then
-            LINE=$(grep "#autologin-user=" "${1}"/etc/lightdm/lightdm.conf)
-            rpl "${LINE}" "autologin-user=${USERNAME}" "${1}"/etc/lightdm/lightdm.conf
-            LINE=$(grep "#autologin-user-timeout=" "${1}"/etc/lightdm/lightdm.conf)
-            rpl "${LINE}" "autologin-user-timeout=0" "${1}"/etc/lightdm/lightdm.conf
-        elif [ "${DM}" = "${SLIM}" ]; then
-            LINE=$(grep "auto_login" "${1}"/etc/slim.conf)
-            rpl "${LINE}" "auto_login          yes" "${1}"/etc/slim.conf
-            LINE=$(grep "#default_user" "${INST_ROOT_DIRECTORY}"/etc/slim.conf)
-            rpl "${LINE}" "default_user          ${USERNAME}" "${1}"/etc/slim.conf
-        elif [ "${DM}" = "${KDM}" ]; then
-            LINE=$(grep "AutoLoginEnable=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
-            rpl "${LINE}" "AutoLoginEnable=true" "${1}"/etc/kde4/kdm/kdmrc
-            LINE=$(grep "AutoLoginUser=" "${INST_ROOT_DIRECTORY}"/etc/kde4/kdm/kdmrc)
-            rpl "${LINE}" "AutoLoginUser=${USERNAME}" "${1}"/etc/kde4/kdm/kdmrc
-        fi
     fi
 }
 
