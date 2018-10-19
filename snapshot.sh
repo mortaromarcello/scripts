@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
+DEBUG=yes
 DISTRO="$(uname -o)"
 KEYBOARD="it"
 LOCALE="it_IT.UTF-8 UTF-8"
@@ -226,9 +227,6 @@ FBRikPeeBwTAPQOwKWfW/gHAXXB2H4AlBGC1qsqtHwAwb/d5/zbaFzzTvAAeHIBmlaNfAGCW6nPy
 fhztC5HRPgALCcDWmgoHPwPAbbuPTR0AFh2AlelfALhN9U2jfTEoJG7qALDgACzZmP4FgL90nx83
 dYQ43s3L2X0AFh+Axs0fAPDr8Ispjle0cVMHgCfy/wFwHzHv4QJ5QwAAAABJRU5ErkJggg==
 "
-# modifica 5/09/2018
-snapshot_basename="snapshot"
-# fine modifica
 
 ########################################################################
 
@@ -244,7 +242,7 @@ function snapshot_configuration() {
     kernel_image="/vmlinuz"
     initrd_image="/initrd.img"
     stamp="datetime"
-#    snapshot_basename="snapshot" # modifica 5/09/2018
+    [[ $snapshot_basename = "" ]] && snapshot_basename="snapshot" # modifica 5/09/2018
     make_md5sum="yes"
     make_isohybrid="yes"
     edit_boot_menu="no"
@@ -921,7 +919,7 @@ function snapshot() {
     exec 2>"$error_log"
 
     if [[ $DEBUG = "yes" ]] ; then
-        set -x
+        set -v -x
     fi
 
     # Default text editor is nano. Make sure it exists if user intends to
@@ -1195,7 +1193,9 @@ iface lo inet loopback
 ########################################################################
 #
 ########################################################################
-until [ -z "${1}" ]; do
+
+until [ -z "${1}" ]
+do
     case ${1} in
         -d | --distro)
             shift

@@ -838,15 +838,15 @@ function create_snapshot() {
     if [ $1 ]; then
         cp -v $PATH_SCRIPTS/snapshot.sh $1/tmp/
         chmod -v +x $1/tmp/snapshot.sh
-        if [ ${SNAPSHOT} ]; then
-            cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME -s $SNAPSHOT"
-        else
-            cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
-        fi
+        #if [ ${SNAPSHOT} ]; then
+        cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME -s $SNAPSHOT"
+        #else
+        #    cmd="/tmp/snapshot.sh -d Devuan -k $KEYBOARD -l $LOCALE -u $USERNAME"
+        #fi
         if mount | grep ${ROOT_DIR}/var/cache/apt/archives; then
             umount -l $VERBOSE ${ROOT_DIR}/var/cache/apt/archives
         fi
-        chroot $1 /bin/bash -c ${cmd}
+        chroot $1 /bin/bash -c "${cmd}"
     fi
 }
 
