@@ -27,7 +27,7 @@ DE=kde
 ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
-PACKAGES_FILE="packages_xfce"
+PACKAGES_FILE="packages_kde"
 INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
@@ -1214,7 +1214,10 @@ function check_script() {
     if [ -e ${PACKAGES_FILE} ]; then
         PACKAGES="$(cat ./${PACKAGES_FILE}) python-wxgtk3.0 python-parted task-$LANGUAGE iceweasel-l10n-$KEYBOARD $PACKAGES"
     else
-        PACKAGES="mc spyder python-rope python-wxgtk3.0 python-parted filezilla vinagre telnet ntp testdisk recoverdm myrescue gpart gsmartcontrol diskscan exfat-fuse task-laptop task-$DE-desktop task-$LANGUAGE iceweasel-l10n-$KEYBOARD cups geany geany-plugins smplayer putty pulseaudio-module-bluetooth $PACKAGES"
+        PACKAGES="python-wxgtk3.0 python-parted task-laptop task-$DE-desktop task-$LANGUAGE $PACKAGES"
+    fi
+    if [ -e packages_utility ]; then
+        PACKAGES="$(cat packages_utility) $PACKAGES"
     fi
     set_distro_env
     if [ ${TYPE_SECONDARY_FS} = "exfat" ]; then
