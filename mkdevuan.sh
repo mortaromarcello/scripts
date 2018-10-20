@@ -1,5 +1,6 @@
 #!/bin/bash
-set -v -x
+
+DEBUG="yes"
 
 ########################################################################
 # environment: variabili script
@@ -1166,6 +1167,7 @@ EOF
 # check_script:
 ########################################################################
 function check_script() {
+    [[ $DEBUG = "yes" ]] && set -v -x
     if [ $DIST != ascii ] && [ $DIST != beowulf ]; then
         DIST=ascii
     fi
