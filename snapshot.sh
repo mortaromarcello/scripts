@@ -265,6 +265,7 @@ function snapshot_configuration() {
     mksq_opt="-info"
     mkdir -p $iso_dir/isolinux
     mkdir -p $iso_dir/live
+    mkdir -p $iso_dir/boot/grub
     echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
 
     cat > /tmp/snapshot_exclude.list <<EOF
@@ -428,20 +429,20 @@ EOF
     ########################################################################
     # files isolinux
     ########################################################################
-    cat > /tmp/iso/isolinux/exithelp.cfg<<EOF
+    cat > $iso_dir/isolinux/exithelp.cfg<<EOF
 label menu
     kernel /isolinux/vesamenu.c32
     config isolinux.cfg
 EOF
 
-    cat > /tmp/iso/isolinux/isolinux.cfg<<EOF
+    cat > $iso_dir/isolinux/isolinux.cfg<<EOF
 include menu.cfg
 default /isolinux/vesamenu.c32
 prompt 0
 timeout 200
 EOF
 
-    cat > /tmp/iso/isolinux/live.cfg<<EOF
+    cat > $iso_dir/isolinux/live.cfg<<EOF
 label live
 menu label \${DISTRO} (default)
     kernel /live/vmlinuz
@@ -480,7 +481,7 @@ label harddisk
     localboot 0x80
 EOF
 
-    cat > /tmp/iso/isolinux/menu.cfg<<EOF
+    cat > $iso_dir/isolinux/menu.cfg<<EOF
 menu hshift 6
 menu width 64
 
@@ -492,7 +493,7 @@ label help
     config prompt.cfg
 EOF
 
-    cat > /tmp/iso/isolinux/stdmenu.cfg<<EOF
+    cat > $iso_dir/isolinux/stdmenu.cfg<<EOF
 menu background /isolinux/splash.png
 menu color title    * #FFFFFFFF *
 menu color border   * #00000000 #00000000 none
@@ -510,7 +511,7 @@ menu rows 12
 menu tabmsg Press ENTER to boot or TAB to edit a menu entry
 EOF
 
-    cat > /tmp/iso/isolinux/f1.txt<<EOF
+    cat > $iso_dir/isolinux/f1.txt<<EOF
                   0fLive Media07                                07
 
 
@@ -531,7 +532,7 @@ You may:
 - press ENTER to boot
 EOF
 
-    cat > /tmp/iso/isolinux/f2.txt<<EOF
+    cat > $iso_dir/isolinux/f2.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -544,7 +545,7 @@ You may:
 
 EOF
 
-    cat > /tmp/iso/isolinux/f3.txt<<EOF
+    cat > $iso_dir/isolinux/f3.txt<<EOF
                   0fBOOT METHODS07                                07
 
 0fMethods list here must correspond to entries in your boot menu. 07                                                                  09F307
@@ -573,7 +574,7 @@ You may:
 
 EOF
 
-    cat > /tmp/iso/isolinux/f4.txt<<EOF
+    cat > $iso_dir/isolinux/f4.txt<<EOF
                   0fLive-Boot Options07                                07
 
 ___ Additional boot options ___
@@ -601,7 +602,7 @@ You may:
 
 EOF
 
-    cat > /tmp/iso/isolinux/f5.txt<<EOF
+    cat > $iso_dir/isolinux/f5.txt<<EOF
                   0fLanguage and Keyboard07                                07
 
 You can specify the default language at the boot prompt below in combination 
@@ -627,7 +628,7 @@ You may:
 - press ENTER to boot
 EOF
 
-    cat > /tmp/iso/isolinux/f6.txt<<EOF
+    cat > $iso_dir/isolinux/f6.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -639,7 +640,7 @@ You may:
 - press ENTER to boot
 EOF
 
-    cat > /tmp/iso/isolinux/f7.txt<<EOF
+    cat > $iso_dir/isolinux/f7.txt<<EOF
                   0fTITLE07                                07
 
 
@@ -651,7 +652,7 @@ You may:
 - press ENTER to boot
 EOF
 
-    cat > /tmp/iso/isolinux/f8.txt<<EOF
+    cat > $iso_dir/isolinux/f8.txt<<EOF
                   0fRefracta!07                                07
 
 Where to get more help:
@@ -671,7 +672,7 @@ You may:
 - press ENTER to boot
 EOF
 
-    cat > /tmp/iso/isolinux/f9.txt<<EOF
+    cat > $iso_dir/isolinux/f9.txt<<EOF
 0fTITLE07                                                    09F1007
 
 
@@ -684,7 +685,7 @@ You may:
 
 EOF
 
-    cat > /tmp/iso/isolinux/f10.txt<<EOF
+    cat > $iso_dir/isolinux/f10.txt<<EOF
 0fCOPYRIGHTS AND WARRANTIES07                                                    09F1007
 
 Debian GNU/Linux is Copyright (C) 1993-2011 Software in the Public Interest,
@@ -710,6 +711,59 @@ More information about the Debian Live project can be found at
 Press F1control and F then 1 for the help index, or ENTER to 
 EOF
 }
+
+
+########################################################################
+# file grub.cfg
+########################################################################
+
+    cat > $iso_dir/boot/grub/grub.cfg << EOF
+if loadfont /font.pf2 ; then
+  set gfxmode=640x480
+  insmod efi_gop
+  insmod efi_uga
+  insmod video_bochs
+  insmod video_cirrus
+  insmod gfxterm
+  insmod jpeg
+  insmod png
+  terminal_output gfxterm
+fi
+
+background_image /boot/grub/splash.png
+set menu_color_normal=white/black
+set menu_color_highlight=dark-gray/white
+set timeout=6
+
+menuentry "devuan-live (amd64)" {
+    set gfxpayload=keep
+    linux   /live/vmlinuz boot=live \${username_opt}
+    initrd  /live/initrd.img
+}
+
+menuentry "Other language" {
+    set gfxpayload=keep
+    linux /live/vmlinuz boot=live \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} 
+    initrd /live/initrd.img
+}
+
+menuentry "devuan-live (load to RAM)" {
+    set gfxpayload=keep
+    linux   /live/vmlinuz boot=live \${username_opt} toram 
+    initrd  /live/initrd.img
+}
+
+menuentry "devuan-live (failsafe)" {
+    set gfxpayload=keep
+    linux   /live/vmlinuz boot=live ${username_opt} noapic noapm nodma nomce nolapic nosmp vga=normal 
+    initrd  /live/initrd.img
+}
+
+menuentry "Memory test" {
+    linux /live/memtest
+}
+
+EOF
 
 ########################################################################
 #
@@ -864,7 +918,7 @@ function report_space() {
 }
 
 ########################################################################
-#
+# copy_isolinux:
 ########################################################################
 function copy_isolinux() {
     if [[ -f /usr/lib/ISOLINUX/isolinux.bin ]] ; then
@@ -888,6 +942,17 @@ function copy_isolinux() {
     fi
     rsync -va "$isolinuxbin" "$iso_dir"/isolinux/
     rsync -va "$vesamenu" "$iso_dir"/isolinux/
+}
+
+########################################################################
+# copy_grub_uefi:
+########################################################################
+
+function copy_grub_uefi() {
+    git clone http://github.com/mortaromarcello/scripts.git /tmp/scripts
+    rsync -va /tmp/scripts/grub-uefi/boot "$iso_dir"/
+    rsync -va /tmp/scripts/grub-uefi/efi "$iso_dir"/
+    rm -rvf /tmp/scripts
 }
 
 ########################################################################
@@ -1007,6 +1072,7 @@ $initrd_message
 
     if [ "$nocopy" != "yes" ]; then
         copy_isolinux
+        copy_grub_uefi
         copy_kernel
         copy_filesystem
     fi

@@ -28,7 +28,7 @@ ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
 PACKAGES_FILE="packages_kde"
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc"
+INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc sharutils"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
@@ -282,7 +282,7 @@ PATH_TO_MOUNT="/mnt"
 ########################################################################
 # create_grub-uefi:
 ########################################################################
-function create_grub-uefi() {
+function create_grub_uefi() {
     git clone http://github.com/mortaromarcello/scripts.git $GIT_DIR/scripts
     cp -av $GIT_DIR/scripts/grub-uefi/* ${PATH_TO_MOUNT}/
 }
@@ -1234,15 +1234,10 @@ function check_script() {
         echo "tipo di  filesystem partizione secondaria: $TYPE_SECONDARY_FS"
         echo "tipo partizione secondaria: $TYPE_SECONDARY_PART"
     fi
-    if [ ! -e /usr/bin/git ]; then
-        apt-get -y install git
-    fi
-    if [ ! -e /sbin/MAKEDEV ]; then
-        apt-get -y install makedev
-    fi
-    if [ ! -e /usr/bin/rpl ]; then
-        apt-get -y install rpl
-    fi
+    [[ ! -e /usr/bin/git ]] && apt-get -y install git
+    [[ ! -e /sbin/MAKEDEV ]] && apt-get -y install makedev
+    [[ ! -e /usr/bin/rpl ]] && apt-get -y install rpl
+    [[ ! -e /usr/bin/uuencode ]] && apt-get -y install sharutils
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
