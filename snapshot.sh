@@ -950,10 +950,6 @@ function copy_isolinux() {
 ########################################################################
 
 function copy_uefi() {
-    #git clone http://github.com/mortaromarcello/scripts.git /tmp/scripts
-    #rsync -va /tmp/scripts/grub-uefi/boot "$iso_dir"/
-    #rsync -va /tmp/scripts/grub-uefi/efi "$iso_dir"/
-    #rm -rvf /tmp/scripts
     rsync -va /usr/lib/SYSLINUX.EFI/efi64/syslinux.efi "$iso_dir"/EFI/boot/bootx64.efi
     rsync -va /usr/lib/syslinux/modules/efi64/* "$iso_dir"/EFI/boot/
     cp -va "$iso_dir"/isolinux/isolinux.cfg "$iso_dir"/isolinux/syslinux.cfg

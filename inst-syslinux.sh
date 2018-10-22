@@ -64,6 +64,13 @@ function check_script() {
     elif [ ${TYPE_SECONDARY_FS} = "vfat" ]; then
         TYPE_SECONDARY_PART=c
     fi
+    if [ ${SYSLINUX_INST:0:1} != '/' ]; then
+        SYSLINUX_INST="/${SYSLINUX_INST}"
+    fi
+    i=$((${#SYSLINUX_INST}-1))
+    if [ ${SYSLINUX_INST:$i:1} = '/' ]; then
+        SYSLINUX_INST="${SYSLINUX_INST:0:$(($i))}"
+    fi
     echo "device usb $DEVICE_USB"
     echo "path to mount $PATH_TO_MOUNT"
     echo "syslinux install path $SYSLINUX_INST"
