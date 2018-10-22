@@ -81,7 +81,7 @@ function create_partitions() {
     read -p "Creo la partizione primaria fat32 e la partizione secondaria ext4 (premere Invio o Crtl-c per uscire)"
     blockdev --rereadpt ${DEVICE_USB}
     sfdisk ${DEVICE_USB} << EOF
-,${SIZE_PRIMARY_PART},c,*
+,${SIZE_PRIMARY_PART},U,*
 ,${SIZE_SECONDARY_PART},${TYPE_SECONDARY_PART}
 EOF
     sync && sync

@@ -1238,6 +1238,7 @@ function check_script() {
     [[ ! -e /sbin/MAKEDEV ]] && apt-get -y install makedev
     [[ ! -e /usr/bin/rpl ]] && apt-get -y install rpl
     [[ ! -e /usr/bin/uuencode ]] && apt-get -y install sharutils
+    # aggiungere uefi
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
