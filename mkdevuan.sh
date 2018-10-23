@@ -28,7 +28,7 @@ ARCH=amd64
 DIST=ascii
 ROOT_DIR=devuan
 PACKAGES_FILE="packages_kde"
-INCLUDES="linux-image-$ARCH grub-pc locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc sharutils"
+INCLUDES="linux-image-$ARCH grub-pc refind locales console-setup ssh firmware-linux wireless-tools devuan-keyring rpl mc sharutils"
 APT_OPTS="--assume-yes"
 INSTALL_DISTRO_DEPS="git sudo parted rsync squashfs-tools xorriso live-boot live-boot-initramfs-tools live-config-sysvinit live-config syslinux isolinux"
 ISO_DEBUG=1
@@ -420,14 +420,14 @@ function copy_files_to_usb() {
 # create_persistence_conf:
 ########################################################################
 function create_persistence_conf() {
-    log "Creo il punto di mount ${ARCHIVE}/part2"
+    log "Creo il punto di mount ${ARCHIVE}/part2" "i"
     mkdir -p ${ARCHIVE}/part2
     log "Monto la partizione ${DEVICE_USB}2" "i"
     mount ${DEVICE_USB}2 ${ARCHIVE}/part2
     cat > ${ARCHIVE}/part2/persistence.conf << EOF
         / union
 EOF
-    log "Smonto la partizione ${DEVICE_USB}2"
+    log "Smonto la partizione ${DEVICE_USB}2" "i"
     umount ${DEVICE_USB}2
 }
 
@@ -1026,7 +1026,7 @@ function check_script() {
     [[ ! -e /sbin/MAKEDEV ]] && apt-get -y install makedev
     [[ ! -e /usr/bin/rpl ]] && apt-get -y install rpl
     [[ ! -e /usr/bin/uuencode ]] && apt-get -y install sharutils
-    # aggiungere uefi
+    [[ ! -e /usr/bin/make ]] && apt-get -y install make
     echo "distribution: $DIST"
     echo "architecture: $ARCH"
     echo "desktop: $DE"
