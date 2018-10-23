@@ -46,7 +46,6 @@ MIRROR=http://pkgmaster.devuan.org/merged
 ########################################################################
 # crea usb live
 ########################################################################
-SYSLINUX_DIR="/usr/lib/syslinux/modules/bios"
 SYSLINUX_INST="/isolinux"
 MBR_DIR="/usr/lib/syslinux/mbr"
 SIZE_PRIMARY_PART=4096M
@@ -326,7 +325,7 @@ menuentry Devuan {
     icon /EFI/BOOT/icons/os_devuan.png
     loader /live/vmlinuz
     initrd /live/initrd.img
-    options "boot=live 3 username=\${USERNAME} locales=\${LOCALE} keyboard-layouts=\${KEYBOARD} persistence"
+    options "boot=live 3 username=${USERNAME} locales=${LOCALE} keyboard-layouts=${KEYBOARD} persistence"
 }
 EOF
             log "Smonto la partizione ${DEVICE_USB}1 su ${PATH_TO_MOUNT}" "i"
@@ -376,10 +375,10 @@ function install_syslinux_to_usb() {
         mkdir -p ${PATH_TO_MOUNT}
         log "Monto la partizione ${DEVICE_USB}1 su ${PATH_TO_MOUNT}." "i"
         mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
-        log "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_DIR}" "i"
-        mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_DIR}
+        log "Creo la directory ${PATH_TO_MOUNT}${SYSLINUX_INST}" "i"
+        mkdir -p ${PATH_TO_MOUNT}${SYSLINUX_INST}
         log "Install syslinux su ${DEVICE_USB}1" "i"
-        syslinux -d ${SYSLINUX_DIR} --install ${DEVICE_USB}1
+        syslinux -d ${SYSLINUX_INST} --install ${DEVICE_USB}1
     else
         log "Line:${LINENO} - Il device usb non è impostato." "f"
     fi
@@ -405,7 +404,13 @@ function copy_files_to_usb() {
         log "Monto la partizione ${DEVICE_USB}1 su ${PATH_TO_MOUNT}." "i"
         mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
         log "Copio la iso sul device usb" "i"
-        7z -x'!EFI' -bt -o${PATH_TO_MOUNT} x ${ARCHIVE}/${ROOT_DIR}/home/snapshot/${FILE_TO_COPY}
+        mkdir -p ${ARCHIVE}/part1
+        mount -o loop ${ARCHIVE}/${ROOT_DIR}/home/snapshot/${FILE_TO_COPY} ${ARCHIVE}/part1
+        cp -va ${ARCHIVE}/part1/* ${PATH_TO_MOUNT}/
+        sync && sync
+        umount ${ARCHIVE}/part1
+        log "Copio syslinux.cfg" "i"        
+        cp -va ${PATH_TO_MOUNT}${SYSLINUX_INST}/isolinux.cfg ${PATH_TO_MOUNT}${SYSLINUX_INST}/syslinux.cfg
         log "Smonto la partizione ${DEVICE_USB}1." "i"
         umount ${DEVICE_USB}1
     fi
@@ -426,9 +431,9 @@ function create_pendrive_live() {
     fi
     log "Cancello la pennetta e ricreo le partizioni." "i"
     create_partitions
+    copy_files_to_usb
     install_syslinux_to_usb
     install_refind
-    copy_files_to_usb
 }
 
 ########################################################################
