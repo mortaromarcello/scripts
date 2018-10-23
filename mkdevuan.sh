@@ -405,7 +405,7 @@ function copy_files_to_usb() {
         log "Monto la partizione ${DEVICE_USB}1 su ${PATH_TO_MOUNT}." "i"
         mount ${DEVICE_USB}1 ${PATH_TO_MOUNT}
         log "Copio la iso sul device usb" "i"
-        7z -o${PATH_TO_MOUNT} x ${ARCHIVE}/${ROOT_DIR}/home/snapshot/${FILE_TO_COPY}
+        7z -x'!EFI' -bt -o${PATH_TO_MOUNT} x ${ARCHIVE}/${ROOT_DIR}/home/snapshot/${FILE_TO_COPY}
         log "Smonto la partizione ${DEVICE_USB}1." "i"
         umount ${DEVICE_USB}1
     fi

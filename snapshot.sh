@@ -711,59 +711,6 @@ Press F1control and F then 1 for the help index, or ENTER to
 EOF
 }
 
-
-########################################################################
-# file grub.cfg
-########################################################################
-
-    cat > $iso_dir/boot/grub/grub.cfg << EOF
-if loadfont /font.pf2 ; then
-  set gfxmode=640x480
-  insmod efi_gop
-  insmod efi_uga
-  insmod video_bochs
-  insmod video_cirrus
-  insmod gfxterm
-  insmod jpeg
-  insmod png
-  terminal_output gfxterm
-fi
-
-background_image /boot/grub/splash.png
-set menu_color_normal=white/black
-set menu_color_highlight=dark-gray/white
-set timeout=6
-
-menuentry "devuan-live (amd64)" {
-    set gfxpayload=keep
-    linux   /live/vmlinuz boot=live \${username_opt}
-    initrd  /live/initrd.img
-}
-
-menuentry "Other language" {
-    set gfxpayload=keep
-    linux /live/vmlinuz boot=live \${username_opt} locales=${LOCALE} keyboard-layouts=${KEYBOARD} 
-    initrd /live/initrd.img
-}
-
-menuentry "devuan-live (load to RAM)" {
-    set gfxpayload=keep
-    linux   /live/vmlinuz boot=live \${username_opt} toram 
-    initrd  /live/initrd.img
-}
-
-menuentry "devuan-live (failsafe)" {
-    set gfxpayload=keep
-    linux   /live/vmlinuz boot=live ${username_opt} noapic noapm nodma nomce nolapic nosmp vga=normal 
-    initrd  /live/initrd.img
-}
-
-menuentry "Memory test" {
-    linux /live/memtest
-}
-
-EOF
-
 ########################################################################
 #
 ########################################################################
@@ -1197,7 +1144,7 @@ iface lo inet loopback
     # Squash the filesystem copy
     echo "Squashing the filesystem..."
     mksquashfs "$work_dir"/myfs/ "$work_dir"/iso/live/filesystem.squashfs ${mksq_opt}
-    cp -va "$work_dir"/iso/live/filesystem.squashfs "$snapshot_dir"/filesystem.squashfs-$(date +%Y%m%d_%H%M)
+    cp -va "$work_dir"/iso/live/filesystem.squashfs "$snapshot_dir"/filesystem.squashfs-$(date +%Y%m%d%H%M)
 
     # This code is redundant, because $work_dir gets removed later, but
     # it might help by making more space on the hard drive for the iso.
