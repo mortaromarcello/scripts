@@ -29,13 +29,13 @@ function check_root() {
 }
 
 function is_removable() {
-	DEVICE=$(echo "${DEVICE_USB}" | cut -d'/' -f 3)
-	if [ $(cat "/sys/block/$DEVICE/removable") == "0" ]; then
-		echo "Il device non è removibile."
-		exit
-	else
-		echo "Il device è removibile. OK!"
-	fi
+    DEVICE=$(echo "${DEVICE_USB}" | cut -d'/' -f 3)
+    if [ $(cat "/sys/block/$DEVICE/removable") == "0" ]; then
+        echo "Il device non è removibile."
+        exit
+    else
+        echo "Il device è removibile. OK!"
+    fi
 }
 
 function help() {

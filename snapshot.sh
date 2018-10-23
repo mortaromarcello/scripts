@@ -265,8 +265,6 @@ function snapshot_configuration() {
     mksq_opt="-info"
     mkdir -p $iso_dir/isolinux
     mkdir -p $iso_dir/live
-    mkdir -p $iso_dir/boot
-    mkdir -p $iso_dir/EFI/boot
     echo "$SPLASH" | base64 --decode > $iso_dir/isolinux/splash.png
 
     cat > /tmp/snapshot_exclude.list <<EOF
@@ -946,17 +944,6 @@ function copy_isolinux() {
 }
 
 ########################################################################
-# copy_uefi:
-########################################################################
-
-function copy_uefi() {
-    rsync -va /usr/lib/SYSLINUX.EFI/efi64/syslinux.efi "$iso_dir"/EFI/boot/bootx64.efi
-    rsync -va /usr/lib/syslinux/modules/efi64/* "$iso_dir"/EFI/boot/
-    cp -va "$iso_dir"/isolinux/isolinux.cfg "$iso_dir"/isolinux/syslinux.cfg
-    rsync -va "$iso_dir"/isolinux/*.cfg "$iso_dir"/EFI/boot/
-}
-
-########################################################################
 #
 ########################################################################
 function copy_kernel() {
@@ -1073,7 +1060,6 @@ $initrd_message
 
     if [ "$nocopy" != "yes" ]; then
         copy_isolinux
-        copy_uefi
         copy_kernel
         copy_filesystem
     fi
@@ -1145,7 +1131,8 @@ $initrd_message
     # and put package list inside that directory
     if [[ $stamp = "datetime" ]]; then
         # use this variable so iso and md5 have same time stamp
-        filename="$snapshot_basename"-$(date +%Y%m%d_%H%M).iso
+        #filename="$snapshot_basename"-$(date +%Y%m%d_%H%M).iso
+        filename="$snapshot_basename"-$(date +%Y%m%d%H%M).iso
     else
         n=1
         while [[ -f "$snapshot_dir"/snapshot$n.iso ]]; do
