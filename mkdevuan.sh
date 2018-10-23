@@ -406,7 +406,7 @@ function copy_files_to_usb() {
         log "Copio la iso sul device usb" "i"
         mkdir -p ${ARCHIVE}/part1
         mount -o loop ${ARCHIVE}/${ROOT_DIR}/home/snapshot/${FILE_TO_COPY} ${ARCHIVE}/part1
-        cp -va ${ARCHIVE}/part1/* ${PATH_TO_MOUNT}/
+        cp -va ${ARCHIVE}/part1/{isolinux,live} ${PATH_TO_MOUNT}/
         sync && sync
         umount ${ARCHIVE}/part1
         log "Copio syslinux.cfg" "i"        
@@ -415,6 +415,22 @@ function copy_files_to_usb() {
         umount ${DEVICE_USB}1
     fi
 }
+
+########################################################################
+# create_persistence_conf:
+########################################################################
+function create_persistence_conf() {
+    log "Creo il punto di mount ${ARCHIVE}/part2"
+    mkdir -p ${ARCHIVE}/part2
+    log "Monto la partizione ${DEVICE_USB}2" "i"
+    mount ${DEVICE_USB}2 ${ARCHIVE}/part2
+    cat > ${ARCHIVE}/part2/persistence.conf << EOF
+        / union
+EOF
+    log "Smonto la partizione ${DEVICE_USB}2"
+    umount ${DEVICE_USB}2
+}
+
 
 ########################################################################
 # create_pendrive_live:
@@ -434,6 +450,7 @@ function create_pendrive_live() {
     copy_files_to_usb
     install_syslinux_to_usb
     install_refind
+    create_persistence_conf
 }
 
 ########################################################################
