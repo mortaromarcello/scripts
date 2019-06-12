@@ -7,6 +7,7 @@ fi
 
 if [ $# -lt 3 ]; then
     echo "$0 <host> <local disk> <remote disk>"
+    exit
 fi
 USER="root"
 HOST="$1"
@@ -18,4 +19,14 @@ if [ "$?" != "0" ]; then
     exit
 fi
 
-#dd if=$LOCAL_HD bs=1M count=1 | ssh $USER@HOST dd of=$REMOTE_HD bs=1M
+#ssh ${USER}@${HOST} "ls $3"
+#echo $LOCAL_HD
+echo "\nHost\t\t\t\t => $HOST\nHardDisk o immagine locale \t => $LOCAL_HD\nHard Disk remoto\t\t => $REMOTE_HD\n\n"
+echo "ATTENZIONE!!! Verrà sovrascritto ogni cosa sul HARD DISK REMOTO!\n\nContinuo (si/no)?\n"
+read RISPOSTA
+if [ "$RISPOSTA" != "si" ]; then
+    echo "Abortito."
+    exit
+fi
+
+dd if=$LOCAL_HD bs=1M | ssh ${USER}@${HOST} dd of=$REMOTE_HD bs=1M
